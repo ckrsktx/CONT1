@@ -1,169 +1,194 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<title>CONT1 | Controle</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#007bff" />
+  <meta charset="UTF-8"/>
+  <title>CONT1 | Controle</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#007bff"/>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-<div class="container">
-<h1>CONT1 | Controle</h1>
-<div class="summary">
- <div class="summary-card">
- <h3>Receitas</h3>
- <p id="total-revenue" class="positive">R$ 0,00</p>
- <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita">+</button>
- </div>
- <div class="summary-card">
- <h3>Despesas</h3>
- <p id="total-expenses" class="negative">R$ 0,00</p>
- <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa">+</button>
- </div>
- <div class="summary-card balance-card">
- <h3>Saldo</h3>
- <p id="balance" class="info">R$ 0,00</p>
- </div>
-</div>
+  <div class="container">
+    <h1>CONT1 | Controle</h1>
 
-<div class="spacer"></div>
-<div class="categoria-legenda-container" id="categoria-legenda-container"></div>
-<div class="pie-container">
- <canvas id="pieChart" width="200" height="200"></canvas>
- <div style="font-size:.65rem;color:#555;font-family:Arial,sans-serif">Receitas e Despesas</div>
-</div>
+    <!-- RESUMO -->
+    <div class="summary">
+      <div class="summary-card">
+        <h3>Receitas</h3>
+        <p id="total-revenue" class="positive">R$ 0,00</p>
+        <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita">+</button>
+      </div>
+      <div class="summary-card">
+        <h3>Despesas</h3>
+        <p id="total-expenses" class="negative">R$ 0,00</p>
+        <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa">+</button>
+      </div>
+      <div class="summary-card balance-card">
+        <h3>Saldo</h3>
+        <p id="balance" class="info">R$ 0,00</p>
+      </div>
+    </div>
 
-<div class="transactions-section" id="transactions-section">
- <button class="reset-btn" id="reset-btn">Resetar</button>
- <h2 id="transacoes-titulo">Transações</h2>
- <table class="transactions-table">
- <thead>
- <tr><th>Descrição</th><th>Valor</th><th>Dia</th><th>Origem/Categoria</th><th style="text-align: center">Ações</th></tr>
- </thead>
- <tbody id="transaction-list"></tbody>
- </table>
-</div>
-</div>
+    <div class="spacer"></div>
 
-<!-- Modais e Prompt -->
-<div class="modal" id="reset-modal">
- <div class="modal-content">
- <div class="modal-header">Resetar Todos os Dados</div>
- <div class="modal-body">
- Tem certeza que deseja apagar TODOS os dados?<br />
- Esta ação não pode ser desfeita.
- </div>
- <div class="modal-footer">
- <button class="modal-btn cancel" id="reset-cancel">Cancelar</button>
- <button class="modal-btn confirm" id=" reset-confirm">Apagar Tudo</button>
- </div>
- </div>
-</div>
+    <!-- LEGENDA + GRÁFICO -->
+    <div class="categoria-legenda-container" id="categoria-legenda-container"></div>
+    <div class="pie-container">
+      <canvas id="pieChart" width="200" height="200"></canvas>
+      <div class="pie-label">Receitas e Despesas</div>
+    </div>
 
-<div class="modal" id="delete-modal">
- <div class="modal-content">
- <div class="modal-header">Excluir Transação</div>
- <div class="modal-body" id="delete-modal-body">Tem certeza que deseja excluir esta transação?</div>
- <div class="modal-footer">
- <button class="modal-btn cancel" id="delete-cancel">Cancelar</button>
- <button class="modal-btn confirm" id="delete-confirm">Excluir</button>
- </div>
- </div>
-</div>
+    <!-- TRANSAÇÕES -->
+    <div class="transactions-section" id="transactions-section">
+      <button class="reset-btn" id="reset-btn">Resetar</button>
+      <h2 id="transacoes-titulo">Transações</h2>
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Descrição</th><th>Valor</th><th>Dia</th><th>Origem/Categoria</th>
+            <th style="text-align:center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="transaction-list"></tbody>
+      </table>
+    </div>
+  </div>
 
-<div class="install-prompt" id="install-prompt">
- <div class="install-prompt-content">
- <div class="install-prompt-header">Instalar Aplicativo</div>
- <div class="install-prompt-body">Deseja instalar o Controle de Gastos para acesso rápido?</div>
- <div class="install-prompt-buttons">
- <button class="install-btn secondary" id="install-cancel">Agora não</button>
- <button class="install-btn primary" id="install-confirm">Instalar</button>
- </div>
- </div>
-</div>
+  <!-- =========== MODAIS / OVERLAYS =========== -->
+  <!-- Modal Reset -->
+  <div class="modal" id="reset-modal">
+    <div class="modal-content">
+      <div class="modal-header">Resetar Todos os Dados</div>
+      <div class="modal-body">
+        Tem certeza que deseja apagar TODOS os dados?<br/>
+        Esta ação não pode ser desfeita.
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" id="reset-cancel">Cancelar</button>
+        <button class="modal-btn confirm" id="reset-confirm">Apagar Tudo</button>
+      </div>
+    </div>
+  </div>
 
-<!-- Alerta saldo negativo -->
-<div class="negative-alert" id="negative-alert" style="display: none;">⚠️ Atenção! Seu saldo está negativo!</div>
+  <!-- Modal Delete -->
+  <div class="modal" id="delete-modal">
+    <div class="modal-content">
+      <div class="modal-header">Excluir Transação</div>
+      <div class="modal-body" id="delete-modal-body">
+        Tem certeza que deseja excluir esta transação?
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" id="delete-cancel">Cancelar</button>
+        <button class="modal-btn confirm" id="delete-confirm">Excluir</button>
+      </div>
+    </div>
+  </div>
 
-<!-- Overlay do formulário receita -->
-<div class="form-overlay" id="form-overlay-revenue">
- <div class="form-container">
- <div class="form-header">
- <div class="form-title">Nova Receita</div>
- <button class="close-form" id="close-form-btn-revenue">&times;</button>
- </div>
- <form id="transaction-form-revenue" autocomplete="off">
- <div class="form-grid">
- <div class="origem">
- <label for="origin-revenue">Origem</label>
- <select id="origin-revenue" required>
- <option value="Adiantamento">Adiantamento</option>
- <option value="Pagamento">Pagamento</option>
- <option value="Empréstimo">Empréstimo</option>
- <option value="Investimento">Investimento</option>
- <option value="Monetização">Monetização</option>
- <option value="Lucro">Lucro</option>
- <option value="Venda">Venda</option>
- <option value="Outros">Outros</option>
- </select>
- </div>
- <div class="valor">
- <label for="amount-revenue">Valor</label>
- <input id="amount-revenue" type="number" step="0.01" required />
- </div>
- </div>
- <div class="check-add-line">
- <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
- </div>
- </form>
- </div>
-</div>
+  <!-- Prompt de instalação PWA -->
+  <div class="install-prompt" id="install-prompt">
+    <div class="install-prompt-content">
+      <div class="install-prompt-header">Instalar Aplicativo</div>
+      <div class="install-prompt-body">
+        Deseja instalar o Controle de Gastos para acesso rápido?
+      </div>
+      <div class="install-prompt-buttons">
+        <button class="install-btn secondary" id="install-cancel">Agora não</button>
+        <button class="install-btn primary" id="install-confirm">Instalar</button>
+      </div>
+    </div>
+  </div>
 
-<!-- Overlay do formulário despesa -->
-<div class="form-overlay" id="form-overlay-expense">
- <div class="form-container">
- <div class="form-header">
- <div class="form-title">Nova Despesa</div>
- <button class="close-form" id="close-form-btn-expense">&times;</button>
- </div>
- <form id="transaction-form-expense" autocomplete="off">
- <div class="form-grid">
- <div class="descricao">
- <label for="description-expense">Descrição</label>
- <input id="description-expense" maxlength="12" required />
- <div class="char-counter"><span id="char-count-expense">0</span>/12</div>
- </div>
- <div class="valor">
- <label for="amount-expense">Valor</label>
- <input id="amount-expense" type="number" step="0.01" required />
- </div>
- <div class="categoria">
- <label for="category-expense">Categoria</label>
- <select id="category-expense" required>
- <option value="Alimentação">Alimentação</option>
- <option value="Lazer">Lazer</option>
- <option value="Transporte">Transporte</option>
- <option value="Moradia">Moradia</option>
- <option value="Saúde">Saúde</option>
- <option value="Educação">Educação</option>
- <option value="Outros">Outros</option>
- </select>
- </div>
- </div>
- <div class="check-add-line">
- <div class="check-group">
- <input id="parcelado-expense" type="checkbox" />
- <label for="parcelado-expense">Parcelado?</label>
- <div class="parcelas-field" id="parcelas-field-div-expense">
- <input id="parcelas-expense" type="number" min="2" value="2" style="width:50px" />
- <label for="parcelas-expense">x</label>
- </div>
- </div>
- <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
- </div>
- </form>
- </div>
-</div>
+  <!-- Alerta de saldo negativo -->
+  <div class="negative-alert" id="negative-alert" style="display:none">
+    ⚠️ Atenção! Seu saldo está negativo!
+  </div>
+
+  <!-- ======== FORMS OVERLAY ======== -->
+  <!-- Receita -->
+  <div class="form-overlay" id="form-overlay-revenue">
+    <div class="form-container">
+      <div class="form-header">
+        <div class="form-title">Nova Receita</div>
+        <button class="close-form" id="close-form-btn-revenue">&times;</button>
+      </div>
+      <form id="transaction-form-revenue" autocomplete="off">
+        <div class="form-grid">
+          <div class="origem">
+            <label for="origin-revenue">Origem</label>
+            <select id="origin-revenue" required>
+              <option value="Adiantamento">Adiantamento</option>
+              <option value="Pagamento">Pagamento</option>
+              <option value="Empréstimo">Empréstimo</option>
+              <option value="Investimento">Investimento</option>
+              <option value="Monetização">Monetização</option>
+              <option value="Lucro">Lucro</option>
+              <option value="Venda">Venda</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="valor">
+            <label for="amount-revenue">Valor</label>
+            <input id="amount-revenue" type="number" step="0.01" required>
+          </div>
+        </div>
+        <div class="check-add-line">
+          <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Despesa -->
+  <div class="form-overlay" id="form-overlay-expense">
+    <div class="form-container">
+      <div class="form-header">
+        <div class="form-title">Nova Despesa</div>
+        <button class="close-form" id="close-form-btn-expense">&times;</button>
+      </div>
+      <form id="transaction-form-expense" autocomplete="off">
+        <div class="form-grid">
+          <div class="descricao">
+            <label for="description-expense">Descrição</label>
+            <input id="description-expense" maxlength="12" required>
+            <div class="char-counter"><span id="char-count-expense">0</span>/12</div>
+          </div>
+          <div class="valor">
+            <label for="amount-expense">Valor</label>
+            <input id="amount-expense" type="number" step="0.01" required>
+          </div>
+          <div class="categoria">
+            <label for="category-expense">Categoria</label>
+            <select id="category-expense" required>
+              <option value="Alimentação">Alimentação</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Moradia">Moradia</option>
+              <option value="Saúde">Saúde</option>
+              <option value="Educação">Educação</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+        </div>
+        <div class="check-add-line">
+          <div class="check-group">
+            <input id="parcelado-expense" type="checkbox">
+            <label for="parcelado-expense">Parcelado?</label>
+            <div class="parcelas-field" id="parcelas-field-div-expense">
+              <input id="parcelas-expense" type="number" min="2" value="2" style="width:50px">
+              <label for="parcelas-expense">x</label>
+            </div>
+          </div>
+          <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
+ 
