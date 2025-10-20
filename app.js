@@ -1,5 +1,5 @@
 /* =========================================================
-   CONT1 | Controle de Gastos – app.js COMPLETO e FINAL
+   CONT1 | Controle de Gastos – app.js COMPLETO e CORRIGIDO
    ========================================================= */
 
 /* ---------- CONFIGURAÇÕES GLOBAIS ---------- */
@@ -63,7 +63,7 @@ const els = {
 };
 
 /* ---------- VARIÁVEIS DE ESTADO ---------- */
-let editIndex = null, chart = null, deleteIndex = null;
+let editIndex = null, chartInstance = null, deleteIndex = null;
 let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
 let deferredPrompt = null;
 let saldoNegativoAlertado = false;
@@ -115,9 +115,7 @@ function atualizarResumo() {
   }
 }
 
-/* ---------- GRÁFICO COLORIDO POR CATEGORIA (SEM "QUEDA") ---------- */
-let chartInstance = null;
-
+/* ---------- GRÁFICO SEM ANIMAÇÃO DE "QUEDA" ---------- */
 function atualizarGrafico() {
   const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
   const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -163,7 +161,7 @@ function atualizarGrafico() {
               label: ctx => {
                 const val = ctx.parsed;
                 const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
-                                return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
+                return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
               }
             },
             bodyFont: { size: 10 },
@@ -416,3 +414,4 @@ function inicializarApp() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarApp);
+       
