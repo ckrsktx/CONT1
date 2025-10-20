@@ -14,6 +14,10 @@ const chartCategories = [
   {type:"expense", name:"Educação", color:"#e67e22"},
   {type:"expense", name:"Outros", color:"#95a5a6"}
 ];
+const categories = {
+  revenue: ["Adiantamento","Pagamento","Empréstimo","Investimento","Monetização","Lucro","Venda","Outros"],
+  expense: ["Alimentação","Lazer","Transporte","Moradia","Saúde","Educação","Outros"]
+};
 
 /* ---------- ELEMENTOS DO DOM ---------- */
 const els = {
@@ -22,8 +26,40 @@ const els = {
   totalDes: document.getElementById('total-expenses'),
   balance: document.getElementById('balance'),
   legenda: document.getElementById('categoria-legenda-container'),
+  reset: document.getElementById('reset-btn'),
+  titulo: document.getElementById('transacoes-titulo'),
   canvas: document.getElementById('pieChart'),
-  /* ... demais elementos ... */
+  resetModal: document.getElementById('reset-modal'),
+  resetCancel: document.getElementById('reset-cancel'),
+  resetConfirm: document.getElementById('reset-confirm'),
+  deleteModal: document.getElementById('delete-modal'),
+  deleteCancel: document.getElementById('delete-cancel'),
+  deleteConfirm: document.getElementById('delete-confirm'),
+  deleteBody: document.getElementById('delete-modal-body'),
+  transactionsSection: document.getElementById('transactions-section'),
+  installPrompt: document.getElementById('install-prompt'),
+  installCancel: document.getElementById('install-cancel'),
+  installConfirm: document.getElementById('install-confirm'),
+  negativeAlert: document.getElementById('negative-alert'),
+  addRevenueBtn: document.getElementById('add-revenue-btn'),
+  addExpenseBtn: document.getElementById('add-expense-btn'),
+  formOverlayRevenue: document.getElementById('form-overlay-revenue'),
+  closeFormBtnRevenue: document.getElementById('close-form-btn-revenue'),
+  formRevenue: document.getElementById('transaction-form-revenue'),
+  amountRevenue: document.getElementById('amount-revenue'),
+  originRevenue: document.getElementById('origin-revenue'),
+  btnSaveRevenue: document.getElementById('save-btn-revenue'),
+  formOverlayExpense: document.getElementById('form-overlay-expense'),
+  closeFormBtnExpense: document.getElementById('close-form-btn-expense'),
+  formExpense: document.getElementById('transaction-form-expense'),
+  descExpense: document.getElementById('description-expense'),
+  amountExpense: document.getElementById('amount-expense'),
+  categoryExpense: document.getElementById('category-expense'),
+  parceladoExpense: document.getElementById('parcelado-expense'),
+  parcelasExpense: document.getElementById('parcelas-expense'),
+  parcelasDivExpense: document.getElementById('parcelas-field-div-expense'),
+  btnSaveExpense: document.getElementById('save-btn-expense'),
+  charCountExpense: document.getElementById('char-count-expense')
 };
 
 /* ---------- VARIÁVEIS DE ESTADO ---------- */
@@ -36,10 +72,24 @@ let saldoNegativoAlertado = false;
 function formatarMoeda(valor) {
   return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+function bloquearZoom() {
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('gesturechange', e => e.preventDefault());
+  document.addEventListener('gestureend', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && '+-=0'.includes(e.key)) e.preventDefault();
+  });
+  document.addEventListener('wheel', e => {
+    if (e.ctrlKey) e.preventDefault();
+  }, { passive: false });
+}
 
 /* ---------- SALVAR / CARREGAR ---------- */
 function salvarDados() {
   localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+function carregarDados() {
+  transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
 }
 
 /* ---------- RESUMO ---------- */
@@ -51,8 +101,11 @@ function atualizarResumo() {
   els.totalRev.textContent = formatarMoeda(receitas);
   els.totalDes.textContent = formatarMoeda(despesas);
   els.balance.textContent = formatarMoeda(saldo);
-  els.balance.classList.toggle('negative', saldo < 0);
 
+  els.balance.classList.remove('positive', 'negative');
+  els.balance.classList.add(saldo >= 0 ? 'info' : 'negative');
+
+  /* alerta saldo negativo */
   if (saldo < 0 && !saldoNegativoAlertado) {
     saldoNegativoAlertado = true;
     els.negativeAlert.style.display = 'block';
@@ -62,96 +115,109 @@ function atualizarResumo() {
   }
 }
 
-/* ---------- GRÁFICO PIZZA + LEGENDA ---------- */
+/* ---------- GRÁFICO COLORIDO POR CATEGORIA ---------- */
 let chartInstance = null;
 
 function atualizarGrafico() {
-  /* agrupa despesas por categoria */
-  const despesas = transactions.filter(t => t.type === 'expense');
-  const mapDesp = {};
-  despesas.forEach(t => {
-    mapDesp[t.category] = (mapDesp[t.category] || 0) + t.amount;
+  const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
+  const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const totalGeral = receitas + despesas;
+
+  /* labels e cores: receita + cada categoria de despesa */
+  const labels = ['Receita'];
+  const dataValues = [receitas];
+  const colors = ['#28a745'];
+
+  const despesasPorCat = {};
+  transactions.filter(t => t.type === 'expense').forEach(t => {
+    despesasPorCat[t.category] = (despesasPorCat[t.category] || 0) + t.amount;
   });
-
-  /* monta arrays para o gráfico */
-  const labels = [];
-  const data = [];
-  const colors = [];
-
-  /* 1ª fatia = RECEITA TOTAL */
-  const totalReceita = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
-  if (totalReceita > 0) {
-    labels.push('Receita');
-    data.push(totalReceita);
-    colors.push(chartCategories.find(c => c.type === 'revenue').color);
-  }
-
-  /* demais fatias = CATEGORIAS DE DESPESA */
-  Object.entries(mapDesp).forEach(([cat, valor]) => {
+  Object.entries(despesasPorCat).sort((a, b) => b[1] - a[1]).forEach(([cat, val]) => {
     labels.push(cat);
-    data.push(valor);
+    dataValues.push(val);
     colors.push(chartCategories.find(c => c.name === cat)?.color || '#999');
   });
 
-  /* desenha */
+  const data = {
+    labels,
+    datasets: [{
+      data: dataValues,
+      backgroundColor: colors
+    }]
+  };
+
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(els.canvas, {
     type: 'pie',
-    data: { labels, datasets: [{ data, backgroundColor: colors }] },
+    data,
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { display: false }, // usamos legenda manual abaixo
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: ctx => {
-              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              const pct = ((ctx.parsed / total) * 100).toFixed(1);
-              return `${ctx.label}: ${formatarMoeda(ctx.parsed)} (${pct}%)`;
+              const val = ctx.parsed;
+              const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
+              return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
             }
-          }
+          },
+          bodyFont: { size: 11 },
+          titleFont: { size: 11 }
         }
       }
     }
   });
 
-  montarLegendaCompleta(labels, data);
+  montarLegendaCategorias(totalGeral);
 }
 
-/* ---------- LEGENDA COLORIDA (RECEITA + DESPESAS) ---------- */
-function montarLegendaCompleta(labels, data) {
-  const total = data.reduce((a, b) => a + b, 0);
-  if (!total) { els.legenda.innerHTML = ''; return; }
+function montarLegendaCategorias(totalGeral) {
+  const despesas = transactions.filter(t => t.type === 'expense');
+  const receitas = transactions.filter(t => t.type === 'revenue');
+  const totalDespesas = despesas.reduce((s, t) => s + t.amount, 0);
+  const totalReceitas = receitas.reduce((s, t) => s + t.amount, 0);
 
-  els.legenda.innerHTML = labels.map((label, i) => {
-    const valor = data[i];
-    const pct = (valor / total * 100).toFixed(1);
-    const cor = chartInstance.data.datasets[0].backgroundColor[i];
-    return `
-      <div class="categoria-legenda">
-        <span class="cor-blob" style="background:${cor}"></span>
-        <span style="font-size:11px">${label} ${pct}%</span>
-      </div>`;
-  }).join('');
+  const items = [];
+
+  /* receita */
+  if (totalReceitas) {
+    const pctR = totalGeral ? (totalReceitas / totalGeral * 100).toFixed(1) : 0;
+    items.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:#28a745"></span><span>Receita ${pctR}%</span></div>`);
+  }
+
+  /* despesas por categoria */
+  const map = {};
+  despesas.forEach(t => {
+    map[t.category] = (map[t.category] || 0) + t.amount;
+  });
+  Object.entries(map).sort((a, b) => b[1] - a[1]).forEach(([cat, val]) => {
+    const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
+    const cor = chartCategories.find(c => c.name === cat)?.color || '#999';
+    items.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:${cor}"></span><span>${cat} ${pct}%</span></div>`);
+  });
+
+  els.legenda.innerHTML = items.join('');
 }
 
 /* ---------- LISTAGEM ---------- */
 function renderizarLista() {
   els.list.innerHTML = '';
   if (!transactions.length) {
-    els.list.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888">Nenhuma transação</td></tr>';
+    els.list.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;font-size:0.7rem">Nenhuma transação</td></tr>';
     return;
   }
   transactions.forEach((tr, i) => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${tr.description || '-'}</td>
-      <td class="${tr.type}">${formatarMoeda(tr.amount)}</td>
-      <td class="data-cell">${tr.day}/${meses[tr.month]}</td>
-      <td>${tr.category || tr.origin}</td>
+      <td style="font-size:0.7rem">${tr.description || '-'}</td>
+      <td class="${tr.type}" style="font-size:0.7rem">${formatarMoeda(tr.amount)}</td>
+      <td class="data-cell" style="font-size:0.6rem">${tr.day}/${meses[tr.month]}</td>
+      <td style="font-size:0.6rem">${tr.category || tr.origin}</td>
       <td class="actions-cell">
-        <button class="edit-btn" title="Editar">✏️</button>
-        <button class="delete-btn" title="Excluir">🗑️</button>
+        <button class="edit-btn" style="font-size:0.8rem" title="Editar">✏️</button>
+        <button class="delete-btn" style="font-size:0.8rem" title="Excluir">🗑️</button>
       </td>`;
     row.querySelector('.edit-btn').onclick = () => editarTransacao(i);
     row.querySelector('.delete-btn').onclick = () => confirmarExclusao(i);
