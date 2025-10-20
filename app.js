@@ -105,7 +105,6 @@ function atualizarResumo() {
   els.balance.classList.remove('positive', 'negative');
   els.balance.classList.add(saldo >= 0 ? 'info' : 'negative');
 
-  /* alerta saldo negativo */
   if (saldo < 0 && !saldoNegativoAlertado) {
     saldoNegativoAlertado = true;
     els.negativeAlert.style.display = 'block';
@@ -115,13 +114,12 @@ function atualizarResumo() {
   }
 }
 
-/* ---------- GRÁFICO SEM ANIMAÇÃO DE "QUEDA" ---------- */
+/* ---------- GRÁFICO (sem animações nem transições) ---------- */
 function atualizarGrafico() {
   const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
   const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const totalGeral = receitas + despesas;
 
-  /* labels e cores: receita + cada categoria de despesa */
   const labels = ['Receita'];
   const dataValues = [receitas];
   const colors = ['#28a745'];
@@ -136,14 +134,22 @@ function atualizarGrafico() {
     colors.push(chartCategories.find(c => c.name === cat)?.color || '#999');
   });
 
-  /* se já existe, apenas atualiza os dados (sem animação de queda) */
   if (chartInstance) {
     chartInstance.data.labels = labels;
     chartInstance.data.datasets[0].data = dataValues;
     chartInstance.data.datasets[0].backgroundColor = colors;
-    chartInstance.update('none'); /* sem animação */
+
+    // Desativa qualquer animação ou transição
+    chartInstance.options.animation = false;
+    chartInstance.options.transitions = {
+      active: { animation: { duration: 0 } },
+      show: { animation: { duration: 0 } },
+      hide: { animation: { duration: 0 } }
+    };
+
+    chartInstance.stop();
+    chartInstance.update(); // atualização imediata
   } else {
-    /* primeira criação */
     chartInstance = new Chart(els.canvas, {
       type: 'pie',
       data: {
@@ -153,7 +159,12 @@ function atualizarGrafico() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: false,               /* desliga animação inicial */
+        animation: false,
+        transitions: {
+          active: { animation: { duration: 0 } },
+          show: { animation: { duration: 0 } },
+          hide: { animation: { duration: 0 } }
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -182,13 +193,11 @@ function montarLegendaCategorias(totalGeral) {
 
   const html = [];
 
-  /* receita */
   if (totalReceitas) {
     const pctR = totalGeral ? (totalReceitas / totalGeral * 100).toFixed(1) : 0;
     html.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:#28a745"></span><span>Receita ${pctR}%</span></div>`);
   }
 
-  /* despesas por categoria */
   const map = {};
   despesas.forEach(t => {
     map[t.category] = (map[t.category] || 0) + t.amount;
@@ -333,7 +342,6 @@ function enviarDespesa(e) {
 
 /* ---------- INICIALIZAÇÃO ---------- */
 function inicializarEventos() {
-  /* abertura */
   els.addRevenueBtn.addEventListener('click', () => {
     els.formOverlayRevenue.style.display = 'flex';
     els.amountRevenue.focus();
@@ -343,7 +351,6 @@ function inicializarEventos() {
     els.descExpense.focus();
   });
 
-  /* fechamento */
   els.closeFormBtnRevenue.addEventListener('click', fecharFormularios);
   els.closeFormBtnExpense.addEventListener('click', fecharFormularios);
   els.formOverlayRevenue.addEventListener('click', e => {
@@ -353,23 +360,19 @@ function inicializarEventos() {
     if (e.target === els.formOverlayExpense) fecharFormularios();
   });
 
-  /* envio */
   els.formRevenue.addEventListener('submit', enviarReceita);
   els.formExpense.addEventListener('submit', enviarDespesa);
 
-  /* parcelado */
   els.parceladoExpense.addEventListener('change', () => {
     els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked);
   });
 
-  /* contador de caracteres */
   els.descExpense.addEventListener('input', () => {
     const len = els.descExpense.value.length;
     els.charCountExpense.textContent = len;
     els.charCountExpense.parentElement.classList.toggle('warning', len > 10);
   });
 
-  /* modais */
   els.reset.addEventListener('click', () => els.resetModal.style.display = 'flex');
   els.resetCancel.addEventListener('click', () => els.resetModal.style.display = 'none');
   els.resetConfirm.addEventListener('click', () => {
@@ -384,7 +387,6 @@ function inicializarEventos() {
   els.deleteCancel.addEventListener('click', () => els.deleteModal.style.display = 'none');
   els.deleteConfirm.addEventListener('click', excluirTransacao);
 
-  /* PWA install prompt */
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
@@ -414,4 +416,3 @@ function inicializarApp() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarApp);
-       
