@@ -115,8 +115,9 @@ function atualizarResumo() {
   }
 }
 
-/* ---------- GRÁFICO ---------- */
+/* ---------- GRÁFICO + LEGENDA COLORIDA ---------- */
 let chartInstance = null;
+
 function atualizarGrafico() {
   const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
   const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -138,6 +139,31 @@ function atualizarGrafico() {
       plugins: { legend: { display: false } }
     }
   });
+
+  montarLegendaCategorias();
+}
+
+function montarLegendaCategorias() {
+  const despesas = transactions.filter(t => t.type === 'expense');
+  const total = despesas.reduce((s, t) => s + t.amount, 0);
+  if (!total) { els.legenda.innerHTML = ''; return; }
+
+  const map = {};
+  despesas.forEach(t => {
+    map[t.category] = (map[t.category] || 0) + t.amount;
+  });
+
+  const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+
+  els.legenda.innerHTML = sorted.map(([cat, valor]) => {
+    const pct = (valor / total * 100).toFixed(1);
+    const cor = chartCategories.find(c => c.name === cat)?.color || '#999';
+    return `
+      <div class="categoria-legenda">
+        <span class="cor-blob" style="background:${cor}"></span>
+        <span>${cat} ${pct}%</span>
+      </div>`;
+  }).join('');
 }
 
 /* ---------- LISTAGEM ---------- */
@@ -352,4 +378,3 @@ function inicializarApp() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarApp);
-                                        
