@@ -1,5 +1,5 @@
 /* =========================================================
-   CONT1 | Controle de Gastos – app.js completo
+   CONT1 | Controle de Gastos – app.js COMPLETO e FINAL
    ========================================================= */
 
 /* ---------- CONFIGURAÇÕES GLOBAIS ---------- */
@@ -115,7 +115,7 @@ function atualizarResumo() {
   }
 }
 
-/* ---------- GRÁFICO COLORIDO POR CATEGORIA ---------- */
+/* ---------- GRÁFICO COLORIDO POR CATEGORIA (SEM "QUEDA") ---------- */
 let chartInstance = null;
 
 function atualizarGrafico() {
@@ -138,37 +138,41 @@ function atualizarGrafico() {
     colors.push(chartCategories.find(c => c.name === cat)?.color || '#999');
   });
 
-  const data = {
-    labels,
-    datasets: [{
-      data: dataValues,
-      backgroundColor: colors
-    }]
-  };
-
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(els.canvas, {
-    type: 'pie',
-    data,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const val = ctx.parsed;
-              const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
-              return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
-            }
-          },
-          bodyFont: { size: 11 },
-          titleFont: { size: 11 }
+  /* se já existe, apenas atualiza os dados (sem animação de queda) */
+  if (chartInstance) {
+    chartInstance.data.labels = labels;
+    chartInstance.data.datasets[0].data = dataValues;
+    chartInstance.data.datasets[0].backgroundColor = colors;
+    chartInstance.update('none'); /* sem animação */
+  } else {
+    /* primeira criação */
+    chartInstance = new Chart(els.canvas, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{ data: dataValues, backgroundColor: colors }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,               /* desliga animação inicial */
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const val = ctx.parsed;
+                const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
+                                return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
+              }
+            },
+            bodyFont: { size: 10 },
+            titleFont: { size: 10 }
+          }
         }
       }
-    }
-  });
+    });
+  }
 
   montarLegendaCategorias(totalGeral);
 }
@@ -176,15 +180,14 @@ function atualizarGrafico() {
 function montarLegendaCategorias(totalGeral) {
   const despesas = transactions.filter(t => t.type === 'expense');
   const receitas = transactions.filter(t => t.type === 'revenue');
-  const totalDespesas = despesas.reduce((s, t) => s + t.amount, 0);
   const totalReceitas = receitas.reduce((s, t) => s + t.amount, 0);
 
-  const items = [];
+  const html = [];
 
   /* receita */
   if (totalReceitas) {
     const pctR = totalGeral ? (totalReceitas / totalGeral * 100).toFixed(1) : 0;
-    items.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:#28a745"></span><span>Receita ${pctR}%</span></div>`);
+    html.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:#28a745"></span><span>Receita ${pctR}%</span></div>`);
   }
 
   /* despesas por categoria */
@@ -195,10 +198,10 @@ function montarLegendaCategorias(totalGeral) {
   Object.entries(map).sort((a, b) => b[1] - a[1]).forEach(([cat, val]) => {
     const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
     const cor = chartCategories.find(c => c.name === cat)?.color || '#999';
-    items.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:${cor}"></span><span>${cat} ${pct}%</span></div>`);
+    html.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:${cor}"></span><span>${cat} ${pct}%</span></div>`);
   });
 
-  els.legenda.innerHTML = items.join('');
+  els.legenda.innerHTML = html.join('');
 }
 
 /* ---------- LISTAGEM ---------- */
