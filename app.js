@@ -1,25 +1,23 @@
-/* =========================================================
-   CONT1 | Controle de Gastos – app.js COMPLETO e CORRIGIDO
-   ========================================================= */
+/* ---------- CONFIGURAÇÕES ---------- */
+const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-/* ---------- CONFIGURAÇÕES GLOBAIS ---------- */
-const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const chartCategories = [
-  {type:"revenue", name:"Receita", color:"#28a745"},
-  {type:"expense", name:"Alimentação", color:"#e74c3c"},
-  {type:"expense", name:"Lazer", color:"#f1c40f"},
-  {type:"expense", name:"Transporte", color:"#3498db"},
-  {type:"expense", name:"Moradia", color:"#9b59b6"},
-  {type:"expense", name:"Saúde", color:"#1abc9c"},
-  {type:"expense", name:"Educação", color:"#e67e22"},
-  {type:"expense", name:"Outros", color:"#95a5a6"}
+  { type: "revenue", name: "Receita", color: "#28a745" },
+  { type: "expense", name: "Alimentação", color: "#e74c3c" },
+  { type: "expense", name: "Lazer", color: "#f1c40f" },
+  { type: "expense", name: "Transporte", color: "#3498db" },
+  { type: "expense", name: "Moradia", color: "#9b59b6" },
+  { type: "expense", name: "Saúde", color: "#1abc9c" },
+  { type: "expense", name: "Educação", color: "#e67e22" },
+  { type: "expense", name: "Outros", color: "#95a5a6" }
 ];
+
 const categories = {
-  revenue: ["Adiantamento","Pagamento","Empréstimo","Investimento","Monetização","Lucro","Venda","Outros"],
-  expense: ["Alimentação","Lazer","Transporte","Moradia","Saúde","Educação","Outros"]
+  revenue: ["Adiantamento", "Pagamento", "Empréstimo", "Investimento", "Monetização", "Lucro", "Venda", "Outros"],
+  expense: ["Alimentação", "Lazer", "Transporte", "Moradia", "Saúde", "Educação", "Outros"]
 };
 
-/* ---------- ELEMENTOS DO DOM ---------- */
+/* ---------- ELEMENTOS ---------- */
 const els = {
   list: document.getElementById('transaction-list'),
   totalRev: document.getElementById('total-revenue'),
@@ -43,12 +41,16 @@ const els = {
   negativeAlert: document.getElementById('negative-alert'),
   addRevenueBtn: document.getElementById('add-revenue-btn'),
   addExpenseBtn: document.getElementById('add-expense-btn'),
+
+  // Receita
   formOverlayRevenue: document.getElementById('form-overlay-revenue'),
   closeFormBtnRevenue: document.getElementById('close-form-btn-revenue'),
   formRevenue: document.getElementById('transaction-form-revenue'),
   amountRevenue: document.getElementById('amount-revenue'),
   originRevenue: document.getElementById('origin-revenue'),
   btnSaveRevenue: document.getElementById('save-btn-revenue'),
+
+  // Despesa
   formOverlayExpense: document.getElementById('form-overlay-expense'),
   closeFormBtnExpense: document.getElementById('close-form-btn-expense'),
   formExpense: document.getElementById('transaction-form-expense'),
@@ -62,339 +64,118 @@ const els = {
   charCountExpense: document.getElementById('char-count-expense')
 };
 
-/* ---------- VARIÁVEIS DE ESTADO ---------- */
-let editIndex = null, chartInstance = null, deleteIndex = null;
-let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+let editIndex = null, chart = null, deleteIndex = null, transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
 let deferredPrompt = null;
 let saldoNegativoAlertado = false;
 
-/* ---------- UTILITÁRIOS ---------- */
-function formatarMoeda(valor) {
-  return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
+/* ---------- UTILS ---------- */
+const hoje = new Date();
+const mesAtualStr = hoje.getFullYear() + '-' + (hoje.getMonth() + 1).toString().padStart(2, '0');
+
+const getMesAnoStr = d => typeof d === 'string' ? d.slice(0, 7) : d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+
+const getMesAnoParcela = (baseDate, parcelaNum) => {
+  const d = new Date(baseDate);
+  d.setMonth(d.getMonth() + parcelaNum - 1);
+  return getMesAnoStr(d);
+};
+
+const parseParcelaInfo = desc => {
+  const match = desc.match(/(.*)\s(\d+)\/(\d+)$/);
+  if (match) {
+    return {
+      baseDesc: match[1],
+      parcelaAtual: parseInt(match[2]),
+      totalParcelas: parseInt(match[3])
+    };
+  }
+  return null;
+};
+
+/* ---------- FORMATAÇÃO REAL BR ---------- */
+const formataReal = v => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(v);
+};
+
+/* ---------- BLOQUEIO DE ZOOM ---------- */
 function bloquearZoom() {
   document.addEventListener('gesturestart', e => e.preventDefault());
   document.addEventListener('gesturechange', e => e.preventDefault());
   document.addEventListener('gestureend', e => e.preventDefault());
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && '+-=0'.includes(e.key)) e.preventDefault();
+    if (e.ctrlKey && ['+', '-', '0', '='].includes(e.key)) e.preventDefault();
   });
   document.addEventListener('wheel', e => {
     if (e.ctrlKey) e.preventDefault();
   }, { passive: false });
 }
 
-/* ---------- SALVAR / CARREGAR ---------- */
-function salvarDados() {
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-}
-function carregarDados() {
-  transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-}
-
-/* ---------- RESUMO ---------- */
-function atualizarResumo() {
-  const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
-  const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const saldo = receitas - despesas;
-
-  els.totalRev.textContent = formatarMoeda(receitas);
-  els.totalDes.textContent = formatarMoeda(despesas);
-  els.balance.textContent = formatarMoeda(saldo);
-
-  els.balance.classList.remove('positive', 'negative');
-  els.balance.classList.add(saldo >= 0 ? 'info' : 'negative');
-
+/* ---------- ATUALIZAÇÃO DE SALDO ---------- */
+const verificarSaldoNegativo = saldo => {
   if (saldo < 0 && !saldoNegativoAlertado) {
-    saldoNegativoAlertado = true;
     els.negativeAlert.style.display = 'block';
-    setTimeout(() => els.negativeAlert.style.display = 'none', 4000);
-  } else if (saldo >= 0) {
-    saldoNegativoAlertado = false;
+    saldoNegativoAlertado = true;
+    setTimeout(() => els.negativeAlert.style.display = 'none', 5000);
   }
-}
-
-/* ---------- GRÁFICO (sem animações nem transições) ---------- */
-function atualizarGrafico() {
-  const receitas = transactions.filter(t => t.type === 'revenue').reduce((s, t) => s + t.amount, 0);
-  const despesas = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const totalGeral = receitas + despesas;
-
-  const labels = ['Receita'];
-  const dataValues = [receitas];
-  const colors = ['#28a745'];
-
-  const despesasPorCat = {};
-  transactions.filter(t => t.type === 'expense').forEach(t => {
-    despesasPorCat[t.category] = (despesasPorCat[t.category] || 0) + t.amount;
-  });
-  Object.entries(despesasPorCat).sort((a, b) => b[1] - a[1]).forEach(([cat, val]) => {
-    labels.push(cat);
-    dataValues.push(val);
-    colors.push(chartCategories.find(c => c.name === cat)?.color || '#999');
-  });
-
-  if (chartInstance) {
-    chartInstance.data.labels = labels;
-    chartInstance.data.datasets[0].data = dataValues;
-    chartInstance.data.datasets[0].backgroundColor = colors;
-
-    // Desativa qualquer animação ou transição
-    chartInstance.options.animation = false;
-    chartInstance.options.transitions = {
-      active: { animation: { duration: 0 } },
-      show: { animation: { duration: 0 } },
-      hide: { animation: { duration: 0 } }
-    };
-
-    chartInstance.stop();
-    chartInstance.update(); // atualização imediata
-  } else {
-    chartInstance = new Chart(els.canvas, {
-      type: 'pie',
-      data: {
-        labels,
-        datasets: [{ data: dataValues, backgroundColor: colors }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        transitions: {
-          active: { animation: { duration: 0 } },
-          show: { animation: { duration: 0 } },
-          hide: { animation: { duration: 0 } }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => {
-                const val = ctx.parsed;
-                const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
-                return `${ctx.label}: ${formatarMoeda(val)} (${pct}%)`;
-              }
-            },
-            bodyFont: { size: 10 },
-            titleFont: { size: 10 }
-          }
-        }
-      }
-    });
-  }
-
-  montarLegendaCategorias(totalGeral);
-}
-
-function montarLegendaCategorias(totalGeral) {
-  const despesas = transactions.filter(t => t.type === 'expense');
-  const receitas = transactions.filter(t => t.type === 'revenue');
-  const totalReceitas = receitas.reduce((s, t) => s + t.amount, 0);
-
-  const html = [];
-
-  if (totalReceitas) {
-    const pctR = totalGeral ? (totalReceitas / totalGeral * 100).toFixed(1) : 0;
-    html.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:#28a745"></span><span>Receita ${pctR}%</span></div>`);
-  }
-
-  const map = {};
-  despesas.forEach(t => {
-    map[t.category] = (map[t.category] || 0) + t.amount;
-  });
-  Object.entries(map).sort((a, b) => b[1] - a[1]).forEach(([cat, val]) => {
-    const pct = totalGeral ? (val / totalGeral * 100).toFixed(1) : 0;
-    const cor = chartCategories.find(c => c.name === cat)?.color || '#999';
-    html.push(`<div class="categoria-legenda"><span class="cor-blob" style="background:${cor}"></span><span>${cat} ${pct}%</span></div>`);
-  });
-
-  els.legenda.innerHTML = html.join('');
-}
-
-/* ---------- LISTAGEM ---------- */
-function renderizarLista() {
-  els.list.innerHTML = '';
-  if (!transactions.length) {
-    els.list.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;font-size:0.7rem">Nenhuma transação</td></tr>';
-    return;
-  }
-  transactions.forEach((tr, i) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td style="font-size:0.7rem">${tr.description || '-'}</td>
-      <td class="${tr.type}" style="font-size:0.7rem">${formatarMoeda(tr.amount)}</td>
-      <td class="data-cell" style="font-size:0.6rem">${tr.day}/${meses[tr.month]}</td>
-      <td style="font-size:0.6rem">${tr.category || tr.origin}</td>
-      <td class="actions-cell">
-        <button class="edit-btn" style="font-size:0.8rem" title="Editar">✏️</button>
-        <button class="delete-btn" style="font-size:0.8rem" title="Excluir">🗑️</button>
-      </td>`;
-    row.querySelector('.edit-btn').onclick = () => editarTransacao(i);
-    row.querySelector('.delete-btn').onclick = () => confirmarExclusao(i);
-    els.list.appendChild(row);
-  });
-}
-
-/* ---------- CRUD ---------- */
-function adicionarTransacao(tr) {
-  if (editIndex !== null) {
-    transactions[editIndex] = tr;
-    editIndex = null;
-  } else {
-    transactions.push(tr);
-  }
-  salvarDados();
-  renderizarLista();
-  atualizarResumo();
-  atualizarGrafico();
-}
-
-function editarTransacao(index) {
-  const tr = transactions[index];
-  if (tr.type === 'revenue') {
-    els.originRevenue.value = tr.origin;
-    els.amountRevenue.value = tr.amount;
-    els.formOverlayRevenue.style.display = 'flex';
-    els.amountRevenue.focus();
-  } else {
-    els.descExpense.value = tr.description;
-    els.amountExpense.value = tr.amount;
-    els.categoryExpense.value = tr.category;
-    els.parceladoExpense.checked = false;
-    els.parcelasDivExpense.classList.remove('visible');
-    els.formOverlayExpense.style.display = 'flex';
-    els.descExpense.focus();
-  }
-  editIndex = index;
-}
-
-function confirmarExclusao(index) {
-  deleteIndex = index;
-  els.deleteModal.style.display = 'flex';
-}
-
-function excluirTransacao() {
-  transactions.splice(deleteIndex, 1);
-  salvarDados();
-  renderizarLista();
-  atualizarResumo();
-  atualizarGrafico();
-  els.deleteModal.style.display = 'none';
-}
+};
 
 /* ---------- FORMULÁRIOS ---------- */
-function fecharFormularios() {
-  els.formOverlayRevenue.style.display = 'none';
-  els.formOverlayExpense.style.display = 'none';
-  els.formRevenue.reset();
-  els.formExpense.reset();
+function abrirFormOverlay(tipo) {
+  if (tipo === 'revenue') {
+    els.formRevenue.reset();
+    els.originRevenue.focus();
+    els.formOverlayRevenue.style.display = 'flex';
+  } else {
+    els.formExpense.reset();
+    els.parcelasDivExpense.classList.remove('visible');
+    els.charCountExpense.textContent = '0';
+    els.charCountExpense.parentElement.classList.remove('warning');
+    els.descExpense.focus();
+    els.formOverlayExpense.style.display = 'flex';
+  }
+}
+
+function fecharFormOverlay(tipo) {
+  if (tipo === 'revenue') {
+    els.formOverlayRevenue.style.display = 'none';
+    els.formRevenue.reset();
+  } else {
+    els.formOverlayExpense.style.display = 'none';
+    els.formExpense.reset();
+    els.parcelasDivExpense.classList.remove('visible');
+    els.charCountExpense.textContent = '0';
+    els.charCountExpense.parentElement.classList.remove('warning');
+  }
   editIndex = null;
 }
 
-function enviarReceita(e) {
-  e.preventDefault();
-  const amount = parseFloat(els.amountRevenue.value);
-  const origin = els.originRevenue.value;
-  if (!amount || amount <= 0) return;
-  const now = new Date();
-  const tr = {
-    type: 'revenue',
-    amount,
-    origin,
-    description: origin,
-    category: origin,
-    day: now.getDate(),
-    month: now.getMonth(),
-    year: now.getFullYear()
-  };
-  adicionarTransacao(tr);
-  fecharFormularios();
+function initCharCounter(el, counterEl) {
+  el.addEventListener('input', () => {
+    let count = el.value.length;
+    if (count > 12) {
+      el.value = el.value.slice(0, 12);
+      count = 12;
+    }
+    counterEl.textContent = count;
+    counterEl.parentElement.classList.toggle('warning', count >= 12);
+  });
 }
 
-function enviarDespesa(e) {
-  e.preventDefault();
-  const amount = parseFloat(els.amountExpense.value);
-  const description = els.descExpense.value.trim();
-  const category = els.categoryExpense.value;
-  const parcelado = els.parceladoExpense.checked;
-  const parcelas = parcelado ? parseInt(els.parcelasExpense.value) : 1;
-
-  if (!amount || amount <= 0 || !description) return;
-
-  const now = new Date();
-  const valorParcela = amount / parcelas;
-
-  for (let i = 0; i < parcelas; i++) {
-    const dataParcela = new Date(now.getFullYear(), now.getMonth() + i, now.getDate());
-    const tr = {
-      type: 'expense',
-      amount: valorParcela,
-      description: parcelas > 1 ? `${description} (${i + 1}/${parcelas})` : description,
-      category,
-      day: dataParcela.getDate(),
-      month: dataParcela.getMonth(),
-      year: dataParcela.getFullYear()
-    };
-    adicionarTransacao(tr);
-  }
-  fecharFormularios();
-}
-
-/* ---------- INICIALIZAÇÃO ---------- */
-function inicializarEventos() {
-  els.addRevenueBtn.addEventListener('click', () => {
-    els.formOverlayRevenue.style.display = 'flex';
-    els.amountRevenue.focus();
-  });
-  els.addExpenseBtn.addEventListener('click', () => {
-    els.formOverlayExpense.style.display = 'flex';
-    els.descExpense.focus();
-  });
-
-  els.closeFormBtnRevenue.addEventListener('click', fecharFormularios);
-  els.closeFormBtnExpense.addEventListener('click', fecharFormularios);
-  els.formOverlayRevenue.addEventListener('click', e => {
-    if (e.target === els.formOverlayRevenue) fecharFormularios();
-  });
-  els.formOverlayExpense.addEventListener('click', e => {
-    if (e.target === els.formOverlayExpense) fecharFormularios();
-  });
-
-  els.formRevenue.addEventListener('submit', enviarReceita);
-  els.formExpense.addEventListener('submit', enviarDespesa);
-
-  els.parceladoExpense.addEventListener('change', () => {
-    els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked);
-  });
-
-  els.descExpense.addEventListener('input', () => {
-    const len = els.descExpense.value.length;
-    els.charCountExpense.textContent = len;
-    els.charCountExpense.parentElement.classList.toggle('warning', len > 10);
-  });
-
-  els.reset.addEventListener('click', () => els.resetModal.style.display = 'flex');
-  els.resetCancel.addEventListener('click', () => els.resetModal.style.display = 'none');
-  els.resetConfirm.addEventListener('click', () => {
-    transactions = [];
-    salvarDados();
-    renderizarLista();
-    atualizarResumo();
-    atualizarGrafico();
-    els.resetModal.style.display = 'none';
-  });
-
-  els.deleteCancel.addEventListener('click', () => els.deleteModal.style.display = 'none');
-  els.deleteConfirm.addEventListener('click', excluirTransacao);
-
+/* ---------- PWA ---------- */
+function initPWA() {
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    els.installPrompt.style.display = 'block';
+    setTimeout(() => {
+      if (deferredPrompt) els.installPrompt.style.display = 'block';
+    }, 3000);
   });
-  els.installCancel.addEventListener('click', () => {
-    els.installPrompt.style.display = 'none';
+  window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
+    els.installPrompt.style.display = 'none';
   });
   els.installConfirm.addEventListener('click', async () => {
     if (deferredPrompt) {
@@ -404,15 +185,372 @@ function inicializarEventos() {
       els.installPrompt.style.display = 'none';
     }
   });
+  els.installCancel.addEventListener('click', () => {
+    els.installPrompt.style.display = 'none';
+  });
 }
 
-function inicializarApp() {
+/* ---------- RENDER ---------- */
+function renderLegenda() {
+  const thisMonth = mesAtualStr;
+  let receita = 0, desp = {};
+  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
+
+  transactions.forEach(tr => {
+    const parcelaInfo = parseParcelaInfo(tr.description);
+    let mesItem;
+    if (parcelaInfo) {
+      mesItem = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
+    } else {
+      mesItem = getMesAnoStr(tr.dataLancamento);
+    }
+    if (mesItem !== thisMonth) return;
+
+    if (tr.type === 'revenue') receita += tr.amount;
+    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
+  });
+
+  const totalReceitas = receita;
+  const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
+  const saldo = totalReceitas - totalDespesas;
+  const porcentagemDisponivel = totalReceitas > 0 ? (saldo / totalReceitas * 100).toFixed(0) : 0;
+
+  els.legenda.innerHTML = chartCategories.map(c => {
+    const v = c.type === 'revenue' ? receita : desp[c.name] || 0;
+    if (c.type === 'revenue') {
+      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${porcentagemDisponivel}%</div>`;
+    } else {
+      const p = totalReceitas > 0 ? (v / totalReceitas * 100).toFixed(0) : 0;
+      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p}%</div>`;
+    }
+  }).join('');
+}
+
+function renderTransactions() {
+  els.list.innerHTML = '';
+  let rev = 0, des = 0;
+  const thisMonth = mesAtualStr;
+
+  transactions.forEach((tr, i) => {
+    const parcelaInfo = parseParcelaInfo(tr.description);
+    let mostra = false;
+    let descricaoDisplay = tr.description;
+    let dataDisplay = '';
+
+    if (parcelaInfo) {
+      const mesParcela = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
+      mostra = mesParcela === thisMonth;
+      if (mostra) {
+        const dataParcela = new Date(tr.dataLancamento);
+        dataParcela.setMonth(dataParcela.getMonth() + parcelaInfo.parcelaAtual - 1);
+        dataDisplay = meses[dataParcela.getMonth()];
+        descricaoDisplay = `${parcelaInfo.baseDesc} (${parcelaInfo.parcelaAtual}/${parcelaInfo.totalParcelas})`;
+      }
+    } else {
+      const mesTransacao = getMesAnoStr(tr.dataLancamento);
+      mostra = mesTransacao === thisMonth;
+      if (mostra) {
+        const dataTransacao = new Date(tr.dataLancamento);
+        dataDisplay = meses[dataTransacao.getMonth()];
+      }
+    }
+
+    if (!mostra) return;
+
+    const dia = new Date(tr.dataLancamento).getDate().toString().padStart(2, '0');
+    const row = document.createElement('tr');
+    const isParcelada = parcelaInfo !== null;
+
+    row.innerHTML = `
+      <td style="white-space: nowrap">${descricaoDisplay}</td>
+      <td class="${tr.type === 'revenue' ? 'positive' : 'negative'}" style="white-space: nowrap">${formataReal(tr.amount)}</td>
+      <td class="data-cell" style="white-space: nowrap">${dia}/${dataDisplay}</td>
+      <td style="white-space: nowrap">${tr.category || '-'}</td>
+      <td class="actions-cell">
+        <div class="actions-container">
+          ${!isParcelada ? `<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>` : '<div style="width:20px"></div>'}
+          <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
+        </div>
+      </td>`;
+    els.list.appendChild(row);
+
+    if (tr.type === 'revenue') rev += tr.amount;
+    else des += tr.amount;
+  });
+
+  updateSummary(rev, des);
+  renderPieChart();
+  els.titulo.textContent = `Transações (${meses[hoje.getMonth()]})`;
+}
+
+function updateSummary(rev, des) {
+  const bal = rev - des;
+  els.totalRev.textContent = formataReal(rev);
+  els.totalDes.textContent = formataReal(des);
+  els.balance.textContent = formataReal(bal);
+
+  if (bal < 0) {
+    els.balance.className = 'negative';
+    verificarSaldoNegativo(bal);
+  } else {
+    els.balance.className = 'info';
+    saldoNegativoAlertado = false;
+  }
+}
+
+function renderPieChart() {
+  const thisMonth = mesAtualStr;
+  let receita = 0, desp = {};
+  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
+
+  transactions.forEach(tr => {
+    const parcelaInfo = parseParcelaInfo(tr.description);
+    let mesItem;
+    if (parcelaInfo) {
+      mesItem = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
+    } else {
+      mesItem = getMesAnoStr(tr.dataLancamento);
+    }
+    if (mesItem !== thisMonth) return;
+
+    if (tr.type === 'revenue') receita += tr.amount;
+    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
+  });
+
+  const data = [receita].concat(chartCategories.filter(c => c.type === 'expense').map(c => desp[c.name]));
+  if (chart) chart.destroy();
+  chart = new Chart(els.canvas, {
+    type: 'pie',
+    data: {
+      labels: chartCategories.map(c => c.name),
+      datasets: [{
+        data: data,
+        backgroundColor: chartCategories.map(c => c.color)
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: true
+    }
+  });
+}
+
+/* ---------- PROCESSAR FORMULÁRIO ---------- */
+function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
+  let descricao = desc.trim();
+  if (descricao.length > 12) descricao = descricao.slice(0, 12);
+
+  const valor = parseFloat(amt);
+  const numParcelas = parseInt(numParc) || 1;
+  const dataLanc = new Date().toISOString();
+  let novas = [];
+
+  if (editIndex !== null) {
+    const original = transactions[editIndex];
+    const parcelaInfo = parseParcelaInfo(original.description);
+
+    if (parcelaInfo && !ehParc) {
+      transactions = transactions.filter(t => {
+        const info = parseParcelaInfo(t.description);
+        return !info || info.baseDesc !== parcelaInfo.baseDesc;
+      });
+      novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
+    } else if (!parcelaInfo && ehParc) {
+      const valorParcela = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) {
+        novas.push({
+          description: `${descricao} ${i}/${numParcelas}`,
+          amount: parseFloat(valorParcela.toFixed(2)),
+          type, category, dataLancamento: dataLanc
+        });
+      }
+      transactions.splice(editIndex, 1);
+    } else if (parcelaInfo && ehParc) {
+      transactions = transactions.filter(t => {
+        const info = parseParcelaInfo(t.description);
+        return !info || info.baseDesc !== parcelaInfo.baseDesc;
+      });
+      const valorParcela = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) {
+        novas.push({
+          description: `${descricao} ${i}/${numParcelas}`,
+          amount: parseFloat(valorParcela.toFixed(2)),
+          type, category, dataLancamento: dataLanc
+        });
+      }
+    } else {
+      transactions[editIndex] = { description: descricao, amount: valor, type, category, dataLancamento: dataLanc };
+    }
+
+    if (novas.length > 0) transactions.push(...novas);
+    editIndex = null;
+  } else {
+    if (ehParc && numParcelas >= 2) {
+      const valorParcela = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) {
+        novas.push({
+          description: `${descricao} ${i}/${numParcelas}`,
+          amount: parseFloat(valorParcela.toFixed(2)),
+          type, category, dataLancamento: dataLanc
+        });
+      }
+    } else {
+      novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
+    }
+    transactions.push(...novas);
+  }
+
+  save();
+  renderTransactions();
+  renderLegenda();
+  fecharFormOverlay(formType);
+
+  if (editIndex === null) {
+    setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+/* ---------- AÇÕES ---------- */
+function handleActions(e) {
+  const i = parseInt(e.target.dataset.i);
+  if (e.target.classList.contains('delete-btn')) {
+    deleteIndex = i;
+    const desc = transactions[i].description;
+    const parcelaInfo = parseParcelaInfo(desc);
+    els.deleteBody.textContent = parcelaInfo
+      ? `Tem certeza que deseja excluir TODAS as parcelas de "${parcelaInfo.baseDesc}"?`
+      : `Tem certeza que deseja excluir "${desc}"?`;
+    els.deleteModal.style.display = 'flex';
+  }
+
+  if (e.target.classList.contains('edit-btn')) {
+    const t = transactions[i];
+    const parcelaInfo = parseParcelaInfo(t.description);
+
+    if (t.type === 'revenue') {
+      abrirFormOverlay('revenue');
+      els.amountRevenue.value = t.amount * (parcelaInfo ? parcelaInfo.totalParcelas : 1);
+      els.originRevenue.value = t.category;
+      els.btnSaveRevenue.textContent = 'Salvar';
+    } else {
+      abrirFormOverlay('expense');
+      els.descExpense.value = parcelaInfo ? parcelaInfo.baseDesc : t.description;
+      els.amountExpense.value = t.amount * (parcelaInfo ? parcelaInfo.totalParcelas : 1);
+      els.categoryExpense.value = t.category;
+      if (parcelaInfo) {
+        els.parceladoExpense.checked = true;
+        els.parcelasDivExpense.classList.add('visible');
+        els.parcelasExpense.value = parcelaInfo.totalParcelas;
+      } else {
+        els.parceladoExpense.checked = false;
+        els.parcelasDivExpense.classList.remove('visible');
+      }
+      const baseDesc = parcelaInfo ? parcelaInfo.baseDesc : t.description;
+      const count = baseDesc.length;
+      els.charCountExpense.textContent = count;
+      els.charCountExpense.parentElement.classList.toggle('warning', count >= 12);
+      els.btnSaveExpense.textContent = 'Salvar';
+    }
+    editIndex = i;
+  }
+}
+
+function save() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+/* ---------- INIT ---------- */
+function init() {
   bloquearZoom();
-  carregarDados();
-  renderizarLista();
-  atualizarResumo();
-  atualizarGrafico();
-  inicializarEventos();
+  initPWA();
+  initCharCounter(els.descExpense, els.charCountExpense);
+
+  // Eventos
+  els.addRevenueBtn.addEventListener('click', () => abrirFormOverlay('revenue'));
+  els.addExpenseBtn.addEventListener('click', () => abrirFormOverlay('expense'));
+
+  els.closeFormBtnRevenue.addEventListener('click', () => fecharFormOverlay('revenue'));
+  els.closeFormBtnExpense.addEventListener('click', () => fecharFormOverlay('expense'));
+
+  els.formRevenue.addEventListener('submit', e => {
+    e.preventDefault();
+    processarFormulario(
+      els.originRevenue.value,
+      els.amountRevenue.value,
+      'revenue',
+      els.originRevenue.value,
+      false,
+      1,
+      'revenue'
+    );
+  });
+
+  els.formExpense.addEventListener('submit', e => {
+    e.preventDefault();
+    processarFormulario(
+      els.descExpense.value,
+      els.amountExpense.value,
+      'expense',
+      els.categoryExpense.value,
+      els.parceladoExpense.checked,
+      els.parcelasExpense.value,
+      'expense'
+    );
+  });
+
+  els.parceladoExpense.addEventListener('change', () => {
+    els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked);
+  });
+
+  els.reset.addEventListener('click', () => els.resetModal.style.display = 'flex');
+  els.resetCancel.addEventListener('click', () => els.resetModal.style.display = 'none');
+  els.resetConfirm.addEventListener('click', () => {
+    transactions = [];
+    save();
+    renderTransactions();
+    renderLegenda();
+    els.resetModal.style.display = 'none';
+  });
+
+  els.deleteCancel.addEventListener('click', () => {
+    els.deleteModal.style.display = 'none';
+    deleteIndex = null;
+  });
+
+  els.deleteConfirm.addEventListener('click', () => {
+    if (deleteIndex !== null) {
+      const transacao = transactions[deleteIndex];
+      const parcelaInfo = parseParcelaInfo(transacao.description);
+      if (parcelaInfo) {
+        transactions = transactions.filter(t => {
+          const info = parseParcelaInfo(t.description);
+          return !info || info.baseDesc !== parcelaInfo.baseDesc;
+        });
+      } else {
+        transactions.splice(deleteIndex, 1);
+      }
+      save();
+      renderTransactions();
+      renderLegenda();
+      els.deleteModal.style.display = 'none';
+      deleteIndex = null;
+    }
+  });
+
+  window.addEventListener('click', e => {
+    if (e.target === els.resetModal) els.resetModal.style.display = 'none';
+    if (e.target === els.deleteModal) els.deleteModal.style.display = 'none';
+    if (e.target === els.formOverlayRevenue) fecharFormOverlay('revenue');
+    if (e.target === els.formOverlayExpense) fecharFormOverlay('expense');
+  });
+
+  els.list.addEventListener('click', handleActions);
+
+  // Primeira renderização
+  renderTransactions();
+  renderLegenda();
 }
 
-document.addEventListener('DOMContentLoaded', inicializarApp);
+init();
+      
