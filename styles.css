@@ -208,8 +208,8 @@ h1 {
 /* Coluna de ações/lixeira sempre fixa */
 .transactions-table th:last-child,
 .transactions-table td:last-child {
- 
-  width: 60px;
+  text-align: center;
+  width: 0px;
   min-width: 48px;
   max-width: 70px;
   overflow: hidden;
