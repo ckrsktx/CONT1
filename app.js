@@ -304,28 +304,35 @@ function updateSummary(rev, des) {
 
 function renderPieChart() {
   const thisMonth = mesAtualStr;
-  let receita = 0, desp = {};
-  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
+  let receita = 0, desp = 0;
 
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
     if (mesItem !== thisMonth) return;
     if (tr.type === 'revenue') receita += tr.amount;
-    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
+    else desp += tr.amount;
   });
 
-  const data = [receita].concat(chartCategories.filter(c => c.type === 'expense').map(c => desp[c.name]));
+  const labels = ['Receitas', 'Despesas'];
+  const data = [receita, desp];
+  const cores = ['#28a745', '#dc3545'];
+
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
     data: {
-      labels: chartCategories.map(c => c.name),
-      datasets: [{ data: data, backgroundColor: chartCategories.map(c => c.color) }]
+      labels: labels,
+      datasets: [{ data: data, backgroundColor: cores }]
     },
-    options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
+    options: {
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: true
+    }
   });
 }
+
 
 /* ---------- FORMULÁRIO ---------- */
 function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
