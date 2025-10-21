@@ -1,167 +1,182 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>CONT1 | Controle</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#007bff">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <title>CONT1 | Controle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>CONT1 | Controle</h1>
+    <div class="container">
+        <h1>CONT1 | Controle</h1>
 
-    <!-- RESUMO -->
-    <div class="summary">
-      <div class="summary-card receita">
-        <h3>Receitas</h3>
-        <p id="total-revenue" class="positive">R$ 0,00</p>
-        <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita">+</button>
-      </div>
-      <div class="summary-card despesas">
-        <h3>Despesas</h3>
-        <p id="total-expenses" class="negative">R$ 0,00</p>
-        <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa">+</button>
-      </div>
-      <div class="summary-card balance-card">
-        <h3>Saldo</h3>
-        <p id="balance" class="info">R$ 0,00</p>
-      </div>
-    </div>
-
-    <div class="spacer"></div>
-
-    <!-- LEGENDA + GRÁFICO -->
-    <div class="categoria-legenda-container" id="categoria-legenda-container"></div>
-    <div class="pie-container">
-      <canvas id="pieChart" width="200" height="200"></canvas>
-      <div class="chart-label">Receitas e Despesas</div>
-    </div>
-
-    <!-- TRANSAÇÕES -->
-    <div class="transactions-section" id="transactions-section">
-      <button class="reset-btn" id="reset-btn">Resetar</button>
-      <h2 id="transacoes-titulo">Transações</h2>
-      <table class="transactions-table">
-        <thead>
-          <tr>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Dia</th>
-            <th>Origem/Categoria</th>
-            <th style="text-align:center;width:60px;min-width:48px;max-width:70px;">Ações</th>
-          </tr>
-        </thead>
-        <tbody id="transaction-list"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- MODAIS -->
-  <div class="modal" id="reset-modal">
-    <div class="modal-content">
-      <div class="modal-header">Resetar Todos os Dados</div>
-      <div class="modal-body">Tem certeza que deseja apagar TODOS os dados? Esta ação não pode ser desfeita.</div>
-      <div class="modal-footer">
-        <button class="modal-btn cancel" id="reset-cancel">Cancelar</button>
-        <button class="modal-btn confirm" id="reset-confirm">Apagar Tudo</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="delete-modal">
-    <div class="modal-content">
-      <div class="modal-header">Excluir Transação</div>
-      <div class="modal-body" id="delete-modal-body"></div>
-      <div class="modal-footer">
-        <button class="modal-btn cancel" id="delete-cancel">Cancelar</button>
-        <button class="modal-btn confirm" id="delete-confirm">Excluir</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PROMPT INSTALAÇÃO -->
-  <div class="install-prompt" id="install-prompt">
-    <div class="install-prompt-content">
-      <div class="install-prompt-header">Instalar Aplicativo</div>
-      <div class="install-prompt-body">Deseja instalar o CONT1 para acesso rápido?</div>
-      <div class="install-prompt-buttons">
-        <button class="install-btn secondary" id="install-cancel">Agora não</button>
-        <button class="install-btn primary" id="install-confirm">Instalar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ALERTA SALDO NEGATIVO -->
-  <div class="negative-alert" id="negative-alert" style="display:none">
-    ⚠️ Atenção! Seu saldo está negativo!
-  </div>
-
-  <!-- FORM RECEITA -->
-  <div class="form-overlay" id="form-overlay-revenue">
-    <div class="form-container">
-      <div class="form-header">
-        <div class="form-title">Nova Receita</div>
-        <button class="close-form" id="close-form-btn-revenue">×</button>
-      </div>
-      <form id="transaction-form-revenue" autocomplete="off">
-        <div class="form-grid">
-          <div>
-            <label for="origin-revenue">Origem</label>
-            <select id="origin-revenue" required></select>
-          </div>
-          <div>
-            <label for="amount-revenue">Valor</label>
-            <input id="amount-revenue" type="number" step="0.01" required>
-          </div>
-        </div>
-        <div class="check-add-line">
-          <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- FORM DESPESA -->
-  <div class="form-overlay" id="form-overlay-expense">
-    <div class="form-container">
-      <div class="form-header">
-        <div class="form-title">Nova Despesa</div>
-        <button class="close-form" id="close-form-btn-expense">×</button>
-      </div>
-      <form id="transaction-form-expense" autocomplete="off">
-        <div class="form-grid">
-          <div>
-            <label for="description-expense">Descrição</label>
-            <input id="description-expense" maxlength="12" required>
-            <div class="char-counter"><span id="char-count-expense">0</span>/12</div>
-          </div>
-          <div>
-            <label for="amount-expense">Valor</label>
-            <input id="amount-expense" type="number" step="0.01" required>
-          </div>
-          <div>
-            <label for="category-expense">Categoria</label>
-            <select id="category-expense" required></select>
-          </div>
-        </div>
-        <div class="check-add-line">
-          <div class="check-group">
-            <input id="parcelado-expense" type="checkbox">
-            <label for="parcelado-expense">Parcelado?</label>
-            <div class="parcelas-field" id="parcelas-field-div-expense">
-              <input id="parcelas-expense" type="number" min="2" value="2">
-              <label for="parcelas-expense">x</label>
+        <!-- RESUMO -->
+        <div class="summary" role="region" aria-label="Resumo Financeiro">
+            <div class="summary-card receita">
+                <h3>Receitas</h3>
+                <p id="total-revenue" class="positive">R$ 0,00</p>
+                <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita">+</button>
             </div>
-          </div>
-          <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
+            <div class="summary-card despesas">
+                <h3>Despesas</h3>
+                <p id="total-expenses" class="negative">R$ 0,00</p>
+                <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa">+</button>
+            </div>
+            <div class="summary-card balance-card">
+                <h3>Saldo</h3>
+                <p id="balance" class="info">R$ 0,00</p>
+            </div>
         </div>
-      </form>
-    </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="app.js"></script>
+        <div class="spacer"></div>
+
+        <!-- LEGENDA + GRÁFICO -->
+        <div class="categoria-legenda-container" id="categoria-legenda-container"></div>
+        <div class="pie-container">
+            <canvas id="pieChart" width="200" height="200" aria-label="Gráfico de Receitas e Despesas"></canvas>
+            <div class="chart-label">Receitas e Despesas</div>
+        </div>
+
+        <!-- TRANSAÇÕES -->
+        <div class="transactions-section" id="transactions-section" aria-labelledby="transacoes-titulo">
+            <button class="reset-btn" id="reset-btn">Resetar</button>
+            <h2 id="transacoes-titulo">Transações</h2>
+            <table class="transactions-table" role="table">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Dia</th>
+                        <th>Origem/Categoria</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-list">
+                    <tr>
+                        <td>Exemplo Transação</td>
+                        <td>R$ 100,00</td>
+                        <td>21/10</td>
+                        <td>Categoria</td>
+                        <td class="actions-cell">
+                            <button class="edit-btn" title="Editar">✏️</button>
+                            <button class="delete-btn" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
+                    <!-- Adicione mais transações aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAIS -->
+    <div class="modal" id="reset-modal" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">Resetar Todos os Dados</div>
+            <div class="modal-body">Tem certeza que deseja apagar TODOS os dados? Esta ação não pode ser desfeita.</div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="reset-cancel">Cancelar</button>
+                <button class="modal-btn confirm" id="reset-confirm">Apagar Tudo</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="delete-modal" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">Excluir Transação</div>
+            <div class="modal-body" id="delete-modal-body"></div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="delete-cancel">Cancelar</button>
+                <button class="modal-btn confirm" id="delete-confirm">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROMPT INSTALAÇÃO -->
+    <div class="install-prompt" id="install-prompt" aria-hidden="true">
+               <div class="install-prompt-content">
+            <div class="install-prompt-header">Instalar Aplicativo</div>
+            <div class="install-prompt-body">Deseja instalar o CONT1 para acesso rápido?</div>
+            <div class="install-prompt-buttons">
+                <button class="install-btn secondary" id="install-cancel">Agora não</button>
+                <button class="install-btn primary" id="install-confirm">Instalar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTA SALDO NEGATIVO -->
+    <div class="negative-alert" id="negative-alert" style="display:none">
+        ⚠️ Atenção! Seu saldo está negativo!
+    </div>
+
+    <!-- FORM RECEITA -->
+    <div class="form-overlay" id="form-overlay-revenue" aria-hidden="true">
+        <div class="form-container">
+            <div class="form-header">
+                <div class="form-title">Nova Receita</div>
+                <button class="close-form" id="close-form-btn-revenue">×</button>
+            </div>
+            <form id="transaction-form-revenue" autocomplete="off">
+                <div class="form-grid">
+                    <div>
+                        <label for="origin-revenue">Origem</label>
+                        <select id="origin-revenue" required></select>
+                    </div>
+                    <div>
+                        <label for="amount-revenue">Valor</label>
+                        <input id="amount-revenue" type="number" step="0.01" required>
+                    </div>
+                </div>
+                <div class="check-add-line">
+                    <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM DESPESA -->
+    <div class="form-overlay" id="form-overlay-expense" aria-hidden="true">
+        <div class="form-container">
+            <div class="form-header">
+                <div class="form-title">Nova Despesa</div>
+                <button class="close-form" id="close-form-btn-expense">×</button>
+            </div>
+            <form id="transaction-form-expense" autocomplete="off">
+                <div class="form-grid">
+                    <div>
+                        <label for="description-expense">Descrição</label>
+                        <input id="description-expense" maxlength="12" required>
+                        <div class="char-counter">
+                            <span id="char-count-expense">0</span>/12
+                        </div>
+                    </div>
+                    <div>
+                        <label for="amount-expense">Valor</label>
+                        <input id="amount-expense" type="number" step="0.01" required>
+                    </div>
+                    <div>
+                        <label for="category-expense">Categoria</label>
+                        <select id="category-expense" required></select>
+                    </div>
+                </div>
+                <div class="check-add-line">
+                    <div class="check-group">
+                        <input id="parcelado-expense" type="checkbox">
+                        <label for="parcelado-expense">Parcelado?</label>
+                        <div class="parcelas-field" id="parcelas-field-div-expense">
+                            <input id="parcelas-expense" type="number" min="2" value="2">
+                            <label for="parcelas-expense">x</label>
+                        </div>
+                    </div>
+                    <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="app.js" defer></script>
 </body>
 </html>
+
