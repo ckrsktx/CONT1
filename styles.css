@@ -154,7 +154,7 @@ h1 {
 }
 .pie-container { text-align: center; margin: 14px 0; }
 #pieChart { max-width: 210px; margin: auto;}
-.chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
+.chart-label { font-size: .78rem; color: #555; }
 
 /* ================== TABELA TRANSAÇÕES ================== */
 .transactions-section {
@@ -209,7 +209,7 @@ h1 {
 .transactions-table th:last-child,
 .transactions-table td:last-child {
   text-align: center;
-  width: 0px;
+  width: 60px;
   min-width: 48px;
   max-width: 70px;
   overflow: hidden;
@@ -360,7 +360,7 @@ h1 {
 .check-group input { width: auto; }
 .parcelas-field { display: none; gap: 5px; align-items: center; }
 .parcelas-field.visible { display: flex; }
-.parcelas-field input { width: 46px; padding: 3px; font-size: .91rem; text-align: center; }
+.parcelas-field input { width: 46px; padding: 3px; font-size: .91rem; }
 .add-btn {
   margin-left: auto;
   padding: 7px 16px;
