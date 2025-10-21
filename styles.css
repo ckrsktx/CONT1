@@ -208,7 +208,7 @@ h1 {
 /* Coluna de ações/lixeira sempre fixa */
 .transactions-table th:last-child,
 .transactions-table td:last-child {
-  text-align: center;
+ 
   width: 60px;
   min-width: 48px;
   max-width: 70px;
@@ -217,7 +217,7 @@ h1 {
 .actions-cell,
 .transactions-table td:last-child {
   display: flex;
-
+  align-items: center;
   justify-content: center;
   gap: 5px;
   height: 100%;
