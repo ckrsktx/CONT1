@@ -118,9 +118,19 @@ const verificarSaldoNegativo = saldo => {
   if (saldo < 0 && !saldoNegativoAlertado) {
     els.negativeAlert.style.display = 'block';
     saldoNegativoAlertado = true;
-    setTimeout(() => els.negativeAlert.style.display = 'none', 5000);
+
+    // 🔁 Força o ocultamento após 5 segundos
+    setTimeout(() => {
+      els.negativeAlert.style.display = 'none';
+      saldoNegativoAlertado = false;
+    }, 5000);
+  } else if (saldo >= 0 && saldoNegativoAlertado) {
+    // 🟢 Saldo positivo → esconde imediatamente
+    els.negativeAlert.style.display = 'none';
+    saldoNegativoAlertado = false;
   }
 };
+
 
 /* ---------- FORMULÁRIOS ---------- */
 function abrirFormOverlay(tipo) {
