@@ -306,22 +306,40 @@ function updateSummary(rev, des) {
 }
 
 function renderPieChart() {
+function renderPieChart() {
   const thisMonth = mesAtualStr;
-  let receita = 0, desp = {};
+  let receita = 0;
+  const desp = {};
+
+  // zera só despesas
   chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
 
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
-    const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
+    const mesItem = parcelaInfo
+      ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual)
+      : getMesAnoStr(tr.dataLancamento);
     if (mesItem !== thisMonth) return;
-    if (tr.type === 'revenue') receita += tr.amount;
-    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
+
+    if (tr.type === 'revenue') {
+      receita += tr.amount; // ✅ só receita
+    } else if (desp.hasOwnProperty(tr.category)) {
+      desp[tr.category] += tr.amount; // ✅ só despesa
+    }
   });
 
-  const labels = ['Receita'];
-  const data = [receita];
-  const cores = [chartCategories[0].color];
+  const labels = [];
+  const data = [];
+  const cores = [];
 
+  // adiciona receita apenas se houver
+  if (receita > 0) {
+    labels.push('Receita');
+    data.push(receita);
+    cores.push(chartCategories[0].color);
+  }
+
+  // adiciona só despesas com valor
   chartCategories.filter(c => c.type === 'expense').forEach(c => {
     if (desp[c.name] > 0) {
       labels.push(c.name);
@@ -329,6 +347,22 @@ function renderPieChart() {
       cores.push(c.color);
     }
   });
+
+  if (chart) chart.destroy();
+  chart = new Chart(els.canvas, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{ data: data, backgroundColor: cores }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: true
+    }
+  });
+}
+
 
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
