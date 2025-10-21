@@ -291,22 +291,33 @@ function renderTransactions() {
   updateSummary(rev, des);
   renderPieChart();
   els.titulo.textContent = `Transações (${meses[hoje.getMonth()]})`;
-}
+}}
 
 function updateSummary(rev, des) {
   const bal = rev - des;
+
+  // 🧹 SEMPRE oculta antes de decidir
+  els.negativeAlert.style.display = 'none';
+  saldoNegativoAlertado = false;
+
+  if (bal < 0) {
+    els.negativeAlert.style.display = 'block';
+    saldoNegativoAlertado = true;
+
+    // ⏱️ Agenda para sumir sozinha
+    setTimeout(() => {
+      els.negativeAlert.style.display = 'none';
+      saldoNegativoAlertado = false;
+    }, 5000);
+  }
+
   els.totalRev.textContent = formataReal(rev);
   els.totalDes.textContent = formataReal(des);
   els.balance.textContent = formataReal(bal);
 
-  if (bal < 0) {
-    els.balance.className = 'negative';
-    verificarSaldoNegativo(bal);
-  } else {
-    els.balance.className = 'info';
-    saldoNegativoAlertado = false;
-  }
+  els.balance.className = bal < 0 ? 'negative' : 'info';
 }
+
 
 function renderPieChart() {
   const thisMonth = mesAtualStr;
