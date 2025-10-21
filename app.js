@@ -1,129 +1,132 @@
-/* ---------- CONFIG ---------- */
-const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-const chartCategories = [
-  { type: "revenue", name: "Receita", color: "#28a745" },
-  { type: "expense", name: "Alimentação", color: "#e74c3c" },
-  { type: "expense", name: "Lazer", color: "#f1c40f" },
-  { type: "expense", name: "Transporte", color: "#3498db" },
-  { type: "expense", name: "Moradia", color: "#9b59b6" },
-  { type: "expense", name: "Saúde", color: "#1abc9c" },
-  { type: "expense", name: "Educação", color: "#e67e22" },
-  { type: "expense", name: "Outros", color: "#95a5a6" }
+/* =========================================================
+   FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (PWA ready)
+   ========================================================= */
+/* ---------- CONFIGURAÇÕES ---------- */
+const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+const revenueCategories = [
+  { type: 'revenue', name: 'Receita', color: '#28a745' }
 ];
+const expenseCategories = [
+  { type: 'expense', name: 'Alimentação', color: '#e74c3c' },
+  { type: 'expense', name: 'Lazer',       color: '#f1c40f' },
+  { type: 'expense', name: 'Transporte',  color: '#3498db' },
+  { type: 'expense', name: 'Moradia',     color: '#9b59b6' },
+  { type: 'expense', name: 'Saúde',       color: '#1abc9c' },
+  { type: 'expense', name: 'Educação',    color: '#e67e22' },
+  { type: 'expense', name: 'Outros',      color: '#95a5a6' }
+];
+const allChartCategories = [...revenueCategories, ...expenseCategories];
+
 const categories = {
-  revenue: ["Adiantamento", "Pagamento", "Empréstimo", "Investimento", "Monetização", "Lucro", "Venda", "Outros"],
-  expense: ["Alimentação", "Lazer", "Transporte", "Moradia", "Saúde", "Educação", "Outros"]
+  revenue: ['Adiantamento','Pagamento','Empréstimo','Investimento','Monetização','Lucro','Venda','Outros'],
+  expense: ['Alimentação','Lazer','Transporte','Moradia','Saúde','Educação','Outros']
 };
 
-/* ---------- ELEMENTS ---------- */
+/* ---------- ELEMENTOS DOM ---------- */
 const els = {
-  list: document.getElementById('transaction-list'),
+  list:   document.getElementById('transaction-list'),
   totalRev: document.getElementById('total-revenue'),
   totalDes: document.getElementById('total-expenses'),
-  balance: document.getElementById('balance'),
-  legenda: document.getElementById('categoria-legenda-container'),
-  reset: document.getElementById('reset-btn'),
-  titulo: document.getElementById('transacoes-titulo'),
-  canvas: document.getElementById('pieChart'),
-  resetModal: document.getElementById('reset-modal'),
-  resetCancel: document.getElementById('reset-cancel'),
-  resetConfirm: document.getElementById('reset-confirm'),
-  deleteModal: document.getElementById('delete-modal'),
-  deleteCancel: document.getElementById('delete-cancel'),
+  balance:  document.getElementById('balance'),
+  legenda:  document.getElementById('categoria-legenda-container'),
+  reset:    document.getElementById('reset-btn'),
+  titulo:   document.getElementById('transacoes-titulo'),
+  canvas:   document.getElementById('pieChart'),
+
+  resetModal:    document.getElementById('reset-modal'),
+  resetCancel:   document.getElementById('reset-cancel'),
+  resetConfirm:  document.getElementById('reset-confirm'),
+
+  deleteModal:   document.getElementById('delete-modal'),
+  deleteCancel:  document.getElementById('delete-cancel'),
   deleteConfirm: document.getElementById('delete-confirm'),
-  deleteBody: document.getElementById('delete-modal-body'),
+  deleteBody:    document.getElementById('delete-modal-body'),
+
   transactionsSection: document.getElementById('transactions-section'),
-  installPrompt: document.getElementById('install-prompt'),
-  installCancel: document.getElementById('install-cancel'),
+  negativeAlert:       document.getElementById('negative-alert'),
+
+  installPrompt:  document.getElementById('install-prompt'),
+  installCancel:  document.getElementById('install-cancel'),
   installConfirm: document.getElementById('install-confirm'),
-  negativeAlert: document.getElementById('negative-alert'),
+
   addRevenueBtn: document.getElementById('add-revenue-btn'),
   addExpenseBtn: document.getElementById('add-expense-btn'),
 
-  // revenue
-  formOverlayRevenue: document.getElementById('form-overlay-revenue'),
+  /* --- revenue form --- */
+  formOverlayRevenue:  document.getElementById('form-overlay-revenue'),
   closeFormBtnRevenue: document.getElementById('close-form-btn-revenue'),
-  formRevenue: document.getElementById('transaction-form-revenue'),
-  amountRevenue: document.getElementById('amount-revenue'),
-  originRevenue: document.getElementById('origin-revenue'),
-  btnSaveRevenue: document.getElementById('save-btn-revenue'),
+  formRevenue:         document.getElementById('transaction-form-revenue'),
+  amountRevenue:       document.getElementById('amount-revenue'),
+  originRevenue:       document.getElementById('origin-revenue'),
+  btnSaveRevenue:      document.getElementById('save-btn-revenue'),
 
-  // expense
-  formOverlayExpense: document.getElementById('form-overlay-expense'),
+  /* --- expense form --- */
+  formOverlayExpense:  document.getElementById('form-overlay-expense'),
   closeFormBtnExpense: document.getElementById('close-form-btn-expense'),
-  formExpense: document.getElementById('transaction-form-expense'),
-  descExpense: document.getElementById('description-expense'),
-  amountExpense: document.getElementById('amount-expense'),
-  categoryExpense: document.getElementById('category-expense'),
-  parceladoExpense: document.getElementById('parcelado-expense'),
-  parcelasExpense: document.getElementById('parcelas-expense'),
-  parcelasDivExpense: document.getElementById('parcelas-field-div-expense'),
-  btnSaveExpense: document.getElementById('save-btn-expense'),
-  charCountExpense: document.getElementById('char-count-expense')
+  formExpense:         document.getElementById('transaction-form-expense'),
+  descExpense:         document.getElementById('description-expense'),
+  amountExpense:       document.getElementById('amount-expense'),
+  categoryExpense:     document.getElementById('category-expense'),
+  parceladoExpense:    document.getElementById('parcelado-expense'),
+  parcelasExpense:     document.getElementById('parcelas-expense'),
+  parcelasDivExpense:  document.getElementById('parcelas-field-div-expense'),
+  btnSaveExpense:      document.getElementById('save-btn-expense'),
+  charCountExpense:    document.getElementById('char-count-expense')
 };
 
-let editIndex = null, chart = null, deleteIndex = null, transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+/* ---------- ESTADO GLOBAL ---------- */
+let transactions   = JSON.parse(localStorage.getItem('transactions') || '[]');
+let chart          = null;
+let editIndex      = null;
+let deleteIndex    = null;
 let deferredPrompt = null;
-let saldoNegativoAlertado = false;
-let alertTimeout = null;
+let saldoNegAlert  = false;
+let alertTimeout   = null;
 
-/* ---------- UTILS ---------- */
-const hoje = new Date();
-const mesAtualStr = hoje.getFullYear() + '-' + (hoje.getMonth() + 1).toString().padStart(2, '0');
+/* ---------- UTILITÁRIOS ---------- */
+const hoje       = new Date();
+const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
 
-const getMesAnoStr = d => typeof d === 'string' ? d.slice(0, 7) : d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
+const getMesAnoStr = d => (typeof d === 'string' ? d.slice(0,7)
+                                                : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
 
-const getMesAnoParcela = (baseDate, parcelaNum) => {
+const getMesAnoParcela = (baseDate, n) => {
   const d = new Date(baseDate);
-  d.setMonth(d.getMonth() + parcelaNum - 1);
+  d.setMonth(d.getMonth() + n - 1);
   return getMesAnoStr(d);
 };
 
-const parseParcelaInfo = desc => {
-  const match = desc.match(/(.*)\s(\d+)\/(\d+)$/);
-  if (match) {
-    return {
-      baseDesc: match[1],
-      parcelaAtual: parseInt(match[2]),
-      totalParcelas: parseInt(match[3])
-    };
-  }
-  return null;
+const parseParcelaInfo = txt => {
+  const m = txt.match(/(.*)\s(\d+)\/(\d+)$/);
+  return m ? { baseDesc: m[1], parcelaAtual: +m[2], totalParcelas: +m[3] } : null;
 };
 
-const formataReal = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+const formataReal = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
 
 /* ---------- BLOQUEIO DE ZOOM ---------- */
 function bloquearZoom() {
-  document.addEventListener('gesturestart', e => e.preventDefault());
-  document.addEventListener('gesturechange', e => e.preventDefault());
-  document.addEventListener('gestureend', e => e.preventDefault());
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && ['+', '-', '0', '='].includes(e.key)) e.preventDefault();
+  ['gesturestart','gesturechange','gestureend'].forEach(ev => {
+    document.addEventListener(ev, e => e.preventDefault());
   });
-  document.addEventListener('wheel', e => {
-    if (e.ctrlKey) e.preventDefault();
-  }, { passive: false });
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && ['+','-','0','='].includes(e.key)) e.preventDefault();
+  });
+  document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, {passive:false});
 }
 
-/* ---------- SALDO NEGATIVO ---------- */
-const verificarSaldoNegativo = saldo => {
-  if (alertTimeout) {
-    clearTimeout(alertTimeout);
-    alertTimeout = null;
-  }
-  if (saldo < 0 && !saldoNegativoAlertado) {
+/* ---------- ALERTA SALDO NEGATIVO ---------- */
+function verificarSaldoNegativo(saldo) {
+  if (alertTimeout) { clearTimeout(alertTimeout); alertTimeout = null; }
+  if (saldo < 0 && !saldoNegAlert) {
     els.negativeAlert.style.display = 'block';
-    saldoNegativoAlertado = true;
-    alertTimeout = setTimeout(() => {
-      els.negativeAlert.style.display = 'none';
-      saldoNegativoAlertado = false;
-    }, 5000);
+    saldoNegAlert = true;
+    alertTimeout = setTimeout(() => { els.negativeAlert.style.display = 'none'; saldoNegAlert = false; }, 5000);
   } else if (saldo >= 0) {
     els.negativeAlert.style.display = 'none';
-    saldoNegativoAlertado = false;
+    saldoNegAlert = false;
   }
-};
+}
 
 /* ---------- FORMULÁRIOS ---------- */
 function abrirFormOverlay(tipo) {
@@ -139,10 +142,7 @@ function abrirFormOverlay(tipo) {
     els.descExpense.focus();
     els.formOverlayExpense.style.display = 'flex';
   }
-  // 🔧 sobe a caixa para o campo visível
-  setTimeout(() => {
-    document.activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 300);
+  setTimeout(() => document.activeElement.scrollIntoView({behavior:'smooth',block:'center'}), 300);
 }
 
 function fecharFormOverlay(tipo) {
@@ -162,10 +162,7 @@ function fecharFormOverlay(tipo) {
 function initCharCounter(el, counterEl) {
   el.addEventListener('input', () => {
     let count = el.value.length;
-    if (count > 12) {
-      el.value = el.value.slice(0, 12);
-      count = 12;
-    }
+    if (count > 12) { el.value = el.value.slice(0,12); count = 12; }
     counterEl.textContent = count;
     counterEl.parentElement.classList.toggle('warning', count >= 12);
   });
@@ -174,34 +171,22 @@ function initCharCounter(el, counterEl) {
 /* ---------- PWA ---------- */
 function initPWA() {
   window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    deferredPrompt = e;
-    setTimeout(() => {
-      if (deferredPrompt) els.installPrompt.style.display = 'block';
-    }, 3000);
+    e.preventDefault(); deferredPrompt = e;
+    setTimeout(() => { if (deferredPrompt) els.installPrompt.style.display = 'block'; }, 3000);
   });
-  window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    els.installPrompt.style.display = 'none';
-  });
+  window.addEventListener('appinstalled', () => { deferredPrompt = null; els.installPrompt.style.display = 'none'; });
   els.installConfirm.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') deferredPrompt = null;
-      els.installPrompt.style.display = 'none';
-    }
+    if (deferredPrompt) { deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if (outcome === 'accepted') deferredPrompt = null; els.installPrompt.style.display = 'none'; }
   });
-  els.installCancel.addEventListener('click', () => {
-    els.installPrompt.style.display = 'none';
-  });
+  els.installCancel.addEventListener('click', () => { els.installPrompt.style.display = 'none'; });
 }
 
-/* ---------- RENDER ---------- */
+/* ---------- RENDER LEGENDA ---------- */
 function renderLegenda() {
   const thisMonth = mesAtualStr;
-  let receita = 0, desp = {};
-  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
+  let receita = 0;
+  const desp = {};
+  expenseCategories.forEach(c => desp[c.name] = 0);
 
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
@@ -211,22 +196,23 @@ function renderLegenda() {
     else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
   });
 
-  const totalReceitas = receita;
-  const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
-  const saldo = totalReceitas - totalDespesas;
-  const porcentagemDisponivel = totalReceitas > 0 ? (saldo / totalReceitas * 100).toFixed(0) : 0;
+  const totalDespesas = Object.values(desp).reduce((a,b) => a + b, 0);
+  const saldo = receita - totalDespesas;
 
-  els.legenda.innerHTML = chartCategories.map(c => {
-    const v = c.type === 'revenue' ? receita : desp[c.name] || 0;
-    if (c.type === 'revenue') {
-      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${porcentagemDisponivel}%</div>`;
-    } else {
-      const p = totalReceitas > 0 ? (v / totalReceitas * 100).toFixed(0) : 0;
-      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p}%</div>`;
-    }
-  }).join('');
+  els.legenda.innerHTML = [
+    ...revenueCategories.map(c => {
+      const p = receita > 0 ? (saldo < 0 ? 0 : saldo) / receita * 100 : 0;
+      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p.toFixed(0)}%</div>`;
+    }),
+    ...expenseCategories.map(c => {
+      const v = desp[c.name] || 0;
+      const p = receita > 0 ? v / receita * 100 : 0;
+      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p.toFixed(0)}%</div>`;
+    })
+  ].join('');
 }
 
+/* ---------- RENDER TRANSAÇÕES ---------- */
 function renderTransactions() {
   els.list.innerHTML = '';
   let rev = 0, des = 0;
@@ -235,115 +221,85 @@ function renderTransactions() {
   transactions.forEach((tr, i) => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     let mostra = false;
-    let descricaoDisplay = tr.description;
-    let dataDisplay = '';
+    let descDisplay = tr.description;
+    let mesDisplay = '';
 
     if (parcelaInfo) {
-      const mesParcela = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
-      mostra = mesParcela === thisMonth;
+      const mesParc = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
+      mostra = mesParc === thisMonth;
       if (mostra) {
-        const dataParcela = new Date(tr.dataLancamento);
-        dataParcela.setMonth(dataParcela.getMonth() + parcelaInfo.parcelaAtual - 1);
-        dataDisplay = meses[dataParcela.getMonth()];
-        descricaoDisplay = `${parcelaInfo.baseDesc} (${parcelaInfo.parcelaAtual}/${parcelaInfo.totalParcelas})`;
+        const d = new Date(tr.dataLancamento);
+        d.setMonth(d.getMonth() + parcelaInfo.parcelaAtual - 1);
+        mesDisplay = meses[d.getMonth()];
+        descDisplay = `${parcelaInfo.baseDesc} (${parcelaInfo.parcelaAtual}/${parcelaInfo.totalParcelas})`;
       }
     } else {
-      const mesTransacao = getMesAnoStr(tr.dataLancamento);
-      mostra = mesTransacao === thisMonth;
-      if (mostra) {
-        const dataTransacao = new Date(tr.dataLancamento);
-        dataDisplay = meses[dataTransacao.getMonth()];
-      }
+      const mesTr = getMesAnoStr(tr.dataLancamento);
+      mostra = mesTr === thisMonth;
+      if (mostra) mesDisplay = meses[new Date(tr.dataLancamento).getMonth()];
     }
-
     if (!mostra) return;
 
-    const dia = new Date(tr.dataLancamento).getDate().toString().padStart(2, '0');
+    const dia = new Date(tr.dataLancamento).getDate().toString().padStart(2,'0');
     const row = document.createElement('tr');
-    const isParcelada = parcelaInfo !== null;
-
+    const ehParc = parcelaInfo !== null;
     row.innerHTML = `
-      <td style="white-space: nowrap">${descricaoDisplay}</td>
-      <td class="${tr.type === 'revenue' ? 'positive' : 'negative'}" style="white-space: nowrap">${formataReal(tr.amount)}</td>
-      <td class="data-cell" style="white-space: nowrap">${dia}/${dataDisplay}</td>
-      <td style="white-space: nowrap">${tr.category || '-'}</td>
+      <td style="white-space:nowrap">${descDisplay}</td>
+      <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
+      <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+      <td style="white-space:nowrap">${tr.category||'-'}</td>
       <td class="actions-cell">
         <div class="actions-container">
-          ${!isParcelada ? `<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>` : '<div style="width:20px"></div>'}
+          ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<div style="width:20px"></div>'}
           <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
         </div>
       </td>`;
     els.list.appendChild(row);
-
-    if (tr.type === 'revenue') rev += tr.amount;
-    else des += tr.amount;
+    if (tr.type === 'revenue') rev += tr.amount; else des += tr.amount;
   });
 
   updateSummary(rev, des);
   renderPieChart();
+  renderLegenda();
   els.titulo.textContent = `Transações (${meses[hoje.getMonth()]})`;
 }
 
 function updateSummary(rev, des) {
   const bal = rev - des;
-
-  els.negativeAlert.style.display = 'none';
-  saldoNegativoAlertado = false;
-
-  if (bal < 0) {
-    els.negativeAlert.style.display = 'block';
-    saldoNegativoAlertado = true;
-    setTimeout(() => {
-      els.negativeAlert.style.display = 'none';
-      saldoNegativoAlertado = false;
-    }, 5000);
-  }
-
+  verificarSaldoNegativo(bal);
   els.totalRev.textContent = formataReal(rev);
   els.totalDes.textContent = formataReal(des);
-  els.balance.textContent = formataReal(bal);
-  els.balance.className = bal < 0 ? 'negative' : 'info';
+  els.balance.textContent  = formataReal(bal);
+  els.balance.className    = bal < 0 ? 'negative' : 'info';
 }
 
-function renderPieChart() {
+/* ---------- RENDER GRÁFICO ---------- */
 function renderPieChart() {
   const thisMonth = mesAtualStr;
   let receita = 0;
   const desp = {};
-
-  // zera só despesas
-  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
+  expenseCategories.forEach(c => desp[c.name] = 0);
 
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
-    const mesItem = parcelaInfo
-      ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual)
-      : getMesAnoStr(tr.dataLancamento);
+    const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
     if (mesItem !== thisMonth) return;
-
-    if (tr.type === 'revenue') {
-      receita += tr.amount; // ✅ só receita
-    } else if (desp.hasOwnProperty(tr.category)) {
-      desp[tr.category] += tr.amount; // ✅ só despesa
-    }
+    if (tr.type === 'revenue') receita += tr.amount;
+    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
   });
 
-  const labels = [];
-  const data = [];
-  const cores = [];
+  const labels = [], data = [], cores = [];
 
-  // adiciona receita apenas se houver
   if (receita > 0) {
     labels.push('Receita');
     data.push(receita);
-    cores.push(chartCategories[0].color);
+    cores.push(revenueCategories[0].color);
   }
-
-  // adiciona só despesas com valor
-  chartCategories.filter(c => c.type === 'expense').forEach(c => {
-    if (desp[c.name] > 0) {
+  expenseCategories.forEach(c => {
+    const v = desp[c.name] || 0;
+    if (v > 0) {
       labels.push(c.name);
-      data.push(desp[c.name]);
+      data.push(v);
       cores.push(c.color);
     }
   });
@@ -351,42 +307,19 @@ function renderPieChart() {
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
-    data: {
-      labels: labels,
-      datasets: [{ data: data, backgroundColor: cores }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      responsive: true,
-      maintainAspectRatio: true
-    }
+    data: { labels, datasets: [{ data, backgroundColor: cores }] },
+    options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
   });
 }
 
-
-  if (chart) chart.destroy();
-  chart = new Chart(els.canvas, {
-    type: 'pie',
-    data: {
-      labels: labels,
-      datasets: [{ data: data, backgroundColor: cores }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      responsive: true,
-      maintainAspectRatio: true
-    }
-  });
-}
-
-/* ---------- FORMULÁRIO ---------- */
+/* ---------- PROCESSA FORMULÁRIOS ---------- */
 function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
   let descricao = desc.trim();
-  if (descricao.length > 12) descricao = descricao.slice(0, 12);
+  if (descricao.length > 12) descricao = descricao.slice(0,12);
   const valor = parseFloat(amt);
   const numParcelas = parseInt(numParc) || 1;
   const dataLanc = new Date().toISOString();
-  let novas = [];
+  const novas = [];
 
   if (editIndex !== null) {
     const original = transactions[editIndex];
@@ -398,43 +331,22 @@ function processarFormulario(desc, amt, type, category, ehParc, numParc, formTyp
       });
       novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
     } else if (!parcelaInfo && ehParc) {
-      const valorParcela = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) {
-        novas.push({
-          description: `${descricao} ${i}/${numParcelas}`,
-          amount: parseFloat(valorParcela.toFixed(2)),
-          type, category, dataLancamento: dataLanc
-        });
-      }
+      const vp = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
       transactions.splice(editIndex, 1);
     } else if (parcelaInfo && ehParc) {
-      transactions = transactions.filter(t => {
-        const info = parseParcelaInfo(t.description);
-        return !info || info.baseDesc !== parcelaInfo.baseDesc;
-      });
-      const valorParcela = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) {
-        novas.push({
-          description: `${descricao} ${i}/${numParcelas}`,
-          amount: parseFloat(valorParcela.toFixed(2)),
-          type, category, dataLancamento: dataLanc
-        });
-      }
+      transactions = transactions.filter(t => { const info = parseParcelaInfo(t.description); return !info || info.baseDesc !== parcelaInfo.baseDesc; });
+      const vp = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
     } else {
       transactions[editIndex] = { description: descricao, amount: valor, type, category, dataLancamento: dataLanc };
     }
-    if (novas.length > 0) transactions.push(...novas);
+    if (novas.length) transactions.push(...novas);
     editIndex = null;
   } else {
     if (ehParc && numParcelas >= 2) {
-      const valorParcela = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) {
-        novas.push({
-          description: `${descricao} ${i}/${numParcelas}`,
-          amount: parseFloat(valorParcela.toFixed(2)),
-          type, category, dataLancamento: dataLanc
-        });
-      }
+      const vp = valor / numParcelas;
+      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
     } else {
       novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
     }
@@ -443,14 +355,11 @@ function processarFormulario(desc, amt, type, category, ehParc, numParc, formTyp
 
   save();
   renderTransactions();
-  renderLegenda();
   fecharFormOverlay(formType);
-  if (editIndex === null) {
-    setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-  }
+  if (editIndex === null) setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
-/* ---------- AÇÕES ---------- */
+/* ---------- AÇÕES DELETE / EDIT ---------- */
 function handleActions(e) {
   const i = parseInt(e.target.dataset.i);
   if (e.target.classList.contains('delete-btn')) {
@@ -483,10 +392,10 @@ function handleActions(e) {
         els.parceladoExpense.checked = false;
         els.parcelasDivExpense.classList.remove('visible');
       }
-      const baseDesc = parcelaInfo ? parcelaInfo.baseDesc : t.description;
-      const count = baseDesc.length;
-      els.charCountExpense.textContent = count;
-      els.charCountExpense.parentElement.classList.toggle('warning', count >= 12);
+      const base = parcelaInfo ? parcelaInfo.baseDesc : t.description;
+      const cnt = base.length;
+      els.charCountExpense.textContent = cnt;
+      els.charCountExpense.parentElement.classList.toggle('warning', cnt >= 12);
       els.btnSaveExpense.textContent = 'Salvar';
     }
     editIndex = i;
@@ -497,27 +406,21 @@ function save() {
   localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
-/* ---------- INIT ---------- */
+/* ---------- INICIALIZAÇÃO ---------- */
 function init() {
   bloquearZoom();
   initPWA();
   initCharCounter(els.descExpense, els.charCountExpense);
 
-  // popula selects
+  /* popula selects */
   categories.revenue.forEach(o => {
-    const opt = document.createElement('option');
-    opt.value = o;
-    opt.textContent = o;
-    els.originRevenue.appendChild(opt);
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
   });
   categories.expense.forEach(o => {
-    const opt = document.createElement('option');
-    opt.value = o;
-    opt.textContent = o;
-    els.categoryExpense.appendChild(opt);
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
   });
 
-  // eventos
+  /* eventos principais */
   els.addRevenueBtn.addEventListener('click', () => abrirFormOverlay('revenue'));
   els.addExpenseBtn.addEventListener('click', () => abrirFormOverlay('expense'));
   els.closeFormBtnRevenue.addEventListener('click', () => fecharFormOverlay('revenue'));
@@ -530,39 +433,26 @@ function init() {
     e.preventDefault();
     processarFormulario(els.descExpense.value, els.amountExpense.value, 'expense', els.categoryExpense.value, els.parceladoExpense.checked, els.parcelasExpense.value, 'expense');
   });
-  els.parceladoExpense.addEventListener('change', () => {
-    els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked);
-  });
+  els.parceladoExpense.addEventListener('change', () => els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked));
   els.reset.addEventListener('click', () => els.resetModal.style.display = 'flex');
   els.resetCancel.addEventListener('click', () => els.resetModal.style.display = 'none');
   els.resetConfirm.addEventListener('click', () => {
-    transactions = [];
-    save();
-    renderTransactions();
-    renderLegenda();
-    els.resetModal.style.display = 'none';
+    transactions = []; save(); renderTransactions(); renderLegenda(); els.resetModal.style.display = 'none';
   });
-  els.deleteCancel.addEventListener('click', () => {
-    els.deleteModal.style.display = 'none';
-    deleteIndex = null;
-  });
+  els.deleteCancel.addEventListener('click', () => { els.deleteModal.style.display = 'none'; deleteIndex = null; });
   els.deleteConfirm.addEventListener('click', () => {
     if (deleteIndex !== null) {
-      const transacao = transactions[deleteIndex];
-      const parcelaInfo = parseParcelaInfo(transacao.description);
-      if (parcelaInfo) {
+      const tr = transactions[deleteIndex];
+      const info = parseParcelaInfo(tr.description);
+      if (info) {
         transactions = transactions.filter(t => {
-          const info = parseParcelaInfo(t.description);
-          return !info || info.baseDesc !== parcelaInfo.baseDesc;
+          const i = parseParcelaInfo(t.description);
+          return !i || i.baseDesc !== info.baseDesc;
         });
       } else {
         transactions.splice(deleteIndex, 1);
       }
-      save();
-      renderTransactions();
-      renderLegenda();
-      els.deleteModal.style.display = 'none';
-      deleteIndex = null;
+      save(); renderTransactions(); renderLegenda(); els.deleteModal.style.display = 'none'; deleteIndex = null;
     }
   });
   window.addEventListener('click', e => {
@@ -573,9 +463,10 @@ function init() {
   });
   els.list.addEventListener('click', handleActions);
 
-  // primeira render
+  /* primeira renderização */
   renderTransactions();
   renderLegenda();
 }
 
 init();
+  
