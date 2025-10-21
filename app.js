@@ -2,7 +2,7 @@
    FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (Mobile + Desktop)
    ========================================================= */
 /* ---------- CONFIGURAÇÕES ---------- */
-const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; 
+const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 const revenueCategories = [
   { type: 'revenue', name: 'Receita', color: '#28a745' }
@@ -16,7 +16,6 @@ const expenseCategories = [
   { type: 'expense', name: 'Educação',    color: '#e67e22' },
   { type: 'expense', name: 'Outros',      color: '#95a5a6' }
 ];
-const allChartCategories = [...revenueCategories, ...expenseCategories];
 
 const categories = {
   revenue: ['Adiantamento','Pagamento','Empréstimo','Investimento','Monetização','Lucro','Venda','Outros'],
@@ -25,7 +24,7 @@ const categories = {
 
 /* ---------- DETECTA SE É DISPOSITIVO MOBILE ---------- */
 function isMobileDevice() {
-  return ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1) || ('ontouchstart' in window);
 }
 
 /* ---------- ELEMENTOS DOM ---------- */
@@ -166,7 +165,7 @@ function fecharFormOverlay(tipo) {
   editIndex = null;
 }
 
-/* ---------- CHARACTER COUNT MAIS FLEXIVEL PARA DESKTOP --------- */
+/* ---------- CHARACTER COUNT FLEXÍVEL ---------- */
 const MOBILE_DESC_LIMIT = 12;
 const DESKTOP_DESC_LIMIT = 32;
 function getDescricaoMaxLen() {
@@ -200,7 +199,7 @@ function initModalClose() {
   });
 }
 
-/* ---------- PWA ---------- (igual original) */
+/* ---------- PWA ---------- */
 function initPWA() {
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault(); deferredPrompt = e;
@@ -282,8 +281,8 @@ function renderTransactions() {
       <td style="white-space:nowrap">${tr.category||'-'}</td>
       <td class="actions-cell">
         <div class="actions-container">
-          ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar" aria-label="Editar" tabindex="0">✏️<span class="tooltip">Editar</span></button>`:'<div style="width:20px"></div>'}
-          <button class="delete-btn" data-i="${i}" title="Excluir" aria-label="Excluir" tabindex="0">🗑️<span class="tooltip">Excluir</span></button>
+          ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<div style="width:20px"></div>'}
+          <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
         </div>
       </td>`;
     els.list.appendChild(row);
@@ -310,7 +309,7 @@ function renderPieChart() {
   const thisMonth = mesAtualStr;
 
   let receita = 0;
-  const desp = {};                                  
+  const desp = {};
   expenseCategories.forEach(c => desp[c.name] = 0);
 
   transactions.forEach(tr => {
@@ -407,7 +406,6 @@ function processarFormulario(desc, amt, type, category, ehParc, numParc, formTyp
   renderTransactions();
   fecharFormOverlay(formType);
 
-  // Só faz scroll para a section em mobile (no desktop pode ser invasivo)
   if (isMobileDevice() && editIndex === null) {
     setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }
@@ -468,10 +466,14 @@ function init() {
   initModalClose();
 
   categories.revenue.forEach(o => {
-    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
+    if (!Array.from(els.originRevenue.options).find(opt => opt.value === o)) {
+      const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
+    }
   });
   categories.expense.forEach(o => {
-    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
+    if (!Array.from(els.categoryExpense.options).find(opt => opt.value === o)) {
+      const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
+    }
   });
 
   els.addRevenueBtn.addEventListener('click', () => abrirFormOverlay('revenue'));
@@ -516,27 +518,3 @@ function init() {
 }
 
 init();
-
-/* DICA: Adicione a seguinte style extra ao CSS:
-.actions-container button .tooltip {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  background: #333;
-  color: #fff;
-  font-size: 12px;
-  border-radius: 6px;
-  padding: 4px 7px;
-  margin-top: 5px; /* ou como desejar */
-  left: 100%;
-  z-index: 99;
-  transition: 0.15s;
-}
-.actions-container button:hover .tooltip,
-.actions-container button:focus .tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-*/
-
-/* FIM DO SCRIPT */
