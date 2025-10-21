@@ -1,5 +1,5 @@
 /* =========================================================
-   FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (Mobile + Desktop)
+   FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (PWA ready)
    ========================================================= */
 /* ---------- CONFIGURAÇÕES ---------- */
 const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -16,16 +16,12 @@ const expenseCategories = [
   { type: 'expense', name: 'Educação',    color: '#e67e22' },
   { type: 'expense', name: 'Outros',      color: '#95a5a6' }
 ];
+const allChartCategories = [...revenueCategories, ...expenseCategories];
 
 const categories = {
   revenue: ['Adiantamento','Pagamento','Empréstimo','Investimento','Monetização','Lucro','Venda','Outros'],
   expense: ['Alimentação','Lazer','Transporte','Moradia','Saúde','Educação','Outros']
 };
-
-/* ---------- DETECTA SE É DISPOSITIVO MOBILE ---------- */
-function isMobileDevice() {
-  return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1) || ('ontouchstart' in window);
-}
 
 /* ---------- ELEMENTOS DOM ---------- */
 const els = {
@@ -110,15 +106,13 @@ const formataReal = v => new Intl.NumberFormat('pt-BR',{style:'currency',currenc
 
 /* ---------- BLOQUEIO DE ZOOM ---------- */
 function bloquearZoom() {
-  if (isMobileDevice()) {
-    ['gesturestart','gesturechange','gestureend'].forEach(ev => {
-      document.addEventListener(ev, e => e.preventDefault());
-    });
-    document.addEventListener('keydown', e => {
-      if (e.ctrlKey && ['+','-','0','='].includes(e.key)) e.preventDefault();
-    });
-    document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, {passive:false});
-  }
+  ['gesturestart','gesturechange','gestureend'].forEach(ev => {
+    document.addEventListener(ev, e => e.preventDefault());
+  });
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && ['+','-','0','='].includes(e.key)) e.preventDefault();
+  });
+  document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, {passive:false});
 }
 
 /* ---------- ALERTA SALDO NEGATIVO ---------- */
@@ -165,37 +159,12 @@ function fecharFormOverlay(tipo) {
   editIndex = null;
 }
 
-/* ---------- CHARACTER COUNT FLEXÍVEL ---------- */
-const MOBILE_DESC_LIMIT = 12;
-const DESKTOP_DESC_LIMIT = 32;
-function getDescricaoMaxLen() {
-  return isMobileDevice() ? MOBILE_DESC_LIMIT : DESKTOP_DESC_LIMIT;
-}
 function initCharCounter(el, counterEl) {
   el.addEventListener('input', () => {
-    let maxLen = getDescricaoMaxLen();
     let count = el.value.length;
-    if (count > maxLen) { el.value = el.value.slice(0,maxLen); count = maxLen; }
+    if (count > 12) { el.value = el.value.slice(0,12); count = 12; }
     counterEl.textContent = count;
-    counterEl.parentElement.classList.toggle('warning', count >= maxLen);
-  });
-}
-
-/* ---------- FECHAR MODAL COM ESC OU CLICK FORA ---------- */
-function initModalClose() {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === "Escape") {
-      els.resetModal.style.display = 'none';
-      els.deleteModal.style.display = 'none';
-      fecharFormOverlay('revenue');
-      fecharFormOverlay('expense');
-    }
-  });
-  window.addEventListener('click', (e) => {
-    if (e.target === els.resetModal) els.resetModal.style.display = 'none';
-    if (e.target === els.deleteModal) els.deleteModal.style.display = 'none';
-    if (e.target === els.formOverlayRevenue) fecharFormOverlay('revenue');
-    if (e.target === els.formOverlayExpense) fecharFormOverlay('expense');
+    counterEl.parentElement.classList.toggle('warning', count >= 12);
   });
 }
 
@@ -305,13 +274,15 @@ function updateSummary(rev, des) {
 }
 
 /* ---------- RENDER GRÁFICO ---------- */
+/* ---------- GRÁFICO PIZZA – RECEITA SOBRANDO OU SOMENTE DESPESAS ---------- */
 function renderPieChart() {
   const thisMonth = mesAtualStr;
 
   let receita = 0;
-  const desp = {};
+  const desp = {};                                   // zero todas as despesas
   expenseCategories.forEach(c => desp[c.name] = 0);
 
+  /* ---------- SOMATÓRIO DO MÊS ---------- */
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     const mesItem = parcelaInfo
@@ -327,18 +298,20 @@ function renderPieChart() {
   });
 
   const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
-  const receitaDisponivel = receita - totalDespesas;
+  const receitaDisponivel = receita - totalDespesas;   // o que sobrou (pode ser ≤ 0)
 
   const labels = [];
   const data   = [];
   const cores  = [];
 
+  /* ---------- SETOR "RECEITA" (só se ainda houver sobra) ---------- */
   if (receitaDisponivel > 0) {
     labels.push('Receita');
     data.push(receitaDisponivel);
     cores.push(revenueCategories[0].color);
   }
 
+  /* ---------- SETORES DE DESPESAS ---------- */
   expenseCategories.forEach(c => {
     const v = desp[c.name] || 0;
     if (v > 0) {
@@ -348,6 +321,7 @@ function renderPieChart() {
     }
   });
 
+  /* ---------- DESENHA ---------- */
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
@@ -362,9 +336,8 @@ function renderPieChart() {
 
 /* ---------- PROCESSA FORMULÁRIOS ---------- */
 function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
-  let maxLen = getDescricaoMaxLen();
   let descricao = desc.trim();
-  if (descricao.length > maxLen) descricao = descricao.slice(0,maxLen);
+  if (descricao.length > 12) descricao = descricao.slice(0,12);
   const valor = parseFloat(amt);
   const numParcelas = parseInt(numParc) || 1;
   const dataLanc = new Date().toISOString();
@@ -405,10 +378,7 @@ function processarFormulario(desc, amt, type, category, ehParc, numParc, formTyp
   save();
   renderTransactions();
   fecharFormOverlay(formType);
-
-  if (isMobileDevice() && editIndex === null) {
-    setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-  }
+  if (editIndex === null) setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
 /* ---------- AÇÕES DELETE / EDIT ---------- */
@@ -447,7 +417,7 @@ function handleActions(e) {
       const base = parcelaInfo ? parcelaInfo.baseDesc : t.description;
       const cnt = base.length;
       els.charCountExpense.textContent = cnt;
-      els.charCountExpense.parentElement.classList.toggle('warning', cnt >= getDescricaoMaxLen());
+      els.charCountExpense.parentElement.classList.toggle('warning', cnt >= 12);
       els.btnSaveExpense.textContent = 'Salvar';
     }
     editIndex = i;
@@ -463,19 +433,16 @@ function init() {
   bloquearZoom();
   initPWA();
   initCharCounter(els.descExpense, els.charCountExpense);
-  initModalClose();
 
+  /* popula selects */
   categories.revenue.forEach(o => {
-    if (!Array.from(els.originRevenue.options).find(opt => opt.value === o)) {
-      const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
-    }
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
   });
   categories.expense.forEach(o => {
-    if (!Array.from(els.categoryExpense.options).find(opt => opt.value === o)) {
-      const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
-    }
+    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
   });
 
+  /* eventos principais */
   els.addRevenueBtn.addEventListener('click', () => abrirFormOverlay('revenue'));
   els.addExpenseBtn.addEventListener('click', () => abrirFormOverlay('expense'));
   els.closeFormBtnRevenue.addEventListener('click', () => fecharFormOverlay('revenue'));
@@ -510,11 +477,18 @@ function init() {
       save(); renderTransactions(); renderLegenda(); els.deleteModal.style.display = 'none'; deleteIndex = null;
     }
   });
-
+  window.addEventListener('click', e => {
+    if (e.target === els.resetModal) els.resetModal.style.display = 'none';
+    if (e.target === els.deleteModal) els.deleteModal.style.display = 'none';
+    if (e.target === els.formOverlayRevenue) fecharFormOverlay('revenue');
+    if (e.target === els.formOverlayExpense) fecharFormOverlay('expense');
+  });
   els.list.addEventListener('click', handleActions);
 
+  /* primeira renderização */
   renderTransactions();
   renderLegenda();
 }
 
 init();
+  
