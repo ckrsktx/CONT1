@@ -274,27 +274,44 @@ function updateSummary(rev, des) {
 }
 
 /* ---------- RENDER GRÁFICO ---------- */
+/* ---------- GRÁFICO PIZZA – RECEITA SOBRANDO OU SOMENTE DESPESAS ---------- */
 function renderPieChart() {
   const thisMonth = mesAtualStr;
+
   let receita = 0;
-  const desp = {};
+  const desp = {};                                   // zero todas as despesas
   expenseCategories.forEach(c => desp[c.name] = 0);
 
+  /* ---------- SOMATÓRIO DO MÊS ---------- */
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
-    const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
+    const mesItem = parcelaInfo
+      ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual)
+      : getMesAnoStr(tr.dataLancamento);
     if (mesItem !== thisMonth) return;
-    if (tr.type === 'revenue') receita += tr.amount;
-    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
+
+    if (tr.type === 'revenue') {
+      receita += tr.amount;
+    } else if (desp.hasOwnProperty(tr.category)) {
+      desp[tr.category] += tr.amount;
+    }
   });
 
-  const labels = [], data = [], cores = [];
+  const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
+  const receitaDisponivel = receita - totalDespesas;   // o que sobrou (pode ser ≤ 0)
 
-  if (receita > 0) {
+  const labels = [];
+  const data   = [];
+  const cores  = [];
+
+  /* ---------- SETOR "RECEITA" (só se ainda houver sobra) ---------- */
+  if (receitaDisponivel > 0) {
     labels.push('Receita');
-    data.push(receita);
+    data.push(receitaDisponivel);
     cores.push(revenueCategories[0].color);
   }
+
+  /* ---------- SETORES DE DESPESAS ---------- */
   expenseCategories.forEach(c => {
     const v = desp[c.name] || 0;
     if (v > 0) {
@@ -304,11 +321,16 @@ function renderPieChart() {
     }
   });
 
+  /* ---------- DESENHA ---------- */
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
     data: { labels, datasets: [{ data, backgroundColor: cores }] },
-    options: { plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: true }
+    options: {
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: true
+    }
   });
 }
 
