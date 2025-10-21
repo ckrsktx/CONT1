@@ -139,6 +139,10 @@ function abrirFormOverlay(tipo) {
     els.descExpense.focus();
     els.formOverlayExpense.style.display = 'flex';
   }
+  // 🔧 sobe a caixa para o campo visível
+  setTimeout(() => {
+    document.activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 300);
 }
 
 function fecharFormOverlay(tipo) {
@@ -283,7 +287,6 @@ function renderTransactions() {
 function updateSummary(rev, des) {
   const bal = rev - des;
 
-  // 🧹 sempre oculta antes de decidir
   els.negativeAlert.style.display = 'none';
   saldoNegativoAlertado = false;
 
@@ -304,19 +307,28 @@ function updateSummary(rev, des) {
 
 function renderPieChart() {
   const thisMonth = mesAtualStr;
-  let receita = 0, desp = 0;
+  let receita = 0, desp = {};
+  chartCategories.filter(c => c.type === 'expense').forEach(c => desp[c.name] = 0);
 
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
     if (mesItem !== thisMonth) return;
     if (tr.type === 'revenue') receita += tr.amount;
-    else desp += tr.amount;
+    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
   });
 
-  const labels = ['Receitas', 'Despesas'];
-  const data = [receita, desp];
-  const cores = ['#28a745', '#dc3545'];
+  const labels = ['Receita'];
+  const data = [receita];
+  const cores = [chartCategories[0].color];
+
+  chartCategories.filter(c => c.type === 'expense').forEach(c => {
+    if (desp[c.name] > 0) {
+      labels.push(c.name);
+      data.push(desp[c.name]);
+      cores.push(c.color);
+    }
+  });
 
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
@@ -332,7 +344,6 @@ function renderPieChart() {
     }
   });
 }
-
 
 /* ---------- FORMULÁRIO ---------- */
 function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
