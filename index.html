@@ -50,7 +50,7 @@
             <th>Valor</th>
             <th>Dia</th>
             <th>Origem/Categoria</th>
-            <th style="text-align:center">Ações</th>
+            <th style="text-align:center;width:60px;min-width:48px;max-width:70px;">Ações</th>
           </tr>
         </thead>
         <tbody id="transaction-list"></tbody>
@@ -94,9 +94,11 @@
   </div>
 
   <!-- ALERTA SALDO NEGATIVO -->
-  <div class="negative-alert" id="negative-alert" style="display:none">⚠️ Atenção! Seu saldo está negativo!</div>
+  <div class="negative-alert" id="negative-alert" style="display:none">
+    ⚠️ Atenção! Seu saldo está negativo!
+  </div>
 
-  <!-- FORMS -->
+  <!-- FORM RECEITA -->
   <div class="form-overlay" id="form-overlay-revenue">
     <div class="form-container">
       <div class="form-header">
@@ -121,6 +123,7 @@
     </div>
   </div>
 
+  <!-- FORM DESPESA -->
   <div class="form-overlay" id="form-overlay-expense">
     <div class="form-container">
       <div class="form-header">
