@@ -7,19 +7,29 @@
   --clr-muted: #6c757d;
   --clr-info: #17a2b8;
   --radius: 8px;
-  --shadow: 0 2px 8px rgba(0, 0, 0, .08);
-  --font: 13px/1.3 Arial, sans-serif;
+  --shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font: inherit;
+}
+
+body,
+input,
+select,
+button,
+table,
+.modal,
+.form-container,
+.install-prompt,
+.negative-alert {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
 }
 
 body {
-  font-family: var(--font);
   background: var(--clr-bg);
   color: #222;
   min-height: 100vh;
@@ -159,6 +169,13 @@ h1 {
   display: flex;
 }
 
+.parcelas-field input {
+  width: 40px;
+  padding: 3px;
+  font-size: .8rem;
+  text-align: center;
+}
+
 .add-btn {
   margin-left: auto;
   padding: 7px 16px;
@@ -239,19 +256,47 @@ h1 {
   width: 100%;
   border-collapse: collapse;
   font-size: .75rem;
+  table-layout: fixed;
 }
 
-.transactions-table th {
-  background: #f2f2f2;
-  padding: 5px 3px;
-  text-align: left;
-  font-weight: 600;
-}
-
+.transactions-table th,
 .transactions-table td {
-  padding: 5px 3px;
+  padding: 4px 3px;
   border-bottom: 1px solid #eee;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transactions-table th:nth-child(1),
+.transactions-table td:nth-child(1) {
+  width: 28%;
+}
+
+.transactions-table th:nth-child(2),
+.transactions-table td:nth-child(2) {
+  width: 18%;
+}
+
+.transactions-table th:nth-child(3),
+.transactions-table td:nth-child(3) {
+  width: 12%;
+}
+
+.transactions-table th:nth-child(4),
+.transactions-table td:nth-child(4) {
+  width: 22%;
+}
+
+.transactions-table th:nth-child(5),
+.transactions-table td:nth-child(5) {
+  width: 20%;
+}
+
+@media (max-width: 360px) {
+  .transactions-table {
+    font-size: .65rem;
+  }
 }
 
 .actions-cell {
@@ -275,7 +320,6 @@ h1 {
   color: var(--clr-danger);
 }
 
-/* ---------- MODAL ---------- */
 .modal {
   display: none;
   position: fixed;
@@ -336,7 +380,6 @@ h1 {
   color: #fff;
 }
 
-/* ---------- INSTALL PROMPT ---------- */
 .install-prompt {
   display: none;
   position: fixed;
@@ -389,7 +432,6 @@ h1 {
   color: #fff;
 }
 
-/* ---------- ALERTA SALDO NEGATIVO ---------- */
 .negative-alert {
   position: fixed;
   top: 20px;
@@ -404,9 +446,9 @@ h1 {
   font-weight: 600;
   text-align: center;
   max-width: 90%;
+  display: none;
 }
 
-/* ---------- OVERLAY FORM ---------- */
 .form-overlay {
   display: none;
   position: fixed;
