@@ -205,26 +205,17 @@ h1 {
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
 .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 22%; }
 
-/* CORREÇÃO: Coluna de ações única com botões lado a lado */
+/* CORREÇÃO: Coluna de ações única com APENAS UM ícone por linha */
 .transactions-table th:last-child,
 .transactions-table td:last-child {
   text-align: center;
-  width: 80px;
-  min-width: 80px;
-  max-width: 80px;
-  padding: 8px 4px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding: 8px 2px;
 }
 
-.actions-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  height: 100%;
-  width: 100%;
-}
-
-.edit-btn, .delete-btn {
+.action-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -237,36 +228,28 @@ h1 {
   height: 28px;
   padding: 0;
   border-radius: 4px;
+  margin: 0 auto;
   transition: all 0.2s ease;
 }
 
-.edit-btn:hover {
-  background-color: rgba(40, 167, 69, 0.1);
+.action-btn:hover {
   transform: scale(1.1);
 }
 
-.delete-btn:hover {
-  background-color: rgba(220, 53, 69, 0.1);
-  transform: scale(1.1);
-}
-
-.edit-btn { 
+.action-btn.edit { 
   color: var(--clr-success);
-  font-weight: bold;
 }
 
-.delete-btn { 
+.action-btn.delete { 
   color: var(--clr-danger);
-  font-weight: bold;
 }
 
-/* Ícones usando caracteres Unicode mais confiáveis */
-.edit-btn::before {
-  content: "✎"; /* Lápis Unicode */
+.action-btn.edit:hover {
+  background-color: rgba(40, 167, 69, 0.1);
 }
 
-.delete-btn::before {
-  content: "🗑"; /* Lixeira Unicode */
+.action-btn.delete:hover {
+  background-color: rgba(220, 53, 69, 0.1);
 }
 
 @media (max-width: 460px) {
@@ -275,14 +258,11 @@ h1 {
   .transactions-table td { padding: 6px 1px; }
   .transactions-table th:last-child,
   .transactions-table td:last-child {
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
+    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
   }
-  .actions-cell {
-    gap: 8px;
-  }
-  .edit-btn, .delete-btn {
+  .action-btn {
     font-size: 1rem;
     width: 24px;
     height: 24px;
