@@ -244,16 +244,16 @@ function renderTransactions() {
     const row = document.createElement('tr');
     const ehParc = parcelaInfo !== null;
     row.innerHTML = `
-      <td style="white-space:nowrap">${descDisplay}</td>
-      <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
-      <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-      <td style="white-space:nowrap">${tr.category||'-'}</td>
-      <td class="actions-cell">
-        <div class="actions-container">
-          ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<div style="width:20px"></div>'}
-          <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
-        </div>
-      </td>`;
+  <td style="white-space:nowrap">${descDisplay}</td>
+  <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
+  <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+  <td style="white-space:nowrap">${tr.category||'-'}</td>
+  <td>
+    <div class="actions-cell">
+      ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:''}
+      <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
+    </div>
+  </td>`;
     els.list.appendChild(row);
     if (tr.type === 'revenue') rev += tr.amount; else des += tr.amount;
   });
