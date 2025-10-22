@@ -50,22 +50,21 @@
                         <th>Valor</th>
                         <th>Dia</th>
                         <th>Origem/Categoria</th>
-                        <th><!-- Lápis --></th>
-                        <th><!-- Lixeira --></th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody id="transaction-list">
-                    <!-- Exemplo com colunas separadas -->
+                    <!-- Exemplo com DOIS botões na mesma célula -->
                     <tr>
                         <td>Adiantamento</td>
                         <td>R$ 500,00</td>
                         <td>21/Out</td>
                         <td>Adiantamento</td>
                         <td>
-                            <button class="edit-btn" title="Editar">✏️</button>
-                        </td>
-                        <td>
-                            <button class="delete-btn" title="Excluir">🗑️</button>
+                            <div class="actions-cell">
+                                <button class="edit-btn" title="Editar">✏️</button>
+                                <button class="delete-btn" title="Excluir">🗑️</button>
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -74,10 +73,10 @@
                         <td>21/Out</td>
                         <td>Alimentação</td>
                         <td>
-                            <button class="edit-btn" title="Editar">✏️</button>
-                        </td>
-                        <td>
-                            <button class="delete-btn" title="Excluir">🗑️</button>
+                            <div class="actions-cell">
+                                <button class="edit-btn" title="Editar">✏️</button>
+                                <button class="delete-btn" title="Excluir">🗑️</button>
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -86,10 +85,10 @@
                         <td>21/Out</td>
                         <td>Lucro</td>
                         <td>
-                            <button class="edit-btn" title="Editar">✏️</button>
-                        </td>
-                        <td>
-                            <button class="delete-btn" title="Excluir">🗑️</button>
+                            <div class="actions-cell">
+                                <button class="edit-btn" title="Editar">✏️</button>
+                                <button class="delete-btn" title="Excluir">🗑️</button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -205,4 +204,4 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="app.js" defer></script>
 </body>
-                    </html>
+    </html>
