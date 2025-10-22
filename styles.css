@@ -205,17 +205,22 @@ h1 {
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
 .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 22%; }
 
-/* CORREÇÃO: Coluna de ações única com APENAS UM ícone por linha */
-.transactions-table th:last-child,
-.transactions-table td:last-child {
-  text-align: center;
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+/* CORREÇÃO: Colunas separadas para lápis e lixeira */
+.transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { 
+  width: 35px;
+  min-width: 35px;
+  max-width: 35px;
   padding: 8px 2px;
 }
 
-.action-btn {
+.transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { 
+  width: 35px;
+  min-width: 35px;
+  max-width: 35px;
+  padding: 8px 2px;
+}
+
+.edit-btn, .delete-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -227,42 +232,33 @@ h1 {
   width: 28px;
   height: 28px;
   padding: 0;
-  border-radius: 4px;
   margin: 0 auto;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.action-btn:hover {
+.edit-btn:hover, .delete-btn:hover {
   transform: scale(1.1);
 }
 
-.action-btn.edit { 
+.edit-btn { 
   color: var(--clr-success);
 }
 
-.action-btn.delete { 
+.delete-btn { 
   color: var(--clr-danger);
-}
-
-.action-btn.edit:hover {
-  background-color: rgba(40, 167, 69, 0.1);
-}
-
-.action-btn.delete:hover {
-  background-color: rgba(220, 53, 69, 0.1);
 }
 
 @media (max-width: 460px) {
   .transactions-table { font-size: .67rem; }
   .transactions-table th,
   .transactions-table td { padding: 6px 1px; }
-  .transactions-table th:last-child,
-  .transactions-table td:last-child {
-    width: 35px;
-    min-width: 35px;
-    max-width: 35px;
+  .transactions-table th:nth-child(5), .transactions-table td:nth-child(5),
+  .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
   }
-  .action-btn {
+  .edit-btn, .delete-btn {
     font-size: 1rem;
     width: 24px;
     height: 24px;
@@ -423,4 +419,4 @@ h1 {
     margin: 0 auto;
     width: 100%;
   }
-}
+  }
