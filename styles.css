@@ -233,16 +233,41 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  transition: transform 0.2s;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
-.edit-btn:hover, .delete-btn:hover {
+
+.edit-btn:hover {
+  background-color: rgba(40, 167, 69, 0.1);
   transform: scale(1.1);
 }
-.edit-btn { color: var(--clr-success); }
-.delete-btn { color: var(--clr-danger); }
+
+.delete-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  transform: scale(1.1);
+}
+
+.edit-btn { 
+  color: var(--clr-success);
+  font-weight: bold;
+}
+
+.delete-btn { 
+  color: var(--clr-danger);
+  font-weight: bold;
+}
+
+/* Ícones usando caracteres Unicode mais confiáveis */
+.edit-btn::before {
+  content: "✎"; /* Lápis Unicode */
+}
+
+.delete-btn::before {
+  content: "🗑"; /* Lixeira Unicode */
+}
 
 @media (max-width: 460px) {
   .transactions-table { font-size: .67rem; }
@@ -259,8 +284,8 @@ h1 {
   }
   .edit-btn, .delete-btn {
     font-size: 1rem;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 }
 
