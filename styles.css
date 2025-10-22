@@ -205,23 +205,19 @@ h1 {
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
 .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 22%; }
 
-/* CORREÇÃO: Coluna de ações/lixeira - largura fixa e alinhamento central */
-.transactions-table th:last-child,
-.transactions-table td:last-child {
-  text-align: center;
-  width: 70px;
-  min-width: 70px;
-  max-width: 70px;
-  padding: 8px 4px;
+/* CORREÇÃO: Colunas separadas para editar e excluir */
+.transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { 
+  width: 35px;
+  min-width: 35px;
+  max-width: 35px;
+  padding: 8px 2px;
 }
 
-.actions-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 100%;
-  width: 100%;
+.transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { 
+  width: 35px;
+  min-width: 35px;
+  max-width: 35px;
+  padding: 8px 2px;
 }
 
 .edit-btn, .delete-btn {
@@ -236,6 +232,7 @@ h1 {
   width: 24px;
   height: 24px;
   padding: 0;
+  margin: 0 auto;
 }
 .edit-btn { color: var(--clr-success); }
 .delete-btn { color: var(--clr-danger); }
@@ -244,11 +241,11 @@ h1 {
   .transactions-table { font-size: .67rem; }
   .transactions-table th,
   .transactions-table td { padding: 6px 1px; }
-  .transactions-table th:last-child,
-  .transactions-table td:last-child {
-    width: 60px;
-    min-width: 60px;
-    max-width: 60px;
+  .transactions-table th:nth-child(5), .transactions-table td:nth-child(5),
+  .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
   }
   .edit-btn, .delete-btn {
     font-size: 1rem;
