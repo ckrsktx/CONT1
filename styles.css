@@ -205,19 +205,23 @@ h1 {
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
 .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 22%; }
 
-/* CORREÇÃO: Colunas separadas para lápis e lixeira */
-.transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { 
-  width: 35px;
-  min-width: 35px;
-  max-width: 35px;
+/* CORREÇÃO: Coluna de AÇÕES com dois botões lado a lado */
+.transactions-table th:last-child,
+.transactions-table td:last-child {
+  text-align: center;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
   padding: 8px 2px;
 }
 
-.transactions-table th:nth-child(6), .transactions-table td:nth-child(6) { 
-  width: 35px;
-  min-width: 35px;
-  max-width: 35px;
-  padding: 8px 2px;
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  width: 100%;
 }
 
 .edit-btn, .delete-btn {
@@ -229,10 +233,9 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  margin: 0 auto;
   transition: transform 0.2s ease;
 }
 
@@ -252,16 +255,19 @@ h1 {
   .transactions-table { font-size: .67rem; }
   .transactions-table th,
   .transactions-table td { padding: 6px 1px; }
-  .transactions-table th:nth-child(5), .transactions-table td:nth-child(5),
-  .transactions-table th:nth-child(6), .transactions-table td:nth-child(6) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
+  .transactions-table th:last-child,
+  .transactions-table td:last-child {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+  }
+  .actions-cell {
+    gap: 8px;
   }
   .edit-btn, .delete-btn {
     font-size: 1rem;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -419,4 +425,4 @@ h1 {
     margin: 0 auto;
     width: 100%;
   }
-  }
+                                       }
