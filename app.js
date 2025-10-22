@@ -250,7 +250,7 @@ function renderTransactions() {
   <td style="white-space:nowrap">${tr.category||'-'}</td>
   <td>
     <div class="actions-cell">
-      ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:''}
+      ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<span class="edit-placeholder"></span>'}
       <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
     </div>
   </td>`;
