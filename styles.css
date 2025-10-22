@@ -409,3 +409,9 @@ h1 {
     width: 100%;
   }
 }
+
+.edit-placeholder {
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+}
