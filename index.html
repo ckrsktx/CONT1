@@ -50,21 +50,22 @@
                         <th>Valor</th>
                         <th>Dia</th>
                         <th>Origem/Categoria</th>
-                        <th>Ações</th>
+                        <th><!-- Coluna do Lápis (Editar) --></th>
+                        <th><!-- Coluna da Lixeira (Excluir) --></th>
                     </tr>
                 </thead>
                 <tbody id="transaction-list">
-                    <!-- Exemplo de transação com alinhamento correto -->
+                    <!-- Exemplo de transação com colunas separadas -->
                     <tr>
                         <td>Exemplo Transação</td>
                         <td>R$ 100,00</td>
                         <td>21/10</td>
                         <td>Categoria</td>
                         <td>
-                            <div class="actions-cell">
-                                <button class="edit-btn" title="Editar">✏️</button>
-                                <button class="delete-btn" title="Excluir">🗑️</button>
-                            </div>
+                            <button class="edit-btn" title="Editar">✏️</button>
+                        </td>
+                        <td>
+                            <button class="delete-btn" title="Excluir">🗑️</button>
                         </td>
                     </tr>
                     <!-- Adicione mais transações aqui -->
@@ -181,4 +182,4 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="app.js" defer></script>
 </body>
-</html>
+    </html>
