@@ -193,7 +193,7 @@ h1 {
 .transactions-table th,
 .transactions-table td {
   text-align: left;
-  padding: 8px 4px;
+  padding: 10px 6px;
   border-bottom: 1px solid #eee;
   white-space: nowrap;
   overflow: hidden;
@@ -207,20 +207,11 @@ h1 {
   text-align: center;
 }
 /* Definição explícita das larguras */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
-.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 22%; }
-
-/* CORREÇÃO: Coluna de AÇÕES com dois botões lado a lado */
-
-/* CORREÇÃO SIMPLES: Coluna de Ações */
-.transactions-table th:last-child,
-.transactions-table td:last-child {
-  width: 70px;
-  padding: 8px 2px;
-}
-
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 15%; }
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 10%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 30%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 15%; }
 .actions-cell {
   display: flex;
   justify-content: center;
