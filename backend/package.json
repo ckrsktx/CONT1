@@ -1,0 +1,19 @@
+{
+  "name": "cont1-backend",
+  "version": "1.0.0",
+  "description": "Backend para o CONT1 - Controle Financeiro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "keywords": ["finance", "backend", "mongodb"],
+  "author": "Seu Nome",
+  "license": "MIT"
+}
