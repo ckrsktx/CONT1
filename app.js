@@ -5,7 +5,7 @@
 
 /* ---------- CONFIGURAÇÃO DO BACKEND ---------- */
 // ⚠️ SUBSTITUA PELA SUA URL DO RENDER ⚠️
-const API_URL = 'https://cont1-backend.onrender.com/';
+const API_URL = 'https://cont1-backend.onrender.com/api';
 let currentUser = null;
 let authToken = localStorage.getItem('authToken');
 let isOnline = false;
