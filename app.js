@@ -1,4 +1,257 @@
-/* =========================================================
+// ================== CONFIGURAÇÃO DO BACKEND ==================
+// ⚠️ SUBSTITUA PELA SUA URL DO RENDER ⚠️
+const API_URL = 'https://cont1-backend.onrender.com/api';
+let currentUser = null;
+let authToken = localStorage.getItem('authToken');
+let isOnline = false;
+
+// ================== FUNÇÕES DE AUTENTICAÇÃO ==================
+async function register(email, password) {
+  const btn = document.querySelector('#register-form .auth-submit-btn');
+  const btnText = btn.querySelector('.btn-text');
+  const btnLoading = btn.querySelector('.btn-loading');
+  
+  try {
+    // Mostrar loading
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'block';
+    
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      authToken = data.token;
+      currentUser = data.user;
+      localStorage.setItem('authToken', authToken);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      showStatus('Cadastro realizado com sucesso!', 'success');
+      setTimeout(() => {
+        checkAuth();
+        loadUserData();
+      }, 1500);
+      
+      return true;
+    } else {
+      throw new Error(data.error || 'Erro no cadastro');
+    }
+  } catch (error) {
+    showStatus(error.message, 'error');
+    return false;
+  } finally {
+    // Esconder loading
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btnText.style.display = 'block';
+    btnLoading.style.display = 'none';
+  }
+}
+
+async function login(email, password) {
+  const btn = document.querySelector('#login-form .auth-submit-btn');
+  const btnText = btn.querySelector('.btn-text');
+  const btnLoading = btn.querySelector('.btn-loading');
+  
+  try {
+    // Mostrar loading
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'block';
+    
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      authToken = data.token;
+      currentUser = data.user;
+      localStorage.setItem('authToken', authToken);
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      showStatus('Login realizado com sucesso!', 'success');
+      setTimeout(() => {
+        checkAuth();
+        loadUserData();
+      }, 1000);
+      
+      return true;
+    } else {
+      throw new Error(data.error || 'Credenciais inválidas');
+    }
+  } catch (error) {
+    showStatus(error.message, 'error');
+    return false;
+  } finally {
+    // Esconder loading
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btnText.style.display = 'block';
+    btnLoading.style.display = 'none';
+  }
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  isOnline = false;
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('currentUser');
+  checkAuth();
+  showStatus('Você saiu da sua conta', 'success');
+}
+
+async function loadUserData() {
+  if (!authToken) return;
+  
+  try {
+    const response = await fetch(`${API_URL}/transactions`, {
+      headers: { 
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      transactions = data.map(t => ({
+        ...t,
+        dataLancamento: new Date(t.dataLancamento)
+      }));
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      renderTransactions();
+      isOnline = true;
+      console.log('✅ Dados carregados da nuvem');
+    }
+  } catch (error) {
+    console.log('📴 Modo offline - usando dados locais');
+    isOnline = false;
+    // Carrega dados locais como fallback
+    const localData = localStorage.getItem('transactions');
+    if (localData) {
+      transactions = JSON.parse(localData);
+      renderTransactions();
+    }
+  }
+}
+
+async function syncToBackend() {
+  if (!authToken || !isOnline) return;
+  
+  try {
+    // Primeiro limpa todas as transações antigas na nuvem
+    await fetch(`${API_URL}/transactions`, {
+      method: 'DELETE',
+      headers: { 
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // Depois envia todas as transações atuais
+    for (const transaction of transactions) {
+      await fetch(`${API_URL}/transactions`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(transaction)
+      });
+    }
+    console.log('✅ Dados sincronizados com a nuvem');
+  } catch (error) {
+    console.log('❌ Erro na sincronização - modo offline');
+    isOnline = false;
+  }
+}
+
+// Modificar a função save para sincronizar
+function save() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+  if (authToken && isOnline) {
+    syncToBackend();
+  }
+}
+
+function checkAuth() {
+  const authOverlay = document.getElementById('auth-overlay');
+  const mainContainer = document.getElementById('main-container');
+  const logoutBtn = document.getElementById('logout-btn');
+  const userEmail = document.getElementById('user-email');
+  
+  if (authToken && currentUser) {
+    authOverlay.style.display = 'none';
+    mainContainer.style.display = 'block';
+    logoutBtn.style.display = 'block';
+    userEmail.textContent = currentUser.email;
+  } else {
+    authOverlay.style.display = 'flex';
+    mainContainer.style.display = 'none';
+    logoutBtn.style.display = 'none';
+  }
+}
+
+function showStatus(message, type) {
+  // Remove status anterior
+  const oldStatus = document.querySelector('.auth-status');
+  if (oldStatus) oldStatus.remove();
+  
+  const status = document.createElement('div');
+  status.className = `auth-status ${type}`;
+  status.textContent = message;
+  
+  const authContainer = document.querySelector('.auth-container');
+  const firstForm = authContainer.querySelector('.auth-form.active');
+  authContainer.insertBefore(status, firstForm);
+  
+  setTimeout(() => {
+    status.remove();
+  }, 4000);
+}
+
+// Sistema de abas
+function initAuthTabs() {
+  const tabs = document.querySelectorAll('.auth-tab');
+  const forms = document.querySelectorAll('.auth-form');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.getAttribute('data-tab');
+      
+      // Ativar aba clicada
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // Mostrar form correspondente
+      forms.forEach(form => {
+        form.classList.remove('active');
+        if (form.id === `${targetTab}-form`) {
+          form.classList.add('active');
+        }
+      });
+      
+      // Limpar status
+      const status = document.querySelector('.auth-status');
+      if (status) status.remove();
+    });
+  });
+}/* =========================================================
    FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (PWA ready)
    ========================================================= */
 /* ---------- CONFIGURAÇÕES ---------- */
