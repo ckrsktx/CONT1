@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>CONT1 | Controle</title>
+    <title>CONT1 | Controle Financeiro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007bff">
@@ -14,12 +14,12 @@
             <h1>CONT1 | Controle</h1>
         </header>
 
-        <!-- Botão Enviar Receita centralizado -->
+        <!-- Botão Enviar Receita -->
         <div class="share-receita-container">
             <button id="share-receita" aria-label="Enviar Receita" title="Enviar Receita">📤 Enviar Receita</button>
         </div>
 
-        <!-- RESUMO -->
+        <!-- RESUMO FINANCEIRO -->
         <div class="summary" role="region" aria-label="Resumo Financeiro">
             <div class="summary-card receita">
                 <h3>Receitas</h3>
@@ -39,7 +39,7 @@
 
         <div class="spacer"></div>
 
-        <!-- LEGENDA + GRÁFICO -->
+        <!-- LEGENDA E GRÁFICO -->
         <div class="categoria-legenda-container" id="categoria-legenda-container"></div>
         <div class="pie-container">
             <canvas id="pieChart" width="200" height="200" aria-label="Gráfico de Receitas e Despesas"></canvas>
@@ -61,7 +61,7 @@
                     </tr>
                 </thead>
                 <tbody id="transaction-list">
-                    <!-- As transações serão adicionadas dinamicamente pelo JavaScript -->
+                    <!-- Transações dinâmicas -->
                 </tbody>
             </table>
         </div>
@@ -107,7 +107,7 @@
         <span aria-hidden="true">⚠️</span> Atenção! Seu saldo está negativo!
     </div>
 
-    <!-- FORM RECEITA -->
+    <!-- FORMULÁRIO RECEITA -->
     <div class="form-overlay" id="form-overlay-revenue" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="revenue-form-title">
         <div class="form-container">
             <div class="form-header">
@@ -132,7 +132,7 @@
         </div>
     </div>
 
-    <!-- FORM DESPESA -->
+    <!-- FORMULÁRIO DESPESA -->
     <div class="form-overlay" id="form-overlay-expense" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="expense-form-title">
         <div class="form-container">
             <div class="form-header">
@@ -171,6 +171,7 @@
             </form>
         </div>
     </div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <script src="script/app.js" defer></script>
 </body>
