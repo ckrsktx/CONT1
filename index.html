@@ -9,63 +9,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <!-- ================== SISTEMA DE LOGIN ================== -->
-    <div class="auth-overlay" id="auth-overlay">
-        <div class="auth-container">
-            <div class="app-logo">
-                <h1>CONT1</h1>
-                <p>Controle Financeiro Pessoal</p>
-            </div>
-            
-            <div class="auth-tabs">
-                <button class="auth-tab active" data-tab="login">Entrar</button>
-                <button class="auth-tab" data-tab="register">Cadastrar</button>
-            </div>
-            
-            <!-- Formulário de Login -->
-            <form id="login-form" class="auth-form active">
-                <div class="input-group">
-                    <input type="email" id="login-email" placeholder="Seu email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="login-password" placeholder="Sua senha" required>
-                </div>
-                <button type="submit" class="auth-submit-btn">
-                    <span class="btn-text">Entrar na Conta</span>
-                    <div class="btn-loading" style="display: none;">Carregando...</div>
-                </button>
-            </form>
-            
-            <!-- Formulário de Cadastro -->
-            <form id="register-form" class="auth-form">
-                <div class="input-group">
-                    <input type="email" id="register-email" placeholder="Seu melhor email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="register-password" placeholder="Crie uma senha segura" required>
-                </div>
-                <button type="submit" class="auth-submit-btn">
-                    <span class="btn-text">Criar Minha Conta</span>
-                    <div class="btn-loading" style="display: none;">Criando conta...</div>
-                </button>
-            </form>
-            
-            <div class="auth-footer">
-                <button id="skip-auth" class="skip-btn">
-                    ↶ Usar localmente (sem cadastro)
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Botão de Logout -->
-    <button id="logout-btn" class="logout-btn" style="display: none;">
-        👤 <span id="user-email"></span> | Sair
-    </button>
-
-    <!-- ================== CONTEÚDO PRINCIPAL ================== -->
-    <div class="container" id="main-container" style="display: none;">
+    <div class="container">
         <h1>CONT1 | Controle</h1>
 
         <!-- RESUMO -->
@@ -116,7 +60,7 @@
         </div>
     </div>
 
-    <!-- ================== MODAIS ================== -->
+    <!-- MODAIS -->
     <div class="modal" id="reset-modal" aria-hidden="true">
         <div class="modal-content">
             <div class="modal-header">Resetar Todos os Dados</div>
@@ -141,7 +85,7 @@
 
     <!-- PROMPT INSTALAÇÃO -->
     <div class="install-prompt" id="install-prompt" aria-hidden="true">
-        <div class="install-prompt-content">
+               <div class="install-prompt-content">
             <div class="install-prompt-header">Instalar Aplicativo</div>
             <div class="install-prompt-body">Deseja instalar o CONT1 para acesso rápido?</div>
             <div class="install-prompt-buttons">
@@ -224,4 +168,4 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="app.js" defer></script>
 </body>
-            </html>
+                            </html>
