@@ -1,499 +1,918 @@
 /* =========================================================
-   FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (PWA ready)
+   CONT1 - CONTROLE FINANCEIRO PESSOAL (PWA)
    ========================================================= */
-/* ---------- CONFIGURAÇÕES ---------- */
-const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-const revenueCategories = [
-  { type: 'revenue', name: 'Receita', color: '#28a745' }
-];
-const expenseCategories = [
-  { type: 'expense', name: 'Alimentação', color: '#e74c3c' },
-  { type: 'expense', name: 'Lazer',       color: '#f1c40f' },
-  { type: 'expense', name: 'Transporte',  color: '#3498db' },
-  { type: 'expense', name: 'Moradia',     color: '#9b59b6' },
-  { type: 'expense', name: 'Saúde',       color: '#1abc9c' },
-  { type: 'expense', name: 'Educação',    color: '#e67e22' },
-  { type: 'expense', name: 'Outros',      color: '#95a5a6' }
-];
-const allChartCategories = [...revenueCategories, ...expenseCategories];
-
-const categories = {
-  revenue: ['Adiantamento','Pagamento','Empréstimo','Investimento','Monetização','Lucro','Venda','Outros'],
-  expense: ['Alimentação','Lazer','Transporte','Moradia','Saúde','Educação','Outros']
+/* ---------- CONFIGURAÇÕES E CONSTANTES ---------- */
+const CONFIG = {
+    meses: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+    categories: {
+        revenue: ['Adiantamento','Pagamento','Empréstimo','Investimento','Monetização','Lucro','Venda','Outros'],
+        expense: ['Alimentação','Lazer','Transporte','Moradia','Saúde','Educação','Outros']
+    },
+    chartColors: {
+        revenue: '#28a745',
+        expenses: [
+            '#e74c3c', '#f1c40f', '#3498db', '#9b59b6', 
+            '#1abc9c', '#e67e22', '#95a5a6'
+        ]
+    }
 };
 
 /* ---------- ELEMENTOS DOM ---------- */
-const els = {
-  list:   document.getElementById('transaction-list'),
-  totalRev: document.getElementById('total-revenue'),
-  totalDes: document.getElementById('total-expenses'),
-  balance:  document.getElementById('balance'),
-  legenda:  document.getElementById('categoria-legenda-container'),
-  reset:    document.getElementById('reset-btn'),
-  titulo:   document.getElementById('transacoes-titulo'),
-  canvas:   document.getElementById('pieChart'),
+const DOM = {
+    // Elementos principais
+    list: document.getElementById('transaction-list'),
+    totalRev: document.getElementById('total-revenue'),
+    totalDes: document.getElementById('total-expenses'),
+    balance: document.getElementById('balance'),
+    legenda: document.getElementById('categoria-legenda-container'),
+    reset: document.getElementById('reset-btn'),
+    titulo: document.getElementById('transacoes-titulo'),
+    canvas: document.getElementById('pieChart'),
+    
+    // Modais
+    resetModal: document.getElementById('reset-modal'),
+    resetCancel: document.getElementById('reset-cancel'),
+    resetConfirm: document.getElementById('reset-confirm'),
+    
+    deleteModal: document.getElementById('delete-modal'),
+    deleteCancel: document.getElementById('delete-cancel'),
+    deleteConfirm: document.getElementById('delete-confirm'),
+    deleteBody: document.getElementById('delete-modal-body'),
+    
+    // Alertas e PWA
+    transactionsSection: document.getElementById('transactions-section'),
+    negativeAlert: document.getElementById('negative-alert'),
+    installPrompt: document.getElementById('install-prompt'),
+    installCancel: document.getElementById('install-cancel'),
+    installConfirm: document.getElementById('install-confirm'),
+    
+    // Botões de ação
+    addRevenueBtn: document.getElementById('add-revenue-btn'),
+    addExpenseBtn: document.getElementById('add-expense-btn'),
+    shareReceita: document.getElementById('share-receita'),
+    
+    // Formulário Receita
+    formOverlayRevenue: document.getElementById('form-overlay-revenue'),
+    closeFormBtnRevenue: document.getElementById('close-form-btn-revenue'),
+    formRevenue: document.getElementById('transaction-form-revenue'),
+    amountRevenue: document.getElementById('amount-revenue'),
+    originRevenue: document.getElementById('origin-revenue'),
+    btnSaveRevenue: document.getElementById('save-btn-revenue'),
+    
+    // Formulário Despesa
+    formOverlayExpense: document.getElementById('form-overlay-expense'),
+    closeFormBtnExpense: document.getElementById('close-form-btn-expense'),
+    formExpense: document.getElementById('transaction-form-expense'),
+    descExpense: document.getElementById('description-expense'),
+    amountExpense: document.getElementById('amount-expense'),
+    categoryExpense: document.getElementById('category-expense'),
+    parceladoExpense: document.getElementById('parcelado-expense'),
+    parcelasExpense: document.getElementById('parcelas-expense'),
+    parcelasDivExpense: document.getElementById('parcelas-field-div-expense'),
+    btnSaveExpense: document.getElementById('save-btn-expense'),
+    charCountExpense: document.getElementById('char-count-expense')
+};
 
-  resetModal:    document.getElementById('reset-modal'),
-  resetCancel:   document.getElementById('reset-cancel'),
-  resetConfirm:  document.getElementById('reset-confirm'),
-
-  deleteModal:   document.getElementById('delete-modal'),
-  deleteCancel:  document.getElementById('delete-cancel'),
-  deleteConfirm: document.getElementById('delete-confirm'),
-  deleteBody:    document.getElementById('delete-modal-body'),
-
-  transactionsSection: document.getElementById('transactions-section'),
-  negativeAlert:       document.getElementById('negative-alert'),
-
-  installPrompt:  document.getElementById('install-prompt'),
-  installCancel:  document.getElementById('install-cancel'),
-  installConfirm: document.getElementById('install-confirm'),
-
-  addRevenueBtn: document.getElementById('add-revenue-btn'),
-  addExpenseBtn: document.getElementById('add-expense-btn'),
-
-  /* --- revenue form --- */
-  formOverlayRevenue:  document.getElementById('form-overlay-revenue'),
-  closeFormBtnRevenue: document.getElementById('close-form-btn-revenue'),
-  formRevenue:         document.getElementById('transaction-form-revenue'),
-  amountRevenue:       document.getElementById('amount-revenue'),
-  originRevenue:       document.getElementById('origin-revenue'),
-  btnSaveRevenue:      document.getElementById('save-btn-revenue'),
-
-  /* --- expense form --- */
-  formOverlayExpense:  document.getElementById('form-overlay-expense'),
-  closeFormBtnExpense: document.getElementById('close-form-btn-expense'),
-  formExpense:         document.getElementById('transaction-form-expense'),
-  descExpense:         document.getElementById('description-expense'),
-  amountExpense:       document.getElementById('amount-expense'),
-  categoryExpense:     document.getElementById('category-expense'),
-  parceladoExpense:    document.getElementById('parcelado-expense'),
-  parcelasExpense:     document.getElementById('parcelas-expense'),
-  parcelasDivExpense:  document.getElementById('parcelas-field-div-expense'),
-  btnSaveExpense:      document.getElementById('save-btn-expense'),
-  charCountExpense:    document.getElementById('char-count-expense'),
-
-  
 /* ---------- ESTADO GLOBAL ---------- */
-let transactions   = JSON.parse(localStorage.getItem('transactions') || '[]');
-let chart          = null;
-let editIndex      = null;
-let deleteIndex    = null;
-let deferredPrompt = null;
-let saldoNegAlert  = false;
-let alertTimeout   = null;
+const STATE = {
+    transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
+    chart: null,
+    editIndex: null,
+    deleteIndex: null,
+    deferredPrompt: null,
+    saldoNegAlert: false,
+    alertTimeout: null
+};
 
 /* ---------- UTILITÁRIOS ---------- */
-const hoje       = new Date();
-const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
-
-const getMesAnoStr = d => (typeof d === 'string' ? d.slice(0,7)
-                                                : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-
-const getMesAnoParcela = (baseDate, n) => {
-  const d = new Date(baseDate);
-  d.setMonth(d.getMonth() + n - 1);
-  return getMesAnoStr(d);
+const UTILS = {
+    hoje: new Date(),
+    
+    get mesAtualStr() {
+        return `${this.hoje.getFullYear()}-${String(this.hoje.getMonth() + 1).padStart(2, '0')}`;
+    },
+    
+    getMesAnoStr(data) {
+        if (typeof data === 'string') {
+            return data.slice(0, 7);
+        }
+        return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+    },
+    
+    getMesAnoParcela(dataBase, numeroParcela) {
+        const data = new Date(dataBase);
+        data.setMonth(data.getMonth() + numeroParcela - 1);
+        return this.getMesAnoStr(data);
+    },
+    
+    parseParcelaInfo(texto) {
+        const match = texto.match(/(.*)\s(\d+)\/(\d+)$/);
+        return match ? {
+            baseDesc: match[1],
+            parcelaAtual: parseInt(match[2]),
+            totalParcelas: parseInt(match[3])
+        } : null;
+    },
+    
+    formataReal(valor) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(valor);
+    },
+    
+    validarValor(valor) {
+        return !isNaN(valor) && valor > 0;
+    }
 };
 
-const parseParcelaInfo = txt => {
-  const m = txt.match(/(.*)\s(\d+)\/(\d+)$/);
-  return m ? { baseDesc: m[1], parcelaAtual: +m[2], totalParcelas: +m[3] } : null;
-};
-
-const formataReal = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
-
-/* ---------- BLOQUEIO DE ZOOM ---------- */
-function bloquearZoom() {
-  ['gesturestart','gesturechange','gestureend'].forEach(ev => {
-    document.addEventListener(ev, e => e.preventDefault());
-  });
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && ['+','-','0','='].includes(e.key)) e.preventDefault();
-  });
-  document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, {passive:false});
-}
-
-/* ---------- ALERTA SALDO NEGATIVO ---------- */
-function verificarSaldoNegativo(saldo) {
-  if (alertTimeout) { clearTimeout(alertTimeout); alertTimeout = null; }
-  if (saldo < 0 && !saldoNegAlert) {
-    els.negativeAlert.style.display = 'block';
-    saldoNegAlert = true;
-    alertTimeout = setTimeout(() => { els.negativeAlert.style.display = 'none'; saldoNegAlert = false; }, 5000);
-  } else if (saldo >= 0) {
-    els.negativeAlert.style.display = 'none';
-    saldoNegAlert = false;
-  }
-}
-
-/* ---------- FORMULÁRIOS ---------- */
-function abrirFormOverlay(tipo) {
-  if (tipo === 'revenue') {
-    els.formRevenue.reset();
-    els.btnSaveRevenue.textContent = 'Adicionar';
-    els.originRevenue.focus();
-    els.formOverlayRevenue.style.display = 'flex';
-  } else {
-    els.formExpense.reset();
-    els.btnSaveExpense.textContent = 'Adicionar';
-    els.parcelasDivExpense.classList.remove('visible');
-    els.charCountExpense.textContent = '0';
-    els.charCountExpense.parentElement.classList.remove('warning');
-    els.descExpense.focus();
-    els.formOverlayExpense.style.display = 'flex';
-  }
-  setTimeout(() => document.activeElement.scrollIntoView({behavior:'smooth',block:'center'}), 300);
-}
-
-function fecharFormOverlay(tipo) {
-  if (tipo === 'revenue') {
-    els.formOverlayRevenue.style.display = 'none';
-    els.formRevenue.reset();
-  } else {
-    els.formOverlayExpense.style.display = 'none';
-    els.formExpense.reset();
-    els.parcelasDivExpense.classList.remove('visible');
-    els.charCountExpense.textContent = '0';
-    els.charCountExpense.parentElement.classList.remove('warning');
-  }
-  editIndex = null;
-}
-
-function initCharCounter(el, counterEl) {
-  el.addEventListener('input', () => {
-    let count = el.value.length;
-    if (count > 12) { el.value = el.value.slice(0,12); count = 12; }
-    counterEl.textContent = count;
-    counterEl.parentElement.classList.toggle('warning', count >= 12);
-  });
-}
-
-/* ---------- PWA ---------- */
-function initPWA() {
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPrompt = e;
-    setTimeout(() => { if (deferredPrompt) els.installPrompt.style.display = 'block'; }, 3000);
-  });
-  window.addEventListener('appinstalled', () => { deferredPrompt = null; els.installPrompt.style.display = 'none'; });
-  els.installConfirm.addEventListener('click', async () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); const {outcome} = await deferredPrompt.userChoice; if (outcome === 'accepted') deferredPrompt = null; els.installPrompt.style.display = 'none'; }
-  });
-  els.installCancel.addEventListener('click', () => { els.installPrompt.style.display = 'none'; });
-}
-
-/* ---------- RENDER LEGENDA ---------- */
-function renderLegenda() {
-  const thisMonth = mesAtualStr;
-  let receita = 0;
-  const desp = {};
-  expenseCategories.forEach(c => desp[c.name] = 0);
-
-  transactions.forEach(tr => {
-    const parcelaInfo = parseParcelaInfo(tr.description);
-    const mesItem = parcelaInfo ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual) : getMesAnoStr(tr.dataLancamento);
-    if (mesItem !== thisMonth) return;
-    if (tr.type === 'revenue') receita += tr.amount;
-    else if (desp.hasOwnProperty(tr.category)) desp[tr.category] += tr.amount;
-  });
-
-  const totalDespesas = Object.values(desp).reduce((a,b) => a + b, 0);
-  const saldo = receita - totalDespesas;
-
-  els.legenda.innerHTML = [
-    ...revenueCategories.map(c => {
-      const p = receita > 0 ? (saldo < 0 ? 0 : saldo) / receita * 100 : 0;
-      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p.toFixed(0)}%</div>`;
-    }),
-    ...expenseCategories.map(c => {
-      const v = desp[c.name] || 0;
-      const p = receita > 0 ? v / receita * 100 : 0;
-      return `<div class="categoria-legenda"><span class="cor-blob" style="background:${c.color}"></span>${c.name} ${p.toFixed(0)}%</div>`;
-    })
-  ].join('');
-}
-
-/* ---------- RENDER TRANSAÇÕES ---------- */
-function renderTransactions() {
-  els.list.innerHTML = '';
-  let rev = 0, des = 0;
-  const thisMonth = mesAtualStr;
-
-  transactions.forEach((tr, i) => {
-    const parcelaInfo = parseParcelaInfo(tr.description);
-    let mostra = false;
-    let descDisplay = tr.description;
-    let mesDisplay = '';
-
-    if (parcelaInfo) {
-      const mesParc = getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual);
-      mostra = mesParc === thisMonth;
-      if (mostra) {
-        const d = new Date(tr.dataLancamento);
-        d.setMonth(d.getMonth() + parcelaInfo.parcelaAtual - 1);
-        mesDisplay = meses[d.getMonth()];
-        descDisplay = `${parcelaInfo.baseDesc} (${parcelaInfo.parcelaAtual}/${parcelaInfo.totalParcelas})`;
-      }
-    } else {
-      const mesTr = getMesAnoStr(tr.dataLancamento);
-      mostra = mesTr === thisMonth;
-      if (mostra) mesDisplay = meses[new Date(tr.dataLancamento).getMonth()];
-    }
-    if (!mostra) return;
-
-    const dia = new Date(tr.dataLancamento).getDate().toString().padStart(2,'0');
-    const row = document.createElement('tr');
-    const ehParc = parcelaInfo !== null;
-    row.innerHTML = `
-  <td style="white-space:nowrap">${descDisplay}</td>
-  <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
-  <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-  <td style="white-space:nowrap">${tr.category||'-'}</td>
-  <td>
-    <div class="actions-cell">
-      ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<span class="edit-placeholder"></span>'}
-      <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
-    </div>
-  </td>`;
-    els.list.appendChild(row);
-    if (tr.type === 'revenue') rev += tr.amount; else des += tr.amount;
-  });
-
-  updateSummary(rev, des);
-  renderPieChart();
-  renderLegenda();
-  els.titulo.textContent = `Transações (${meses[hoje.getMonth()]})`;
-}
-
-function updateSummary(rev, des) {
-  const bal = rev - des;
-  verificarSaldoNegativo(bal);
-  els.totalRev.textContent = formataReal(rev);
-  els.totalDes.textContent = formataReal(des);
-  els.balance.textContent  = formataReal(bal);
-  els.balance.className    = bal < 0 ? 'negative' : 'info';
-}
-
-/* ---------- RENDER GRÁFICO ---------- */
-function renderPieChart() {
-  const thisMonth = mesAtualStr;
-
-  let receita = 0;
-  const desp = {};
-  expenseCategories.forEach(c => desp[c.name] = 0);
-
-  transactions.forEach(tr => {
-    const parcelaInfo = parseParcelaInfo(tr.description);
-    const mesItem = parcelaInfo
-      ? getMesAnoParcela(tr.dataLancamento, parcelaInfo.parcelaAtual)
-      : getMesAnoStr(tr.dataLancamento);
-    if (mesItem !== thisMonth) return;
-
-    if (tr.type === 'revenue') {
-      receita += tr.amount;
-    } else if (desp.hasOwnProperty(tr.category)) {
-      desp[tr.category] += tr.amount;
-    }
-  });
-
-  const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
-  const receitaDisponivel = receita - totalDespesas;
-
-  const labels = [];
-  const data   = [];
-  const cores  = [];
-
-  if (receitaDisponivel > 0) {
-    labels.push('Receita');
-    data.push(receitaDisponivel);
-    cores.push(revenueCategories[0].color);
-  }
-
-  expenseCategories.forEach(c => {
-    const v = desp[c.name] || 0;
-    if (v > 0) {
-      labels.push(c.name);
-      data.push(v);
-      cores.push(c.color);
-    }
-  });
-
-  if (chart) chart.destroy();
-  chart = new Chart(els.canvas, {
-    type: 'pie',
-    data: { labels, datasets: [{ data, backgroundColor: cores }] },
-    options: {
-      plugins: { legend: { display: false } },
-      responsive: true,
-      maintainAspectRatio: true
-    }
-  });
-}
-
-/* ---------- PROCESSA FORMULÁRIOS ---------- */
-function processarFormulario(desc, amt, type, category, ehParc, numParc, formType) {
-  let descricao = desc.trim();
-  if (descricao.length > 12) descricao = descricao.slice(0,12);
-  const valor = parseFloat(amt);
-  const numParcelas = parseInt(numParc) || 1;
-  const dataLanc = new Date().toISOString();
-  const novas = [];
-
-  if (editIndex !== null) {
-    const original = transactions[editIndex];
-    const parcelaInfo = parseParcelaInfo(original.description);
-    if (parcelaInfo && !ehParc) {
-      transactions = transactions.filter(t => {
-        const info = parseParcelaInfo(t.description);
-        return !info || info.baseDesc !== parcelaInfo.baseDesc;
-      });
-      novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
-    } else if (!parcelaInfo && ehParc) {
-      const vp = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
-      transactions.splice(editIndex, 1);
-    } else if (parcelaInfo && ehParc) {
-      transactions = transactions.filter(t => { const info = parseParcelaInfo(t.description); return !info || info.baseDesc !== parcelaInfo.baseDesc; });
-      const vp = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
-    } else {
-      transactions[editIndex] = { description: descricao, amount: valor, type, category, dataLancamento: dataLanc };
-    }
-    if (novas.length) transactions.push(...novas);
-    editIndex = null;
-  } else {
-    if (ehParc && numParcelas >= 2) {
-      const vp = valor / numParcelas;
-      for (let i = 1; i <= numParcelas; i++) novas.push({ description: `${descricao} ${i}/${numParcelas}`, amount: parseFloat(vp.toFixed(2)), type, category, dataLancamento: dataLanc });
-    } else {
-      novas.push({ description: descricao, amount: valor, type, category, dataLancamento: dataLanc });
-    }
-    transactions.push(...novas);
-  }
-
-  save();
-  renderTransactions();
-  fecharFormOverlay(formType);
-  if (editIndex === null) setTimeout(() => els.transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-}
-
-/* ---------- AÇÕES DELETE / EDIT ---------- */
-function handleActions(e) {
-  const i = parseInt(e.target.dataset.i);
-  if (e.target.classList.contains('delete-btn')) {
-    deleteIndex = i;
-    const desc = transactions[i].description;
-    const parcelaInfo = parseParcelaInfo(desc);
-    els.deleteBody.textContent = parcelaInfo
-      ? `Tem certeza que deseja excluir TODAS as parcelas de "${parcelaInfo.baseDesc}"?`
-      : `Tem certeza que deseja excluir "${desc}"?`;
-    els.deleteModal.style.display = 'flex';
-  }
-  if (e.target.classList.contains('edit-btn')) {
-    const t = transactions[i];
-    const parcelaInfo = parseParcelaInfo(t.description);
-    if (t.type === 'revenue') {
-      abrirFormOverlay('revenue');
-      els.amountRevenue.value = t.amount * (parcelaInfo ? parcelaInfo.totalParcelas : 1);
-      els.originRevenue.value = t.category;
-      els.btnSaveRevenue.textContent = 'Salvar';
-    } else {
-      abrirFormOverlay('expense');
-      els.descExpense.value = parcelaInfo ? parcelaInfo.baseDesc : t.description;
-      els.amountExpense.value = t.amount * (parcelaInfo ? parcelaInfo.totalParcelas : 1);
-      els.categoryExpense.value = t.category;
-      if (parcelaInfo) {
-        els.parceladoExpense.checked = true;
-        els.parcelasDivExpense.classList.add('visible');
-        els.parcelasExpense.value = parcelaInfo.totalParcelas;
-      } else {
-        els.parceladoExpense.checked = false;
-        els.parcelasDivExpense.classList.remove('visible');
-      }
-      const base = parcelaInfo ? parcelaInfo.baseDesc : t.description;
-      const cnt = base.length;
-      els.charCountExpense.textContent = cnt;
-      els.charCountExpense.parentElement.classList.toggle('warning', cnt >= 12);
-      els.btnSaveExpense.textContent = 'Salvar';
-    }
-    editIndex = i;
-  }
-}
-
-function save() {
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-}
-
-
-
-/* ---------- INICIALIZAÇÃO ---------- */
-function init() {
-  bloquearZoom();
-  initPWA();
-  initCharCounter(els.descExpense, els.charCountExpense);
-
-  /* popula selects */
-  categories.revenue.forEach(o => {
-    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.originRevenue.appendChild(opt);
-  });
-  categories.expense.forEach(o => {
-    const opt = document.createElement('option'); opt.value = o; opt.textContent = o; els.categoryExpense.appendChild(opt);
-  });
-
-  /* eventos principais */
-  els.addRevenueBtn.addEventListener('click', () => abrirFormOverlay('revenue'));
-  els.addExpenseBtn.addEventListener('click', () => abrirFormOverlay('expense'));
-  els.closeFormBtnRevenue.addEventListener('click', () => fecharFormOverlay('revenue'));
-  els.closeFormBtnExpense.addEventListener('click', () => fecharFormOverlay('expense'));
-  els.formRevenue.addEventListener('submit', e => {
-    e.preventDefault();
-    processarFormulario(els.originRevenue.value, els.amountRevenue.value, 'revenue', els.originRevenue.value, false, 1, 'revenue');
-  });
-  els.formExpense.addEventListener('submit', e => {
-    e.preventDefault();
-    processarFormulario(els.descExpense.value, els.amountExpense.value, 'expense', els.categoryExpense.value, els.parceladoExpense.checked, els.parcelasExpense.value, 'expense');
-  });
-  els.parceladoExpense.addEventListener('change', () => els.parcelasDivExpense.classList.toggle('visible', els.parceladoExpense.checked));
-  els.reset.addEventListener('click', () => els.resetModal.style.display = 'flex');
-  els.resetCancel.addEventListener('click', () => els.resetModal.style.display = 'none');
-  els.resetConfirm.addEventListener('click', () => {
-    transactions = []; save(); renderTransactions(); renderLegenda(); els.resetModal.style.display = 'none';
-  });
-  els.deleteCancel.addEventListener('click', () => { els.deleteModal.style.display = 'none'; deleteIndex = null; });
-  els.deleteConfirm.addEventListener('click', () => {
-    if (deleteIndex !== null) {
-      const tr = transactions[deleteIndex];
-      const info = parseParcelaInfo(tr.description);
-      if (info) {
-        transactions = transactions.filter(t => {
-          const i = parseParcelaInfo(t.description);
-          return !i || i.baseDesc !== info.baseDesc;
+/* ---------- GERENCIAMENTO DE DADOS ---------- */
+const DATA_MANAGER = {
+    salvar() {
+        localStorage.setItem('transactions', JSON.stringify(STATE.transactions));
+    },
+    
+    obterTransacoesDoMes(mes = UTILS.mesAtualStr) {
+        return STATE.transactions.filter(transacao => {
+            const parcelaInfo = UTILS.parseParcelaInfo(transacao.description);
+            const mesTransacao = parcelaInfo 
+                ? UTILS.getMesAnoParcela(transacao.dataLancamento, parcelaInfo.parcelaAtual)
+                : UTILS.getMesAnoStr(transacao.dataLancamento);
+            
+            return mesTransacao === mes;
         });
-      } else {
-        transactions.splice(deleteIndex, 1);
-      }
-      save(); renderTransactions(); renderLegenda(); els.deleteModal.style.display = 'none'; deleteIndex = null;
+    },
+    
+    calcularTotais(transacoes = STATE.transactions) {
+        const transacoesMes = this.obterTransacoesDoMes();
+        let receita = 0;
+        let despesa = 0;
+        
+        transacoesMes.forEach(transacao => {
+            if (transacao.type === 'revenue') {
+                receita += transacao.amount;
+            } else {
+                despesa += transacao.amount;
+            }
+        });
+        
+        return { receita, despesa, saldo: receita - despesa };
     }
-  });
-  window.addEventListener('click', e => {
-    if (e.target === els.resetModal) els.resetModal.style.display = 'none';
-    if (e.target === els.deleteModal) els.deleteModal.style.display = 'none';
-    if (e.target === els.formOverlayRevenue) fecharFormOverlay('revenue');
-    if (e.target === els.formOverlayExpense) fecharFormOverlay('expense');
-  });
-  els.list.addEventListener('click', handleActions);
+};
 
+/* ---------- GERENCIAMENTO DE ZOOM ---------- */
+const ZOOM_MANAGER = {
+    init() {
+        this.bloquearGestos();
+        this.bloquearTeclado();
+        this.bloquearWheel();
+    },
+    
+    bloquearGestos() {
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(evento => {
+            document.addEventListener(evento, e => e.preventDefault());
+        });
+    },
+    
+    bloquearTeclado() {
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && ['+', '-', '0', '='].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    },
+    
+    bloquearWheel() {
+        document.addEventListener('wheel', e => {
+            if (e.ctrlKey) e.preventDefault();
+        }, { passive: false });
+    }
+};
 
-  /* primeira renderização */
-  renderTransactions();
-  renderLegenda();
+/* ---------- GERENCIAMENTO DE ALERTAS ---------- */
+const ALERT_MANAGER = {
+    verificarSaldoNegativo(saldo) {
+        if (STATE.alertTimeout) {
+            clearTimeout(STATE.alertTimeout);
+            STATE.alertTimeout = null;
+        }
+        
+        if (saldo < 0 && !STATE.saldoNegAlert) {
+            DOM.negativeAlert.style.display = 'block';
+            STATE.saldoNegAlert = true;
+            
+            STATE.alertTimeout = setTimeout(() => {
+                DOM.negativeAlert.style.display = 'none';
+                STATE.saldoNegAlert = false;
+            }, 5000);
+        } else if (saldo >= 0) {
+            DOM.negativeAlert.style.display = 'none';
+            STATE.saldoNegAlert = false;
+        }
+    }
+};
+
+/* ---------- GERENCIAMENTO DE FORMULÁRIOS ---------- */
+const FORM_MANAGER = {
+    init() {
+        this.inicializarContadorCaracteres();
+        this.popularSelects();
+        this.configurarEventos();
+    },
+    
+    inicializarContadorCaracteres() {
+        DOM.descExpense.addEventListener('input', () => {
+            let count = DOM.descExpense.value.length;
+            if (count > 12) {
+                DOM.descExpense.value = DOM.descExpense.value.slice(0, 12);
+                count = 12;
+            }
+            DOM.charCountExpense.textContent = count;
+            DOM.charCountExpense.parentElement.classList.toggle('warning', count >= 12);
+        });
+    },
+    
+    popularSelects() {
+        // Limpar selects existentes
+        DOM.originRevenue.innerHTML = '';
+        DOM.categoryExpense.innerHTML = '';
+        
+        // Popular origem de receitas
+        CONFIG.categories.revenue.forEach(origem => {
+            const option = document.createElement('option');
+            option.value = origem;
+            option.textContent = origem;
+            DOM.originRevenue.appendChild(option);
+        });
+        
+        // Popular categorias de despesas
+        CONFIG.categories.expense.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            DOM.categoryExpense.appendChild(option);
+        });
+    },
+    
+    configurarEventos() {
+        // Eventos de formulário de receita
+        DOM.formRevenue.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processarFormulario('revenue');
+        });
+        
+        // Eventos de formulário de despesa
+        DOM.formExpense.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.processarFormulario('expense');
+        });
+        
+        DOM.parceladoExpense.addEventListener('change', () => {
+            DOM.parcelasDivExpense.classList.toggle('visible', DOM.parceladoExpense.checked);
+        });
+    },
+    
+    abrir(tipo) {
+        if (tipo === 'revenue') {
+            DOM.formRevenue.reset();
+            DOM.btnSaveRevenue.textContent = 'Adicionar';
+            DOM.originRevenue.focus();
+            DOM.formOverlayRevenue.style.display = 'flex';
+        } else {
+            DOM.formExpense.reset();
+            DOM.btnSaveExpense.textContent = 'Adicionar';
+            DOM.parcelasDivExpense.classList.remove('visible');
+            DOM.charCountExpense.textContent = '0';
+            DOM.charCountExpense.parentElement.classList.remove('warning');
+            DOM.descExpense.focus();
+            DOM.formOverlayExpense.style.display = 'flex';
+        }
+        
+        setTimeout(() => {
+            document.activeElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }, 300);
+    },
+    
+    fechar(tipo) {
+        if (tipo === 'revenue') {
+            DOM.formOverlayRevenue.style.display = 'none';
+            DOM.formRevenue.reset();
+        } else {
+            DOM.formOverlayExpense.style.display = 'none';
+            DOM.formExpense.reset();
+            DOM.parcelasDivExpense.classList.remove('visible');
+            DOM.charCountExpense.textContent = '0';
+            DOM.charCountExpense.parentElement.classList.remove('warning');
+        }
+        STATE.editIndex = null;
+    },
+    
+    processarFormulario(tipo) {
+        if (tipo === 'revenue') {
+            this.processarReceita();
+        } else {
+            this.processarDespesa();
+        }
+    },
+    
+    processarReceita() {
+        const origem = DOM.originRevenue.value.trim();
+        const valor = parseFloat(DOM.amountRevenue.value);
+        
+        if (!UTILS.validarValor(valor)) {
+            alert('Por favor, insira um valor válido para a receita.');
+            return;
+        }
+        
+        this.salvarTransacao({
+            descricao: origem,
+            valor: valor,
+            tipo: 'revenue',
+            categoria: origem,
+            ehParcelado: false,
+            numParcelas: 1
+        }, 'revenue');
+    },
+    
+    processarDespesa() {
+        const descricao = DOM.descExpense.value.trim();
+        const valor = parseFloat(DOM.amountExpense.value);
+        const categoria = DOM.categoryExpense.value;
+        const ehParcelado = DOM.parceladoExpense.checked;
+        const numParcelas = parseInt(DOM.parcelasExpense.value) || 1;
+        
+        if (!descricao) {
+            alert('Por favor, insira uma descrição para a despesa.');
+            return;
+        }
+        
+        if (!UTILS.validarValor(valor)) {
+            alert('Por favor, insira um valor válido para a despesa.');
+            return;
+        }
+        
+        this.salvarTransacao({
+            descricao: descricao,
+            valor: valor,
+            tipo: 'expense',
+            categoria: categoria,
+            ehParcelado: ehParcelado,
+            numParcelas: numParcelas
+        }, 'expense');
+    },
+    
+    salvarTransacao(dados, formType) {
+        let { descricao, valor, tipo, categoria, ehParcelado, numParcelas } = dados;
+        
+        // Limitar descrição a 12 caracteres
+        descricao = descricao.trim();
+        if (descricao.length > 12) {
+            descricao = descricao.slice(0, 12);
+        }
+        
+        const dataLancamento = new Date().toISOString();
+        const novasTransacoes = [];
+        
+        // Modo edição
+        if (STATE.editIndex !== null) {
+            this.processarEdicao(descricao, valor, tipo, categoria, ehParcelado, numParcelas, dataLancamento);
+        } else {
+            // Modo criação
+            if (ehParcelado && numParcelas >= 2) {
+                const valorParcela = valor / numParcelas;
+                for (let i = 1; i <= numParcelas; i++) {
+                    novasTransacoes.push({
+                        description: `${descricao} ${i}/${numParcelas}`,
+                        amount: parseFloat(valorParcela.toFixed(2)),
+                        type: tipo,
+                        category: categoria,
+                        dataLancamento: dataLancamento
+                    });
+                }
+            } else {
+                novasTransacoes.push({
+                    description: descricao,
+                    amount: valor,
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataLancamento
+                });
+            }
+            STATE.transactions.push(...novasTransacoes);
+        }
+        
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+        this.fechar(formType);
+        
+        if (STATE.editIndex === null) {
+            setTimeout(() => {
+                DOM.transactionsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+    },
+    
+    processarEdicao(descricao, valor, tipo, categoria, ehParcelado, numParcelas, dataLancamento) {
+        const transacaoOriginal = STATE.transactions[STATE.editIndex];
+        const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
+        const novasTransacoes = [];
+        
+        // Caso 1: Era parcelada, agora não é mais
+        if (infoParcela && !ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            novasTransacoes.push({
+                description: descricao,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento
+            });
+        }
+        // Caso 2: Não era parcelada, agora é
+        else if (!infoParcela && ehParcelado) {
+            const valorParcela = valor / numParcelas;
+            for (let i = 1; i <= numParcelas; i++) {
+                novasTransacoes.push({
+                    description: `${descricao} ${i}/${numParcelas}`,
+                    amount: parseFloat(valorParcela.toFixed(2)),
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataLancamento
+                });
+            }
+            STATE.transactions.splice(STATE.editIndex, 1);
+        }
+        // Caso 3: Era parcelada e continua sendo (possivelmente com alterações)
+        else if (infoParcela && ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            const valorParcela = valor / numParcelas;
+            for (let i = 1; i <= numParcelas; i++) {
+                novasTransacoes.push({
+                    description: `${descricao} ${i}/${numParcelas}`,
+                    amount: parseFloat(valorParcela.toFixed(2)),
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataLancamento
+                });
+            }
+        }
+        // Caso 4: Edição simples sem mudança de parcelamento
+        else {
+            STATE.transactions[STATE.editIndex] = {
+                description: descricao,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento
+            };
+        }
+        
+        if (novasTransacoes.length) {
+            STATE.transactions.push(...novasTransacoes);
+        }
+        STATE.editIndex = null;
+    }
+};
+
+/* ---------- GERENCIAMENTO DE RENDERIZAÇÃO ---------- */
+const RENDER_MANAGER = {
+    renderizarTudo() {
+        this.renderizarTransacoes();
+        this.renderizarLegenda();
+        this.renderizarGrafico();
+    },
+    
+    renderizarTransacoes() {
+        DOM.list.innerHTML = '';
+        const { receita, despesa } = DATA_MANAGER.calcularTotais();
+        const mesAtual = UTILS.mesAtualStr;
+        
+        STATE.transactions.forEach((transacao, index) => {
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            let mostra = false;
+            let descricaoDisplay = transacao.description;
+            let mesDisplay = '';
+            
+            // Verificar se a transação pertence ao mês atual
+            if (infoParcela) {
+                const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
+                mostra = mesParcela === mesAtual;
+                if (mostra) {
+                    const data = new Date(transacao.dataLancamento);
+                    data.setMonth(data.getMonth() + infoParcela.parcelaAtual - 1);
+                    mesDisplay = CONFIG.meses[data.getMonth()];
+                    descricaoDisplay = `${infoParcela.baseDesc} (${infoParcela.parcelaAtual}/${infoParcela.totalParcelas})`;
+                }
+            } else {
+                const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
+                mostra = mesTransacao === mesAtual;
+                if (mostra) {
+                    mesDisplay = CONFIG.meses[new Date(transacao.dataLancamento).getMonth()];
+                }
+            }
+            
+            if (!mostra) return;
+            
+            const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
+            const ehParcelada = infoParcela !== null;
+            
+            const linha = document.createElement('tr');
+            linha.innerHTML = `
+                <td style="white-space:nowrap">${descricaoDisplay}</td>
+                <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap">
+                    ${UTILS.formataReal(transacao.amount)}
+                </td>
+                <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+                <td style="white-space:nowrap">${transacao.category || '-'}</td>
+                <td>
+                    <div class="actions-cell">
+                        ${!ehParcelada ? 
+                            `<button class="edit-btn" data-i="${index}" title="Editar">✏️</button>` : 
+                            '<span class="edit-placeholder"></span>'
+                        }
+                        <button class="delete-btn" data-i="${index}" title="Excluir">🗑️</button>
+                    </div>
+                </td>
+            `;
+            DOM.list.appendChild(linha);
+        });
+        
+        this.atualizarResumo(receita, despesa);
+        DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
+    },
+    
+    atualizarResumo(receita, despesa) {
+        const saldo = receita - despesa;
+        ALERT_MANAGER.verificarSaldoNegativo(saldo);
+        
+        DOM.totalRev.textContent = UTILS.formataReal(receita);
+        DOM.totalDes.textContent = UTILS.formataReal(despesa);
+        DOM.balance.textContent = UTILS.formataReal(saldo);
+        DOM.balance.className = saldo < 0 ? 'negative' : 'info';
+    },
+    
+    renderizarLegenda() {
+        const mesAtual = UTILS.mesAtualStr;
+        let receitaTotal = 0;
+        const despesasPorCategoria = {};
+        
+        // Inicializar categorias de despesa
+        CONFIG.categories.expense.forEach(categoria => {
+            despesasPorCategoria[categoria] = 0;
+        });
+        
+        // Calcular totais
+        STATE.transactions.forEach(transacao => {
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            const mesItem = infoParcela 
+                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
+                : UTILS.getMesAnoStr(transacao.dataLancamento);
+            
+            if (mesItem !== mesAtual) return;
+            
+            if (transacao.type === 'revenue') {
+                receitaTotal += transacao.amount;
+            } else if (despesasPorCategoria.hasOwnProperty(transacao.category)) {
+                despesasPorCategoria[transacao.category] += transacao.amount;
+            }
+        });
+        
+        const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
+        const saldo = receitaTotal - totalDespesas;
+        
+        // Gerar HTML da legenda
+        const legendas = [];
+        
+        // Legenda para receita (saldo)
+        if (receitaTotal > 0) {
+            const percentual = saldo < 0 ? 0 : (saldo / receitaTotal) * 100;
+            legendas.push(`
+                <div class="categoria-legenda">
+                    <span class="cor-blob" style="background:${CONFIG.chartColors.revenue}"></span>
+                    Receita ${percentual.toFixed(0)}%
+                </div>
+            `);
+        }
+        
+        // Legendas para despesas
+        CONFIG.categories.expense.forEach((categoria, index) => {
+            const valor = despesasPorCategoria[categoria] || 0;
+            if (valor > 0) {
+                const percentual = receitaTotal > 0 ? (valor / receitaTotal) * 100 : 0;
+                legendas.push(`
+                    <div class="categoria-legenda">
+                        <span class="cor-blob" style="background:${CONFIG.chartColors.expenses[index]}"></span>
+                        ${categoria} ${percentual.toFixed(0)}%
+                    </div>
+                `);
+            }
+        });
+        
+        DOM.legenda.innerHTML = legendas.join('');
+    },
+    
+    renderizarGrafico() {
+        const mesAtual = UTILS.mesAtualStr;
+        let receitaTotal = 0;
+        const despesasPorCategoria = {};
+        
+        // Inicializar categorias
+        CONFIG.categories.expense.forEach(categoria => {
+            despesasPorCategoria[categoria] = 0;
+        });
+        
+        // Calcular totais para o gráfico
+        STATE.transactions.forEach(transacao => {
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            const mesItem = infoParcela
+                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
+                : UTILS.getMesAnoStr(transacao.dataLancamento);
+            
+            if (mesItem !== mesAtual) return;
+            
+            if (transacao.type === 'revenue') {
+                receitaTotal += transacao.amount;
+            } else if (despesasPorCategoria.hasOwnProperty(transacao.category)) {
+                despesasPorCategoria[transacao.category] += transacao.amount;
+            }
+        });
+        
+        const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
+        const receitaDisponivel = receitaTotal - totalDespesas;
+        
+        // Preparar dados para o gráfico
+        const labels = [];
+        const dados = [];
+        const cores = [];
+        
+        // Adicionar receita disponível (saldo)
+        if (receitaDisponivel > 0) {
+            labels.push('Receita');
+            dados.push(receitaDisponivel);
+            cores.push(CONFIG.chartColors.revenue);
+        }
+        
+        // Adicionar despesas por categoria
+        CONFIG.categories.expense.forEach((categoria, index) => {
+            const valor = despesasPorCategoria[categoria] || 0;
+            if (valor > 0) {
+                labels.push(categoria);
+                dados.push(valor);
+                cores.push(CONFIG.chartColors.expenses[index]);
+            }
+        });
+        
+        // Destruir gráfico existente
+        if (STATE.chart) {
+            STATE.chart.destroy();
+        }
+        
+        // Criar novo gráfico
+        if (dados.length > 0) {
+            STATE.chart = new Chart(DOM.canvas, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dados,
+                        backgroundColor: cores
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+    }
+};
+
+/* ---------- GERENCIAMENTO DE AÇÕES ---------- */
+const ACTION_MANAGER = {
+    configurarEventos() {
+        // Ações de clique na lista
+        DOM.list.addEventListener('click', (e) => this.handleAcoes(e));
+        
+        // Botões de adicionar
+        DOM.addRevenueBtn.addEventListener('click', () => FORM_MANAGER.abrir('revenue'));
+        DOM.addExpenseBtn.addEventListener('click', () => FORM_MANAGER.abrir('expense'));
+        
+        // Fechar formulários
+        DOM.closeFormBtnRevenue.addEventListener('click', () => FORM_MANAGER.fechar('revenue'));
+        DOM.closeFormBtnExpense.addEventListener('click', () => FORM_MANAGER.fechar('expense'));
+        
+        // Modais de reset
+        DOM.reset.addEventListener('click', () => DOM.resetModal.style.display = 'flex');
+        DOM.resetCancel.addEventListener('click', () => DOM.resetModal.style.display = 'none');
+        DOM.resetConfirm.addEventListener('click', () => this.resetarDados());
+        
+        // Modais de exclusão
+        DOM.deleteCancel.addEventListener('click', () => {
+            DOM.deleteModal.style.display = 'none';
+            STATE.deleteIndex = null;
+        });
+        DOM.deleteConfirm.addEventListener('click', () => this.confirmarExclusao());
+        
+        // Cliques fora dos modais/formulários
+        window.addEventListener('click', (e) => this.handleCliqueFora(e));
+    },
+    
+    handleAcoes(e) {
+        const indice = parseInt(e.target.dataset.i);
+        
+        if (e.target.classList.contains('delete-btn')) {
+            this.abrirModalExclusao(indice);
+        }
+        
+        if (e.target.classList.contains('edit-btn')) {
+            this.editarTransacao(indice);
+        }
+    },
+    
+    abrirModalExclusao(indice) {
+        STATE.deleteIndex = indice;
+        const transacao = STATE.transactions[indice];
+        const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+        
+        DOM.deleteBody.textContent = infoParcela
+            ? `Tem certeza que deseja excluir TODAS as parcelas de "${infoParcela.baseDesc}"?`
+            : `Tem certeza que deseja excluir "${transacao.description}"?`;
+        
+        DOM.deleteModal.style.display = 'flex';
+    },
+    
+    editarTransacao(indice) {
+        const transacao = STATE.transactions[indice];
+        const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+        
+        if (transacao.type === 'revenue') {
+            FORM_MANAGER.abrir('revenue');
+            DOM.amountRevenue.value = transacao.amount * (infoParcela ? infoParcela.totalParcelas : 1);
+            DOM.originRevenue.value = transacao.category;
+            DOM.btnSaveRevenue.textContent = 'Salvar';
+        } else {
+            FORM_MANAGER.abrir('expense');
+            DOM.descExpense.value = infoParcela ? infoParcela.baseDesc : transacao.description;
+            DOM.amountExpense.value = transacao.amount * (infoParcela ? infoParcela.totalParcelas : 1);
+            DOM.categoryExpense.value = transacao.category;
+            
+            if (infoParcela) {
+                DOM.parceladoExpense.checked = true;
+                DOM.parcelasDivExpense.classList.add('visible');
+                DOM.parcelasExpense.value = infoParcela.totalParcelas;
+            } else {
+                DOM.parceladoExpense.checked = false;
+                DOM.parcelasDivExpense.classList.remove('visible');
+            }
+            
+            const baseDesc = infoParcela ? infoParcela.baseDesc : transacao.description;
+            const count = baseDesc.length;
+            DOM.charCountExpense.textContent = count;
+            DOM.charCountExpense.parentElement.classList.toggle('warning', count >= 12);
+            DOM.btnSaveExpense.textContent = 'Salvar';
+        }
+        
+        STATE.editIndex = indice;
+    },
+    
+    confirmarExclusao() {
+        if (STATE.deleteIndex !== null) {
+            const transacao = STATE.transactions[STATE.deleteIndex];
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            
+            if (infoParcela) {
+                STATE.transactions = STATE.transactions.filter(t => {
+                    const info = UTILS.parseParcelaInfo(t.description);
+                    return !info || info.baseDesc !== infoParcela.baseDesc;
+                });
+            } else {
+                STATE.transactions.splice(STATE.deleteIndex, 1);
+            }
+            
+            DATA_MANAGER.salvar();
+            RENDER_MANAGER.renderizarTudo();
+            DOM.deleteModal.style.display = 'none';
+            STATE.deleteIndex = null;
+        }
+    },
+    
+    resetarDados() {
+        STATE.transactions = [];
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+        DOM.resetModal.style.display = 'none';
+    },
+    
+    handleCliqueFora(e) {
+        if (e.target === DOM.resetModal) DOM.resetModal.style.display = 'none';
+        if (e.target === DOM.deleteModal) DOM.deleteModal.style.display = 'none';
+        if (e.target === DOM.formOverlayRevenue) FORM_MANAGER.fechar('revenue');
+        if (e.target === DOM.formOverlayExpense) FORM_MANAGER.fechar('expense');
+    }
+};
+
+/* ---------- GERENCIAMENTO PWA ---------- */
+const PWA_MANAGER = {
+    init() {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            STATE.deferredPrompt = e;
+            
+            setTimeout(() => {
+                if (STATE.deferredPrompt) {
+                    DOM.installPrompt.style.display = 'block';
+                }
+            }, 3000);
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            STATE.deferredPrompt = null;
+            DOM.installPrompt.style.display = 'none';
+        });
+        
+        DOM.installConfirm.addEventListener('click', async () => {
+            if (STATE.deferredPrompt) {
+                STATE.deferredPrompt.prompt();
+                const { outcome } = await STATE.deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    STATE.deferredPrompt = null;
+                }
+                DOM.installPrompt.style.display = 'none';
+            }
+        });
+        
+        DOM.installCancel.addEventListener('click', () => {
+            DOM.installPrompt.style.display = 'none';
+        });
+    }
+};
+
+/* ---------- COMPARTILHAMENTO ---------- */
+const SHARE_MANAGER = {
+    init() {
+        DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
+    },
+    
+    async compartilharResumo() {
+        const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
+        const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
+        
+        const texto = `💰 RESUMO FINANCEIRO - ${mesAtual}
+
+📈 Receitas: ${UTILS.formataReal(receita)}
+📉 Despesas: ${UTILS.formataReal(despesa)}
+💎 Saldo: ${UTILS.formataReal(saldo)}
+
+Gerado pelo CONT1 - Controle Financeiro`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: `Resumo Financeiro - ${mesAtual}`,
+                    text: texto
+                });
+            } else {
+                await navigator.clipboard.writeText(texto);
+                alert('Resumo copiado para a área de transferência!');
+            }
+        } catch (err) {
+            console.log('Erro ao compartilhar:', err);
+        }
+    }
+};
+
+/* ---------- INICIALIZAÇÃO DA APLICAÇÃO ---------- */
+function init() {
+    ZOOM_MANAGER.init();
+    PWA_MANAGER.init();
+    FORM_MANAGER.init();
+    ACTION_MANAGER.configurarEventos();
+    SHARE_MANAGER.init();
+    
+    // Renderização inicial
+    RENDER_MANAGER.renderizarTudo();
 }
 
-
-// Inicializa a aplicação quando o DOM estiver pronto
+// Inicializar quando o DOM estiver pronto
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', init);
 } else {
-  init();
+    init();
 }
