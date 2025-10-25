@@ -49,41 +49,11 @@ h1 {
   padding: 18px 14px 22px;
 }
 
-/* ============== HEADER E BOTÃO ENVIAR RECEITA ============== */
-.page-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 8px;
-}
 
 .page-header h1 {
   font-size: 1.3rem;
   margin: 0;
   color: #222;
-}
-
-/* Container do botão Enviar Receita */
-.share-receita-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-/* Botão Enviar Receita */
-#share-receita {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--clr-accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  padding: 8px 16px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: background-color 0.2s ease;
 }
 
 #share-receita:hover,
