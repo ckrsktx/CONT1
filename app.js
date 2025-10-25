@@ -72,7 +72,10 @@ const els = {
   parcelasExpense:     document.getElementById('parcelas-expense'),
   parcelasDivExpense:  document.getElementById('parcelas-field-div-expense'),
   btnSaveExpense:      document.getElementById('save-btn-expense'),
-  charCountExpense:    document.getElementById('char-count-expense')
+  charCountExpense:    document.getElementById('char-count-expense'),
+
+  /* --- novo botão Enviar Receita --- */
+  btnShareReceita:     document.getElementById('share-receita'),
 };
 
 /* ---------- ESTADO GLOBAL ---------- */
@@ -274,15 +277,13 @@ function updateSummary(rev, des) {
 }
 
 /* ---------- RENDER GRÁFICO ---------- */
-/* ---------- GRÁFICO PIZZA – RECEITA SOBRANDO OU SOMENTE DESPESAS ---------- */
 function renderPieChart() {
   const thisMonth = mesAtualStr;
 
   let receita = 0;
-  const desp = {};                                   // zero todas as despesas
+  const desp = {};
   expenseCategories.forEach(c => desp[c.name] = 0);
 
-  /* ---------- SOMATÓRIO DO MÊS ---------- */
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     const mesItem = parcelaInfo
@@ -298,20 +299,18 @@ function renderPieChart() {
   });
 
   const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
-  const receitaDisponivel = receita - totalDespesas;   // o que sobrou (pode ser ≤ 0)
+  const receitaDisponivel = receita - totalDespesas;
 
   const labels = [];
   const data   = [];
   const cores  = [];
 
-  /* ---------- SETOR "RECEITA" (só se ainda houver sobra) ---------- */
   if (receitaDisponivel > 0) {
     labels.push('Receita');
     data.push(receitaDisponivel);
     cores.push(revenueCategories[0].color);
   }
 
-  /* ---------- SETORES DE DESPESAS ---------- */
   expenseCategories.forEach(c => {
     const v = desp[c.name] || 0;
     if (v > 0) {
@@ -321,7 +320,6 @@ function renderPieChart() {
     }
   });
 
-  /* ---------- DESENHA ---------- */
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
@@ -428,6 +426,36 @@ function save() {
   localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
+/* ---------- NOVA FUNÇÃO: GERAR PDF E ENVIAR RECEITA ---------- */
+function gerarPdfReceita() {
+  const element = document.getElementById('main-content');
+  if (!element) {
+    console.error('Elemento main-content não encontrado.');
+    return;
+  }
+
+  // Usa html2canvas para capturar a área
+  html2canvas(element).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: 'a4'
+    });
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('receita-controle.pdf');
+  }).catch(err => {
+    console.error('Erro ao gerar PDF:', err);
+  });
+}
+
 /* ---------- INICIALIZAÇÃO ---------- */
 function init() {
   bloquearZoom();
@@ -485,6 +513,11 @@ function init() {
   });
   els.list.addEventListener('click', handleActions);
 
+  /* evento para botão "Enviar Receita" */
+  if (els.btnShareReceita) {
+    els.btnShareReceita.addEventListener('click', gerarPdfReceita);
+  }
+
   /* primeira renderização */
   renderTransactions();
   renderLegenda();
@@ -497,4 +530,3 @@ if ('serviceWorker' in navigator) {
 }
 
 init();
-  
