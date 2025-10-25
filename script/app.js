@@ -874,11 +874,43 @@ const SHARE_MANAGER = {
         const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
         const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
         
+        // Calcular porcentagens por categoria
+        const despesasPorCategoria = {};
+        CONFIG.categories.expense.forEach(categoria => {
+            despesasPorCategoria[categoria] = 0;
+        });
+
+        STATE.transactions.forEach(transacao => {
+            if (transacao.type === 'expense') {
+                const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+                const mesItem = infoParcela 
+                    ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
+                    : UTILS.getMesAnoStr(transacao.dataLancamento);
+                
+                if (mesItem === UTILS.mesAtualStr && despesasPorCategoria.hasOwnProperty(transacao.category)) {
+                    despesasPorCategoria[transacao.category] += transacao.amount;
+                }
+            }
+        });
+
+        // Gerar texto das categorias com emojis de quadrado colorido
+        const categoriasTexto = CONFIG.categories.expense.map((categoria, index) => {
+            const valor = despesasPorCategoria[categoria] || 0;
+            if (valor > 0 && receita > 0) {
+                const percentual = (valor / receita) * 100;
+                const quadrado = ['🟥','🟨','🟦','🟪','🟩','🟧','⬜'][index]; // Cores correspondentes
+                return `${quadrado} ${categoria}: ${percentual.toFixed(1)}%`;
+            }
+            return '';
+        }).filter(texto => texto !== '').join('\n');
+
         const texto = `💰 RESUMO FINANCEIRO - ${mesAtual}
 
 📈 Receitas: ${UTILS.formataReal(receita)}
 📉 Despesas: ${UTILS.formataReal(despesa)}
 💎 Saldo: ${UTILS.formataReal(saldo)}
+
+${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nenhuma despesa registrada este mês'}
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
