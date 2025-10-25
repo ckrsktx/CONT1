@@ -90,13 +90,14 @@ h1 {
   outline: none;
 }
 
-/* RESUMO FINANCEIRO */
+/* RESUMO FINANCEIRO - CORREÇÃO DE ALINHAMENTO */
 .summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   margin-bottom: 16px;
   justify-items: center;
+  align-items: start; /* Garante alinhamento no topo */
 }
 
 .summary-card {
@@ -108,12 +109,18 @@ h1 {
   width: 100%;
   max-width: 220px;
   position: relative;
+  height: 100%; /* Garante altura igual */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
+/* CORREÇÃO: Saldo com mesma largura que as outras */
 .summary-card.balance-card {
-  max-width: 320px;
+  max-width: 220px; /* Mesma largura das outras */
   grid-column: span 3;
   justify-self: center;
+  margin-top: 0; /* Remove margem extra */
 }
 
 .summary-card h3 {
@@ -121,6 +128,7 @@ h1 {
   color: var(--clr-muted);
   margin-bottom: 2px;
   font-weight: 500;
+  flex-shrink: 0; /* Evita compressão */
 }
 
 .summary-card p {
@@ -129,6 +137,10 @@ h1 {
   margin-bottom: 0;
   line-height: 1.15em;
   min-height: 1.6em;
+  flex-grow: 1; /* Ocupa espaço disponível */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .positive { color: var(--clr-success); }
@@ -154,6 +166,7 @@ h1 {
   box-shadow: 0 1px 2px #0002;
   z-index: 2;
   transition: background .17s;
+  flex-shrink: 0; /* Garante tamanho fixo */
 }
 
 .add-btn-card.negative { background: var(--clr-danger); }
@@ -188,7 +201,7 @@ h1 {
 #pieChart { max-width: 210px; margin: auto; }
 .chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
 
-/* TABELA DE TRANSAÇÕES - MELHORIAS MOBILE */
+/* TABELA DE TRANSAÇÕES - CORREÇÃO DE ALINHAMENTO */
 .transactions-section {
   margin: 0 auto;
   max-width: 900px;
@@ -228,7 +241,6 @@ h1 {
 
 .transactions-table th,
 .transactions-table td {
-  text-align: left;
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
   white-space: nowrap;
@@ -237,27 +249,10 @@ h1 {
   vertical-align: middle;
 }
 
-/* CENTRALIZAÇÃO VERTICAL E HORIZONTAL PARA TODAS AS CÉLULAS */
-.transactions-table th,
-.transactions-table td {
-  vertical-align: middle;
-  text-align: center;
-}
-
-/* Apenas a primeira coluna alinhada à esquerda para melhor legibilidade */
-.transactions-table th:first-child,
-.transactions-table td:first-child {
-  text-align: left;
-}
-
-/* Definição explícita das larguras */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
-.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 25%; }
-.transactions-table th:last-child, .transactions-table td:last-child { width: 15%; }
-
+/* CORREÇÃO: Centralização vertical e horizontal consistente */
 .transactions-table th {
+  text-align: center;
+  vertical-align: middle;
   font-weight: 600;
   color: #495057;
   padding: 10px 4px;
@@ -268,6 +263,8 @@ h1 {
 }
 
 .transactions-table td {
+  text-align: center;
+  vertical-align: middle;
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
   white-space: nowrap;
@@ -276,6 +273,27 @@ h1 {
   font-size: 0.82rem;
 }
 
+/* Primeira coluna alinhada à esquerda para melhor legibilidade */
+.transactions-table th:first-child,
+.transactions-table td:first-child {
+  text-align: left;
+}
+
+/* CORREÇÃO: Alinhamento perfeito da coluna de ações */
+.transactions-table th:last-child,
+.transactions-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+  width: 15%;
+}
+
+/* Definição explícita das larguras */
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 25%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 15%; }
+
 .actions-cell {
   display: flex;
   justify-content: center;
@@ -283,8 +301,10 @@ h1 {
   gap: 6px;
   height: 100%;
   min-height: 35px;
+  width: 100%;
 }
 
+/* CORREÇÃO: Botões de ação perfeitamente centralizados */
 .edit-btn, .delete-btn {
   background: none;
   border: none;
@@ -300,6 +320,7 @@ h1 {
   height: 26px;
   border-radius: 4px;
   vertical-align: middle;
+  flex-shrink: 0; /* Garante que não comprimam */
 }
 
 .edit-btn { color: #28a745; }
@@ -309,6 +330,13 @@ h1 {
   outline: 2px solid #007bff;
   background: #e6f0ff;
   border-radius: 4px;
+}
+
+.edit-placeholder {
+  display: inline-block;
+  width: 26px; /* Mesma largura do botão de editar */
+  height: 26px; /* Mesma altura do botão de editar */
+  visibility: hidden; /* Mantém o espaço mas esconde */
 }
 
 /* MELHORIAS PARA MOBILE */
@@ -333,6 +361,7 @@ h1 {
     justify-self: unset;
     margin: 0 auto;
     width: 100%;
+    height: auto; /* Altura automática no mobile */
   }
   
   .share-receita-container {
@@ -376,6 +405,11 @@ h1 {
     width: 22px;
     height: 22px;
     padding: 1px;
+  }
+  
+  .edit-placeholder {
+    width: 22px;
+    height: 22px;
   }
 }
 
@@ -582,12 +616,6 @@ h1 {
 .char-counter { font-size: .78rem; color: var(--clr-muted); text-align: right; margin-top: 1px; }
 .char-counter.warning { color: var(--clr-danger); }
 
-.edit-placeholder {
-  display: inline-block;
-  width: 20px;
-  height: 1px;
-}
-
 /* FOCUS VISÍVEL */
 :focus {
   outline: 2px solid #007bff;
@@ -599,4 +627,4 @@ input:focus, select:focus {
   outline: 2px solid #007bff !important;
   background: #e6f0ff !important;
   color: #111 !important;
-  }
+}
