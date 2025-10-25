@@ -93,11 +93,11 @@ h1 {
 /* RESUMO FINANCEIRO - CORREÇÃO DE ALINHAMENTO */
 .summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
   gap: 18px;
   margin-bottom: 16px;
   justify-items: center;
-  align-items: start; /* Garante alinhamento no topo */
+  align-items: start;
 }
 
 .summary-card {
@@ -118,9 +118,9 @@ h1 {
 /* CORREÇÃO: Saldo com mesma largura que as outras */
 .summary-card.balance-card {
   max-width: 220px; /* Mesma largura das outras */
-  grid-column: span 3;
+  /* grid-column: span 3; REMOVIDO - agora fica na mesma linha */
   justify-self: center;
-  margin-top: 0; /* Remove margem extra */
+  margin-top: 0;
 }
 
 .summary-card h3 {
