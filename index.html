@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="main-content">
         <h1>CONT1 | Controle</h1>
 
         <!-- RESUMO -->
@@ -17,12 +17,12 @@
             <div class="summary-card receita">
                 <h3>Receitas</h3>
                 <p id="total-revenue" class="positive">R$ 0,00</p>
-                <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita">+</button>
+                <button class="add-btn-card" id="add-revenue-btn" title="Adicionar Receita" aria-label="Adicionar Receita">+</button>
             </div>
             <div class="summary-card despesas">
                 <h3>Despesas</h3>
                 <p id="total-expenses" class="negative">R$ 0,00</p>
-                <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa">+</button>
+                <button class="add-btn-card negative" id="add-expense-btn" title="Adicionar Despesa" aria-label="Adicionar Despesa">+</button>
             </div>
             <div class="summary-card balance-card">
                 <h3>Saldo</h3>
@@ -41,9 +41,9 @@
 
         <!-- TRANSAÇÕES -->
         <div class="transactions-section" id="transactions-section" aria-labelledby="transacoes-titulo">
-            <button class="reset-btn" id="reset-btn">Resetar</button>
+            <button class="reset-btn" id="reset-btn" aria-label="Resetar todos os dados">Resetar</button>
             <h2 id="transacoes-titulo">Transações</h2>
-            <table class="transactions-table" role="table">
+            <table class="transactions-table" role="table" aria-label="Tabela de transações do mês">
                 <thead>
                     <tr>
                         <th>Descrição</th>
@@ -61,10 +61,10 @@
     </div>
 
     <!-- MODAIS -->
-    <div class="modal" id="reset-modal" aria-hidden="true">
+    <div class="modal" id="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-header" aria-describedby="reset-body" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">Resetar Todos os Dados</div>
-            <div class="modal-body">Tem certeza que deseja apagar TODOS os dados? Esta ação não pode ser desfeita.</div>
+            <div class="modal-header" id="reset-header">Resetar Todos os Dados</div>
+            <div class="modal-body" id="reset-body">Tem certeza que deseja apagar TODOS os dados? Esta ação não pode ser desfeita.</div>
             <div class="modal-footer">
                 <button class="modal-btn cancel" id="reset-cancel">Cancelar</button>
                 <button class="modal-btn confirm" id="reset-confirm">Apagar Tudo</button>
@@ -72,9 +72,9 @@
         </div>
     </div>
 
-    <div class="modal" id="delete-modal" aria-hidden="true">
+    <div class="modal" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-header" aria-describedby="delete-modal-body" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">Excluir Transação</div>
+            <div class="modal-header" id="delete-header">Excluir Transação</div>
             <div class="modal-body" id="delete-modal-body"></div>
             <div class="modal-footer">
                 <button class="modal-btn cancel" id="delete-cancel">Cancelar</button>
@@ -84,10 +84,10 @@
     </div>
 
     <!-- PROMPT INSTALAÇÃO -->
-    <div class="install-prompt" id="install-prompt" aria-hidden="true">
-               <div class="install-prompt-content">
-            <div class="install-prompt-header">Instalar Aplicativo</div>
-            <div class="install-prompt-body">Deseja instalar o CONT1 para acesso rápido?</div>
+    <div class="install-prompt" id="install-prompt" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="install-header" aria-describedby="install-body">
+        <div class="install-prompt-content">
+            <div class="install-prompt-header" id="install-header">Instalar Aplicativo</div>
+            <div class="install-prompt-body" id="install-body">Deseja instalar o CONT1 para acesso rápido?</div>
             <div class="install-prompt-buttons">
                 <button class="install-btn secondary" id="install-cancel">Agora não</button>
                 <button class="install-btn primary" id="install-confirm">Instalar</button>
@@ -96,26 +96,26 @@
     </div>
 
     <!-- ALERTA SALDO NEGATIVO -->
-    <div class="negative-alert" id="negative-alert" style="display:none">
-        ⚠️ Atenção! Seu saldo está negativo!
+    <div class="negative-alert" id="negative-alert" role="alert" aria-live="assertive" style="display:none">
+        <span aria-hidden="true">⚠️</span> Atenção! Seu saldo está negativo!
     </div>
 
     <!-- FORM RECEITA -->
-    <div class="form-overlay" id="form-overlay-revenue" aria-hidden="true">
+    <div class="form-overlay" id="form-overlay-revenue" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="revenue-form-title">
         <div class="form-container">
             <div class="form-header">
-                <div class="form-title">Nova Receita</div>
-                <button class="close-form" id="close-form-btn-revenue">×</button>
+                <div class="form-title" id="revenue-form-title">Nova Receita</div>
+                <button class="close-form" id="close-form-btn-revenue" aria-label="Fechar formulário de receita">×</button>
             </div>
             <form id="transaction-form-revenue" autocomplete="off">
                 <div class="form-grid">
                     <div>
                         <label for="origin-revenue">Origem</label>
-                        <select id="origin-revenue" required></select>
+                        <select id="origin-revenue" required aria-required="true"></select>
                     </div>
                     <div>
                         <label for="amount-revenue">Valor</label>
-                        <input id="amount-revenue" type="number" step="0.01" required>
+                        <input id="amount-revenue" type="number" step="0.01" required aria-required="true">
                     </div>
                 </div>
                 <div class="check-add-line">
@@ -126,28 +126,28 @@
     </div>
 
     <!-- FORM DESPESA -->
-    <div class="form-overlay" id="form-overlay-expense" aria-hidden="true">
+    <div class="form-overlay" id="form-overlay-expense" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="expense-form-title">
         <div class="form-container">
             <div class="form-header">
-                <div class="form-title">Nova Despesa</div>
-                <button class="close-form" id="close-form-btn-expense">×</button>
+                <div class="form-title" id="expense-form-title">Nova Despesa</div>
+                <button class="close-form" id="close-form-btn-expense" aria-label="Fechar formulário de despesa">×</button>
             </div>
             <form id="transaction-form-expense" autocomplete="off">
                 <div class="form-grid">
                     <div>
                         <label for="description-expense">Descrição</label>
-                        <input id="description-expense" maxlength="12" required>
-                        <div class="char-counter">
-                            <span id="char-count-expense">0</span>/12
+                        <input id="description-expense" maxlength="12" required aria-required="true" aria-describedby="desc-limit">
+                        <div class="char-counter" id="desc-limit">
+                            <span id="char-count-expense" aria-live="polite" aria-atomic="true">0</span>/12 caracteres permitidos
                         </div>
                     </div>
                     <div>
                         <label for="amount-expense">Valor</label>
-                        <input id="amount-expense" type="number" step="0.01" required>
+                        <input id="amount-expense" type="number" step="0.01" required aria-required="true">
                     </div>
                     <div>
                         <label for="category-expense">Categoria</label>
-                        <select id="category-expense" required></select>
+                        <select id="category-expense" required aria-required="true"></select>
                     </div>
                 </div>
                 <div class="check-add-line">
@@ -155,7 +155,7 @@
                         <input id="parcelado-expense" type="checkbox">
                         <label for="parcelado-expense">Parcelado?</label>
                         <div class="parcelas-field" id="parcelas-field-div-expense">
-                            <input id="parcelas-expense" type="number" min="2" value="2">
+                            <input id="parcelas-expense" type="number" min="2" value="2" aria-label="Quantidade de parcelas">
                             <label for="parcelas-expense">x</label>
                         </div>
                     </div>
@@ -168,4 +168,4 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="app.js" defer></script>
 </body>
-                            </html>
+</html>
