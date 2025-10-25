@@ -1,15 +1,6 @@
 /* =========================================================
    FINANCEIRO PESSOAL – ÚNICO ARQUIVO JS (PWA ready)
-   COM SISTEMA DE LOGIN E SINCRONIZAÇÃO
    ========================================================= */
-
-/* ---------- CONFIGURAÇÃO DO BACKEND ---------- */
-// ⚠️ SUBSTITUA PELA SUA URL DO RENDER ⚠️
-const API_URL = 'https://cont1-backend.onrender.com';
-let currentUser = null;
-let authToken = localStorage.getItem('authToken');
-let isOnline = false;
-
 /* ---------- CONFIGURAÇÕES ---------- */
 const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -112,279 +103,6 @@ const parseParcelaInfo = txt => {
 };
 
 const formataReal = v => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v);
-
-/* ================== SISTEMA DE AUTENTICAÇÃO ================== */
-
-async function register(email, password) {
-  const btn = document.querySelector('#register-form .auth-submit-btn');
-  const btnText = btn.querySelector('.btn-text');
-  const btnLoading = btn.querySelector('.btn-loading');
-  
-  try {
-    // Mostrar loading
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'block';
-    
-    console.log('Tentando cadastrar:', email);
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password })
-    });
-    
-    const data = await response.json();
-    console.log('Resposta do cadastro:', data);
-    
-    if (response.ok && data.success) {
-      authToken = data.token;
-      currentUser = data.user;
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      
-      showStatus('Cadastro realizado com sucesso!', 'success');
-      setTimeout(() => {
-        checkAuth();
-        loadUserData();
-      }, 1500);
-      
-      return true;
-    } else {
-      throw new Error(data.error || 'Erro no cadastro');
-    }
-  } catch (error) {
-    console.error('Erro no cadastro:', error);
-    showStatus(error.message, 'error');
-    return false;
-  } finally {
-    // Esconder loading
-    btn.disabled = false;
-    btn.classList.remove('loading');
-    btnText.style.display = 'block';
-    btnLoading.style.display = 'none';
-  }
-}
-
-async function login(email, password) {
-  const btn = document.querySelector('#login-form .auth-submit-btn');
-  const btnText = btn.querySelector('.btn-text');
-  const btnLoading = btn.querySelector('.btn-loading');
-  
-  try {
-    // Mostrar loading
-    btn.disabled = true;
-    btn.classList.add('loading');
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'block';
-    
-    console.log('Tentando login:', email);
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password })
-    });
-    
-    const data = await response.json();
-    console.log('Resposta do login:', data);
-    
-    if (response.ok && data.success) {
-      authToken = data.token;
-      currentUser = data.user;
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      
-      showStatus('Login realizado com sucesso!', 'success');
-      setTimeout(() => {
-        checkAuth();
-        loadUserData();
-      }, 1000);
-      
-      return true;
-    } else {
-      throw new Error(data.error || 'Credenciais inválidas');
-    }
-  } catch (error) {
-    console.error('Erro no login:', error);
-    showStatus(error.message, 'error');
-    return false;
-  } finally {
-    // Esconder loading
-    btn.disabled = false;
-    btn.classList.remove('loading');
-    btnText.style.display = 'block';
-    btnLoading.style.display = 'none';
-  }
-}
-
-function logout() {
-  authToken = null;
-  currentUser = null;
-  isOnline = false;
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('currentUser');
-  checkAuth();
-  showStatus('Você saiu da sua conta', 'success');
-}
-
-async function loadUserData() {
-  if (!authToken) {
-    console.log('Sem token, usando dados locais');
-    // Carrega dados locais como fallback
-    const localData = localStorage.getItem('transactions');
-    if (localData) {
-      transactions = JSON.parse(localData);
-      renderTransactions();
-    }
-    return;
-  }
-  
-  try {
-    console.log('Carregando dados da nuvem...');
-    const response = await fetch(`${API_URL}/transactions`, {
-      headers: { 
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      transactions = data.map(t => ({
-        ...t,
-        dataLancamento: new Date(t.dataLancamento)
-      }));
-      localStorage.setItem('transactions', JSON.stringify(transactions));
-      renderTransactions();
-      isOnline = true;
-      console.log('✅ Dados carregados da nuvem');
-    } else {
-      throw new Error('Erro ao carregar dados');
-    }
-  } catch (error) {
-    console.log('📴 Modo offline - usando dados locais:', error.message);
-    isOnline = false;
-    // Carrega dados locais como fallback
-    const localData = localStorage.getItem('transactions');
-    if (localData) {
-      transactions = JSON.parse(localData);
-      renderTransactions();
-    }
-  }
-}
-
-async function syncToBackend() {
-  if (!authToken || !isOnline) {
-    console.log('Sem autenticação ou offline, pulando sincronização');
-    return;
-  }
-  
-  try {
-    console.log('Sincronizando dados com a nuvem...');
-    // Primeiro limpa todas as transações antigas na nuvem
-    await fetch(`${API_URL}/transactions`, {
-      method: 'DELETE',
-      headers: { 
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    // Depois envia todas as transações atuais
-    for (const transaction of transactions) {
-      await fetch(`${API_URL}/transactions`, {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transaction)
-      });
-    }
-    console.log('✅ Dados sincronizados com a nuvem');
-  } catch (error) {
-    console.log('❌ Erro na sincronização - modo offline:', error.message);
-    isOnline = false;
-  }
-}
-
-// Modificar a função save para sincronizar
-function save() {
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-  if (authToken && isOnline) {
-    syncToBackend();
-  }
-}
-
-function checkAuth() {
-  const authOverlay = document.getElementById('auth-overlay');
-  const mainContainer = document.getElementById('main-container');
-  const logoutBtn = document.getElementById('logout-btn');
-  const userEmail = document.getElementById('user-email');
-  
-  if (authToken && currentUser) {
-    authOverlay.style.display = 'none';
-    mainContainer.style.display = 'block';
-    logoutBtn.style.display = 'block';
-    userEmail.textContent = currentUser.email;
-    console.log('Usuário autenticado:', currentUser.email);
-  } else {
-    authOverlay.style.display = 'flex';
-    mainContainer.style.display = 'none';
-    logoutBtn.style.display = 'none';
-    console.log('Usuário não autenticado');
-  }
-}
-
-function showStatus(message, type) {
-  // Remove status anterior
-  const oldStatus = document.querySelector('.auth-status');
-  if (oldStatus) oldStatus.remove();
-  
-  const status = document.createElement('div');
-  status.className = `auth-status ${type}`;
-  status.textContent = message;
-  
-  const authContainer = document.querySelector('.auth-container');
-  const firstForm = authContainer.querySelector('.auth-form.active');
-  authContainer.insertBefore(status, firstForm);
-  
-  setTimeout(() => {
-    status.remove();
-  }, 4000);
-}
-
-// Sistema de abas
-function initAuthTabs() {
-  const tabs = document.querySelectorAll('.auth-tab');
-  const forms = document.querySelectorAll('.auth-form');
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetTab = tab.getAttribute('data-tab');
-      
-      // Ativar aba clicada
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      
-      // Mostrar form correspondente
-      forms.forEach(form => {
-        form.classList.remove('active');
-        if (form.id === `${targetTab}-form`) {
-          form.classList.add('active');
-        }
-      });
-      
-      // Limpar status
-      const status = document.querySelector('.auth-status');
-      if (status) status.remove();
-    });
-  });
-}
 
 /* ---------- BLOQUEIO DE ZOOM ---------- */
 function bloquearZoom() {
@@ -526,16 +244,16 @@ function renderTransactions() {
     const row = document.createElement('tr');
     const ehParc = parcelaInfo !== null;
     row.innerHTML = `
-      <td style="white-space:nowrap">${descDisplay}</td>
-      <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
-      <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-      <td style="white-space:nowrap">${tr.category||'-'}</td>
-      <td>
-        <div class="actions-cell">
-          ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<span class="edit-placeholder"></span>'}
-          <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
-        </div>
-      </td>`;
+  <td style="white-space:nowrap">${descDisplay}</td>
+  <td class="${tr.type==='revenue'?'positive':'negative'}" style="white-space:nowrap">${formataReal(tr.amount)}</td>
+  <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+  <td style="white-space:nowrap">${tr.category||'-'}</td>
+  <td>
+    <div class="actions-cell">
+      ${!ehParc?`<button class="edit-btn" data-i="${i}" title="Editar">✏️</button>`:'<span class="edit-placeholder"></span>'}
+      <button class="delete-btn" data-i="${i}" title="Excluir">🗑️</button>
+    </div>
+  </td>`;
     els.list.appendChild(row);
     if (tr.type === 'revenue') rev += tr.amount; else des += tr.amount;
   });
@@ -556,13 +274,15 @@ function updateSummary(rev, des) {
 }
 
 /* ---------- RENDER GRÁFICO ---------- */
+/* ---------- GRÁFICO PIZZA – RECEITA SOBRANDO OU SOMENTE DESPESAS ---------- */
 function renderPieChart() {
   const thisMonth = mesAtualStr;
 
   let receita = 0;
-  const desp = {};
+  const desp = {};                                   // zero todas as despesas
   expenseCategories.forEach(c => desp[c.name] = 0);
 
+  /* ---------- SOMATÓRIO DO MÊS ---------- */
   transactions.forEach(tr => {
     const parcelaInfo = parseParcelaInfo(tr.description);
     const mesItem = parcelaInfo
@@ -578,18 +298,20 @@ function renderPieChart() {
   });
 
   const totalDespesas = Object.values(desp).reduce((a, b) => a + b, 0);
-  const receitaDisponivel = receita - totalDespesas;
+  const receitaDisponivel = receita - totalDespesas;   // o que sobrou (pode ser ≤ 0)
 
   const labels = [];
   const data   = [];
   const cores  = [];
 
+  /* ---------- SETOR "RECEITA" (só se ainda houver sobra) ---------- */
   if (receitaDisponivel > 0) {
     labels.push('Receita');
     data.push(receitaDisponivel);
     cores.push(revenueCategories[0].color);
   }
 
+  /* ---------- SETORES DE DESPESAS ---------- */
   expenseCategories.forEach(c => {
     const v = desp[c.name] || 0;
     if (v > 0) {
@@ -599,6 +321,7 @@ function renderPieChart() {
     }
   });
 
+  /* ---------- DESENHA ---------- */
   if (chart) chart.destroy();
   chart = new Chart(els.canvas, {
     type: 'pie',
@@ -701,57 +424,15 @@ function handleActions(e) {
   }
 }
 
+function save() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
 /* ---------- INICIALIZAÇÃO ---------- */
 function init() {
   bloquearZoom();
   initPWA();
   initCharCounter(els.descExpense, els.charCountExpense);
-  initAuthTabs();
-
-  // Verifica autenticação ao carregar
-  if (authToken) {
-    try {
-      currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      console.log('Usuário recuperado do localStorage:', currentUser);
-      loadUserData();
-    } catch (error) {
-      console.log('Token inválido, fazendo logout...', error);
-      logout();
-    }
-  }
-  
-  checkAuth();
-
-  /* eventos de autenticação */
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    console.log('Tentando fazer login com:', email);
-    await login(email, password);
-  });
-
-  document.getElementById('register-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    console.log('Tentando cadastrar com:', email);
-    await register(email, password);
-  });
-
-  document.getElementById('logout-btn').addEventListener('click', logout);
-  
-  document.getElementById('skip-auth').addEventListener('click', () => {
-    document.getElementById('auth-overlay').style.display = 'none';
-    document.getElementById('main-container').style.display = 'block';
-    showStatus('Modo local ativado - dados salvos apenas neste navegador', 'success');
-    // Carrega dados locais
-    const localData = localStorage.getItem('transactions');
-    if (localData) {
-      transactions = JSON.parse(localData);
-      renderTransactions();
-    }
-  });
 
   /* popula selects */
   categories.revenue.forEach(o => {
@@ -810,3 +491,4 @@ function init() {
 }
 
 init();
+  
