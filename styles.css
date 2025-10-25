@@ -49,6 +49,42 @@ h1 {
   padding: 18px 14px 22px;
 }
 
+/* ============== NOVO: HEADER COM TÍTULO E BOTÃO ============== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.page-header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+  color: #222;
+}
+
+/* Botão Enviar Receita */
+#share-receita {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--clr-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background-color 0.2s ease;
+}
+
+#share-receita:hover,
+#share-receita:focus {
+  background-color: #0056b3;
+  outline: none;
+}
+
 /* ================== SUMMARY ================== */
 .summary {
   display: grid;
