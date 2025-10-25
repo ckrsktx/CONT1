@@ -74,10 +74,7 @@ const els = {
   btnSaveExpense:      document.getElementById('save-btn-expense'),
   charCountExpense:    document.getElementById('char-count-expense'),
 
-  /* --- botão Enviar Receita --- */
-  btnShareReceita:     document.getElementById('share-receita'),
-};
-
+  
 /* ---------- ESTADO GLOBAL ---------- */
 let transactions   = JSON.parse(localStorage.getItem('transactions') || '[]');
 let chart          = null;
@@ -428,35 +425,7 @@ function save() {
   localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
-/* ---------- FUNÇÃO: GERAR PDF E ENVIAR RECEITA ---------- */
-function gerarPdfReceita() {
-  const element = document.getElementById('main-content');
-  if (!element) {
-    console.error('Elemento main-content não encontrado.');
-    return;
-  }
 
-  // Usa html2canvas para capturar a área
-  html2canvas(element).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'pt',
-      format: 'a4'
-    });
-
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('receita-controle.pdf');
-  }).catch(err => {
-    console.error('Erro ao gerar PDF:', err);
-  });
-}
 
 /* ---------- INICIALIZAÇÃO ---------- */
 function init() {
@@ -515,23 +484,12 @@ function init() {
   });
   els.list.addEventListener('click', handleActions);
 
-  /* evento para botão "Enviar Receita" - CORRIGIDO */
-  if (els.btnShareReceita) {
-    els.btnShareReceita.addEventListener('click', gerarPdfReceita);
-  } else {
-    console.error('Botão share-receita não encontrado');
-  }
 
   /* primeira renderização */
   renderTransactions();
   renderLegenda();
 }
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('Service Worker registrado', reg))
-    .catch(err => console.warn('Erro ao registrar SW', err));
-}
 
 // Inicializa a aplicação quando o DOM estiver pronto
 if (document.readyState === 'loading') {
