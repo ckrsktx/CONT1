@@ -10,6 +10,7 @@
   --shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 
+/* Reset básico */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -129,7 +130,8 @@ h1 {
   transition: background .17s;
 }
 .add-btn-card.negative { background: var(--clr-danger); }
-.add-btn-card:hover, .add-btn-card:focus { background: #1178f7; }
+.add-btn-card:hover,
+.add-btn-card:focus { background: #1178f7; }
 
 .spacer { height: 16px; }
 
@@ -153,7 +155,7 @@ h1 {
   border: 1px solid #ccc;
 }
 .pie-container { text-align: center; margin: 14px 0; }
-#pieChart { max-width: 210px; margin: auto;}
+#pieChart { max-width: 210px; margin: auto; }
 .chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
 
 /* ================== TABELA TRANSAÇÕES ================== */
@@ -178,7 +180,8 @@ h1 {
   cursor: pointer;
   transition: background .17s;
 }
-.reset-btn:hover { background: #c93030; }
+.reset-btn:hover,
+.reset-btn:focus { background: #c93030; }
 
 .transactions-table {
   width: 100%;
@@ -206,9 +209,9 @@ h1 {
 .transactions-table td:last-child {
   text-align: center;
 }
+
 /* Definição explícita das larguras */
 .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
 .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 16%; }
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
 .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 29%; }
@@ -240,11 +243,15 @@ h1 {
   font-size: 1.1rem;
   padding: 0;
   margin: 0;
+  transition: background 0.15s, color 0.15s;
 }
-
 .edit-btn { color: #28a745; }
 .delete-btn { color: #dc3545; }
-
+.edit-btn:focus, .delete-btn:focus {
+  outline: 2px solid #007bff;
+  background: #e6f0ff;
+  border-radius: 4px;
+}
 
 @media (max-width: 460px) {
   .transactions-table { font-size: .67rem; }
@@ -290,6 +297,7 @@ h1 {
 .modal-btn { padding: 7px 14px; border: none; border-radius: var(--radius); cursor: pointer; font-size: .95rem; }
 .modal-btn.confirm { background: var(--clr-danger); color: #fff; }
 .modal-btn.cancel { background: #6c757d; color: #fff; }
+.modal-btn:focus { outline: 2px solid #007bff; background: #e6f0ff; color: #111; }
 
 .install-prompt {
   display: none;
@@ -312,6 +320,7 @@ h1 {
 .install-btn { padding: 6px 12px; border: none; border-radius: var(--radius); cursor: pointer; font-size: .8rem; }
 .install-btn.primary { background: var(--clr-accent); color: #fff; }
 .install-btn.secondary { background: #6c757d; color: #fff; }
+.install-btn:focus { outline: 2px solid #007bff; background: #e6f0ff; color: #111; }
 
 .negative-alert {
   position: fixed;
@@ -328,6 +337,7 @@ h1 {
   text-align: center;
   max-width: 90%;
   display: none;
+  /* Para acessibilidade, foco deve ser automático em JS ao abrir */
 }
 
 /* ================== FORMULÁRIOS ================== */
@@ -350,10 +360,28 @@ h1 {
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
 }
-.form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
 .form-title { font-size: 1.1rem; font-weight: 700; color: #333; }
-.close-form { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #6c757d; }
-.close-form:hover { color: #333; }
+.close-form {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 4px;
+}
+.close-form:focus {
+  outline: 2px solid #007bff;
+  color: #111;
+  background: #e6f0ff;
+}
 .form-grid { display: grid; gap: 8px 10px; grid-template-columns: 1fr; }
 @media (min-width: 600px) {.form-grid { grid-template-columns: 1fr 1fr 1fr; }}
 /* Receita: 2 colunas (desktop), 1 coluna (mobile) */
@@ -375,6 +403,11 @@ h1 {
   border: 1px solid #ccc;
   border-radius: var(--radius);
   font-size: .92rem;
+  transition: outline 0.18s, background 0.18s;
+}
+.form-grid input:focus, .form-grid select:focus {
+  outline: 2px solid #28a745;
+  background: #eefbee;
 }
 .check-add-line {
   display: flex;
@@ -397,8 +430,9 @@ h1 {
   border-radius: var(--radius);
   cursor: pointer;
   font-size: .95rem;
+  transition: background 0.18s, color 0.18s;
 }
-.add-btn:hover { background: #0056b3; }
+.add-btn:hover, .add-btn:focus { background: #0056b3; outline: 2px solid #007bff; color: #e6f0ff; }
 .char-counter { font-size: .78rem; color: var(--clr-muted); text-align: right; margin-top: 1px; }
 .char-counter.warning { color: var(--clr-danger); }
 
@@ -426,4 +460,16 @@ h1 {
   display: inline-block;
   width: 20px;
   height: 1px;
+}
+
+/* ========== Foco visível para todos interativos, reforçado! ========== */
+:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+button:focus, .add-btn-card:focus, .modal-btn:focus, .install-btn:focus, .close-form:focus,
+input:focus, select:focus {
+  outline: 2px solid #007bff !important;
+  background: #e6f0ff !important;
+  color: #111 !important;
 }
