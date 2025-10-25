@@ -1,0 +1,557 @@
+:root {
+  --clr-bg: #f5f7fa;
+  --clr-card: #fff;
+  --clr-accent: #007bff;
+  --clr-danger: #dc3545;
+  --clr-success: #28a745;
+  --clr-muted: #6c757d;
+  --clr-info: #17a2b8;
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body,
+input, select, button, table, .modal, .form-container, .install-prompt, .negative-alert {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+body {
+  background: var(--clr-bg);
+  color: #222;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: pan-y;
+}
+
+h1 {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.container {
+  max-width: 700px;
+  width: 100%;
+  margin: 30px auto;
+  background: var(--clr-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 14px 22px;
+}
+
+/* ============== HEADER E BOTÃO ENVIAR RECEITA ============== */
+.page-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.page-header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+  color: #222;
+}
+
+/* Container do botão Enviar Receita */
+.share-receita-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* Botão Enviar Receita */
+#share-receita {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--clr-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background-color 0.2s ease;
+}
+
+#share-receita:hover,
+#share-receita:focus {
+  background-color: #0056b3;
+  outline: none;
+}
+
+/* ================== SUMMARY ================== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 16px;
+  justify-items: center;
+}
+
+.summary-card {
+  background: #f9f9f9;
+  padding: 16px 8px 10px 8px;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: 0 2px 7px #0001;
+  width: 100%;
+  max-width: 220px;
+  position: relative;
+}
+
+.summary-card.balance-card {
+  max-width: 320px;
+  grid-column: span 3;
+  justify-self: center;
+}
+
+.summary-card h3 {
+  font-size: .97rem;
+  color: var(--clr-muted);
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.summary-card p {
+  font-size: 1.34rem;
+  font-weight: 700;
+  margin-bottom: 0;
+  line-height: 1.15em;
+  min-height: 1.6em;
+}
+
+.positive { color: var(--clr-success); }
+.negative { color: var(--clr-danger); }
+.info { color: var(--clr-info); }
+.summary-card.negative { background: #ffeaea; }
+
+.add-btn-card {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  background: var(--clr-success);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px #0002;
+  z-index: 2;
+  transition: background .17s;
+}
+
+.add-btn-card.negative { background: var(--clr-danger); }
+.add-btn-card:hover,
+.add-btn-card:focus { background: #1178f7; }
+
+.spacer { height: 16px; }
+
+/* ================== LEGENDA & GRÁFICO ================== */
+.categoria-legenda-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 5px 10px;
+  margin-bottom: 10px;
+  font-size: .75rem;
+}
+
+.categoria-legenda {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cor-blob {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+}
+
+.pie-container { text-align: center; margin: 14px 0; }
+#pieChart { max-width: 210px; margin: auto; }
+.chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
+
+/* ================== TABELA TRANSAÇÕES ================== */
+.transactions-section {
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 0 5px;
+}
+
+.transactions-section h2 {
+  font-size: 1.07rem;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+
+.reset-btn {
+  float: right;
+  background: var(--clr-danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 4px 9px;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: background .17s;
+}
+
+.reset-btn:hover,
+.reset-btn:focus { background: #c93030; }
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .84rem;
+  table-layout: fixed;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 .5px 3px #0001;
+  text-align: center;
+}
+
+.transactions-table th,
+.transactions-table td {
+  text-align: left;
+  padding: 10px 6px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Apenas a coluna de ações mantém centralização VERTICAL E HORIZONTAL */
+.transactions-table th:last-child,
+.transactions-table td:last-child {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Definição explícita das larguras */
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 16%; }
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 12%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 29%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 15%; }
+
+.transactions-table th {
+  font-weight: 600;
+  color: #495057;
+  padding: 10px 6px;
+  border-bottom: 2px solid #dee2e6;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.transactions-table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  min-height: 40px;
+}
+
+.edit-btn, .delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  margin: 0;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+
+.edit-btn { color: #28a745; }
+.delete-btn { color: #dc3545; }
+
+.edit-btn:focus, .delete-btn:focus {
+  outline: 2px solid #007bff;
+  background: #e6f0ff;
+  border-radius: 4px;
+}
+
+@media (max-width: 460px) {
+  .transactions-table { font-size: .67rem; }
+  .transactions-table th,
+  .transactions-table td { padding: 6px 1px; }
+  .transactions-table th:last-child,
+  .transactions-table td:last-child {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+  }
+  .actions-cell {
+    gap: 6px;
+  }
+  .edit-btn, .delete-btn {
+    font-size: 1rem;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ================== MODAIS, PWA, ALERTAS, FORM ================== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, .5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
+  max-width: 380px;
+  width: 92vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .15);
+}
+
+.modal-header { margin-bottom: 12px; font-size: 1rem; font-weight: 700; color: #333; }
+.modal-body { margin-bottom: 16px; line-height: 1.4; color: #555; font-size: .93rem; }
+.modal-footer { display: flex; gap: 9px; justify-content: flex-end; }
+.modal-btn { padding: 7px 14px; border: none; border-radius: var(--radius); cursor: pointer; font-size: .95rem; }
+.modal-btn.confirm { background: var(--clr-danger); color: #fff; }
+.modal-btn.cancel { background: #6c757d; color: #fff; }
+.modal-btn:focus { outline: 2px solid #007bff; background: #e6f0ff; color: #111; }
+
+.install-prompt {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+  padding: 15px;
+  max-width: 400px;
+  width: 90%;
+  z-index: 1001;
+  border-left: 4px solid var(--clr-accent);
+}
+
+.install-prompt-content { display: flex; flex-direction: column; gap: 10px; }
+.install-prompt-header { font-weight: 700; color: #333; font-size: .97rem; }
+.install-prompt-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+.install-btn { padding: 6px 12px; border: none; border-radius: var(--radius); cursor: pointer; font-size: .8rem; }
+.install-btn.primary { background: var(--clr-accent); color: #fff; }
+.install-btn.secondary { background: #6c757d; color: #fff; }
+.install-btn:focus { outline: 2px solid #007bff; background: #e6f0ff; color: #111; }
+
+.negative-alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--clr-danger);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+  z-index: 1002;
+  font-weight: 600;
+  text-align: center;
+  max-width: 90%;
+  display: none;
+}
+
+/* ================== FORMULÁRIOS ================== */
+.form-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, .5);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-container {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.form-title { font-size: 1.1rem; font-weight: 700; color: #333; }
+
+.close-form {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0 4px;
+}
+
+.close-form:focus {
+  outline: 2px solid #007bff;
+  color: #111;
+  background: #e6f0ff;
+}
+
+.form-grid { display: grid; gap: 8px 10px; grid-template-columns: 1fr; }
+
+@media (min-width: 600px) {.form-grid { grid-template-columns: 1fr 1fr 1fr; }}
+
+@media (min-width: 600px) {
+  #transaction-form-revenue .form-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 599px) {
+  #transaction-form-revenue .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.form-grid label { display: block; margin-bottom: 3px; font-size: .9rem; color: #444; }
+
+.form-grid input, .form-grid select {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  font-size: .92rem;
+  transition: outline 0.18s, background 0.18s;
+}
+
+.form-grid input:focus, .form-grid select:focus {
+  outline: 2px solid #28a745;
+  background: #eefbee;
+}
+
+.check-add-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.check-group { display: flex; align-items: center; gap: 5px; }
+.check-group input { width: auto; }
+.parcelas-field { display: none; gap: 5px; align-items: center; }
+.parcelas-field.visible { display: flex; }
+.parcelas-field input { width: 46px; padding: 3px; font-size: .91rem; text-align: center; }
+
+.add-btn {
+  margin-left: auto;
+  padding: 7px 16px;
+  background: var(--clr-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .95rem;
+  transition: background 0.18s, color 0.18s;
+}
+
+.add-btn:hover, .add-btn:focus { background: #0056b3; outline: 2px solid #007bff; color: #e6f0ff; }
+
+.char-counter { font-size: .78rem; color: var(--clr-muted); text-align: right; margin-top: 1px; }
+.char-counter.warning { color: var(--clr-danger); }
+
+/* ============ MOBILE: Cards e tabelas empilham ============= */
+@media (max-width: 700px) {
+  .container { padding: 8px 1vw 20px; }
+  .summary {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .summary-card,
+  .summary-card.receita,
+  .summary-card.despesas,
+  .summary-card.balance-card {
+    max-width: 100%;
+    min-width: 0;
+    justify-self: unset;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .share-receita-container {
+    margin-bottom: 12px;
+  }
+  
+  #share-receita {
+    padding: 7px 14px;
+    font-size: 0.9rem;
+  }
+}
+
+.edit-placeholder {
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+}
+
+/* ========== Foco visível para todos interativos, reforçado! ========== */
+:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+button:focus, .add-btn-card:focus, .modal-btn:focus, .install-btn:focus, .close-form:focus,
+input:focus, select:focus {
+  outline: 2px solid #007bff !important;
+  background: #e6f0ff !important;
+  color: #111 !important;
+}
