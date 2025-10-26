@@ -90,10 +90,10 @@ h1 {
   outline: none;
 }
 
-/* RESUMO FINANCEIRO - CORREÇÃO DE ALINHAMENTO */
+/* RESUMO FINANCEIRO */
 .summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 colunas iguais */
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   margin-bottom: 16px;
   justify-items: center;
@@ -109,16 +109,15 @@ h1 {
   width: 100%;
   max-width: 220px;
   position: relative;
-  height: 100%; /* Garante altura igual */
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-/* CORREÇÃO: Saldo com mesma largura que as outras */
 .summary-card.balance-card {
-  max-width: 220px; /* Mesma largura das outras */
-  /* grid-column: span 3; REMOVIDO - agora fica na mesma linha */
+  max-width: 220px;
+  grid-column: span 3;
   justify-self: center;
   margin-top: 0;
 }
@@ -128,7 +127,7 @@ h1 {
   color: var(--clr-muted);
   margin-bottom: 2px;
   font-weight: 500;
-  flex-shrink: 0; /* Evita compressão */
+  flex-shrink: 0;
 }
 
 .summary-card p {
@@ -137,7 +136,7 @@ h1 {
   margin-bottom: 0;
   line-height: 1.15em;
   min-height: 1.6em;
-  flex-grow: 1; /* Ocupa espaço disponível */
+  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +165,7 @@ h1 {
   box-shadow: 0 1px 2px #0002;
   z-index: 2;
   transition: background .17s;
-  flex-shrink: 0; /* Garante tamanho fixo */
+  flex-shrink: 0;
 }
 
 .add-btn-card.negative { background: var(--clr-danger); }
@@ -175,33 +174,16 @@ h1 {
 
 .spacer { height: 16px; }
 
-/* LEGENDA E GRÁFICO */
+/* REMOVIDA A LEGENDA DOS QUADRADINHOS */
 .categoria-legenda-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 5px 10px;
-  margin-bottom: 10px;
-  font-size: .75rem;
-}
-
-.categoria-legenda {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.cor-blob {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  border: 1px solid #ccc;
+  display: none; /* REMOVIDA A LEGENDA */
 }
 
 .pie-container { text-align: center; margin: 14px 0; }
 #pieChart { max-width: 210px; margin: auto; }
 .chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
 
-/* TABELA DE TRANSAÇÕES - CORREÇÃO DE ALINHAMENTO */
+/* TABELA DE TRANSAÇÕES - CORRIGIDA */
 .transactions-section {
   margin: 0 auto;
   max-width: 900px;
@@ -243,13 +225,9 @@ h1 {
 .transactions-table td {
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   vertical-align: middle;
 }
 
-/* CORREÇÃO: Centralização vertical e horizontal consistente */
 .transactions-table th {
   text-align: center;
   vertical-align: middle;
@@ -267,32 +245,40 @@ h1 {
   vertical-align: middle;
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-size: 0.82rem;
 }
 
-/* Primeira coluna alinhada à esquerda para melhor legibilidade */
+/* DESCRIÇÃO E VALOR SEM CORTE */
+.transactions-table td:nth-child(1) {
+  text-align: left;
+  white-space: normal !important; /* PERMITE QUEBRA DE LINHA */
+  word-wrap: break-word;
+  overflow: visible !important; /* REMOVE O CORTE */
+}
+
+.transactions-table td:nth-child(2) {
+  white-space: nowrap;
+  overflow: visible !important; /* REMOVE O CORTE */
+  text-overflow: unset !important;
+}
+
 .transactions-table th:first-child,
 .transactions-table td:first-child {
   text-align: left;
 }
 
-/* CORREÇÃO: Alinhamento perfeito da coluna de ações */
 .transactions-table th:last-child,
 .transactions-table td:last-child {
   text-align: center;
   vertical-align: middle;
-  width: 15%;
 }
 
-/* Definição explícita das larguras */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
-.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 25%; }
-.transactions-table th:last-child, .transactions-table td:last-child { width: 15%; }
+/* NOVAS LARGURAS - CATEGORIA MENOR */
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 35%; } /* MAIS ESPAÇO PARA DESCRIÇÃO */
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; } /* VALOR */
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; } /* DATA */
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 8%; } /* CATEGORIA MENOR */
+.transactions-table th:last-child, .transactions-table td:last-child { width: 23%; } /* AÇÕES */
 
 .actions-cell {
   display: flex;
@@ -304,7 +290,6 @@ h1 {
   width: 100%;
 }
 
-/* CORREÇÃO: Botões de ação perfeitamente centralizados */
 .edit-btn, .delete-btn {
   background: none;
   border: none;
@@ -320,7 +305,7 @@ h1 {
   height: 26px;
   border-radius: 4px;
   vertical-align: middle;
-  flex-shrink: 0; /* Garante que não comprimam */
+  flex-shrink: 0;
 }
 
 .edit-btn { color: #28a745; }
@@ -334,9 +319,18 @@ h1 {
 
 .edit-placeholder {
   display: inline-block;
-  width: 26px; /* Mesma largura do botão de editar */
-  height: 26px; /* Mesma altura do botão de editar */
-  visibility: hidden; /* Mantém o espaço mas esconde */
+  width: 26px;
+  height: 26px;
+  visibility: hidden;
+}
+
+/* QUADRADINHOS COLORIDOS SIMPLES - SEM TOOLTIP */
+.category-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
 }
 
 /* MELHORIAS PARA MOBILE */
@@ -361,7 +355,7 @@ h1 {
     justify-self: unset;
     margin: 0 auto;
     width: 100%;
-    height: auto; /* Altura automática no mobile */
+    height: auto;
   }
   
   .share-receita-container {
@@ -373,7 +367,6 @@ h1 {
     font-size: 0.9rem;
   }
   
-  /* MELHORIAS ESPECÍFICAS PARA TABELA MOBILE */
   .transactions-table {
     font-size: 0.75rem;
   }
@@ -389,13 +382,12 @@ h1 {
     padding: 8px 2px;
   }
   
-  /* Ajuste de larguras para mobile */
-  /* Ajuste final das larguras da tabela */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
-.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
-.transactions-table th:last-child, .transactions-table td:last-child { width: 24%; }
+  /* LARGURAS MOBILE */
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 32%; }
+  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
+  .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
+  .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
   
   .actions-cell {
     gap: 4px;
@@ -411,6 +403,11 @@ h1 {
   .edit-placeholder {
     width: 22px;
     height: 22px;
+  }
+  
+  .category-dot {
+    width: 12px;
+    height: 12px;
   }
 }
 
@@ -429,12 +426,12 @@ h1 {
     font-size: 0.65rem;
   }
   
-  /* Ajustes para celulares muito pequenos */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 22%; }
+  /* LARGURAS CELULAR PEQUENO */
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
   .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
   .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 25%; }
-  .transactions-table th:last-child, .transactions-table td:last-child { width: 20%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
+  .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
 }
 
 /* MODAIS, PWA, ALERTAS, FORMULÁRIOS */
@@ -504,6 +501,112 @@ h1 {
   text-align: center;
   max-width: 90%;
   display: none;
+}
+
+/* ALERTA DE MUDANÇA DE MÊS */
+.month-change-alert {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.month-change-content {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-left: 4px solid var(--clr-accent);
+  animation: slideUp 0.3s ease;
+}
+
+.month-change-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.month-change-header span {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.close-alert {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--clr-muted);
+  padding: 0 5px;
+}
+
+.close-alert:hover {
+  color: var(--clr-danger);
+}
+
+.month-change-body {
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.month-change-body p {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.small-info {
+  font-size: 0.8rem;
+  color: var(--clr-muted) !important;
+  font-style: italic;
+  margin-top: 15px !important;
+}
+
+.month-change-footer {
+  text-align: center;
+}
+
+.month-change-btn {
+  background: var(--clr-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.month-change-btn:hover {
+  background: #0056b3;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* FORMULÁRIOS */
@@ -590,12 +693,23 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: space-between;
 }
 
-.check-group { display: flex; align-items: center; gap: 5px; }
-.check-group input { width: auto; }
+.check-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.check-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
 .parcelas-field { display: none; gap: 5px; align-items: center; }
 .parcelas-field.visible { display: flex; }
 .parcelas-field input { width: 46px; padding: 3px; font-size: .91rem; text-align: center; }
@@ -617,6 +731,17 @@ h1 {
 .char-counter { font-size: .78rem; color: var(--clr-muted); text-align: right; margin-top: 1px; }
 .char-counter.warning { color: var(--clr-danger); }
 
+/* DATA INPUT STYLES */
+input[type="date"] {
+  font-family: Arial, sans-serif;
+  padding: 6px;
+}
+
+input[type="date"]:focus {
+  outline: 2px solid #28a745;
+  background: #eefbee;
+}
+
 /* FOCUS VISÍVEL */
 :focus {
   outline: 2px solid #007bff;
@@ -629,260 +754,3 @@ input:focus, select:focus {
   background: #e6f0ff !important;
   color: #111 !important;
 }
-
-/* ALERTA DE MUDANÇA DE MÊS */
-.month-change-alert {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    animation: fadeIn 0.3s ease;
-}
-
-.month-change-content {
-    background: white;
-    border-radius: var(--radius);
-    padding: 20px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    border-left: 4px solid var(--clr-accent);
-    animation: slideUp 0.3s ease;
-}
-
-.month-change-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.month-change-header span {
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #333;
-}
-
-.close-alert {
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    cursor: pointer;
-    color: var(--clr-muted);
-    padding: 0 5px;
-}
-
-.close-alert:hover {
-    color: var(--clr-danger);
-}
-
-.month-change-body {
-    margin-bottom: 20px;
-    line-height: 1.5;
-}
-
-.month-change-body p {
-    margin-bottom: 10px;
-    color: #555;
-}
-
-.small-info {
-    font-size: 0.8rem;
-    color: var(--clr-muted) !important;
-    font-style: italic;
-    margin-top: 15px !important;
-}
-
-.month-change-footer {
-    text-align: center;
-}
-
-.month-change-btn {
-    background: var(--clr-accent);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    padding: 8px 20px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.month-change-btn:hover {
-    background: #0056b3;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { 
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* MELHORIAS PARA OS NOVOS CAMPOS */
-.form-grid {
-    display: grid;
-    gap: 8px 10px;
-    grid-template-columns: 1fr;
-}
-
-@media (min-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    #transaction-form-revenue .form-grid {
-        grid-template-columns: 1fr 1fr !important;
-    }
-    
-    #transaction-form-expense .form-grid {
-        grid-template-columns: 1fr 1fr !important;
-    }
-}
-
-/* ÍCONE DE FIXA NA TABELA */
-.fixa-indicator {
-    color: #007bff;
-    font-size: 0.8rem;
-    margin-left: 4px;
-}
-
-/* AJUSTES PARA OS CHECKBOX ADICIONAIS */
-.check-add-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    justify-content: space-between;
-}
-
-.check-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-}
-
-.check-group input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-
-/* DATA INPUT STYLES */
-input[type="date"] {
-    font-family: Arial, sans-serif;
-    padding: 6px;
-}
-
-input[type="date"]:focus {
-    outline: 2px solid #28a745;
-    background: #eefbee;
-}
-
-
-
-/* ESTILOS PARA OS QUADRADINHOS COLORIDOS */
-.category-dot {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    position: relative;
-}
-
-/* Tooltip para os quadradinhos */
-.category-tooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    z-index: 1000;
-    margin-bottom: 5px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
-}
-
-.category-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: #333;
-}
-
-.category-dot:hover .category-tooltip {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Para mobile - tooltip sempre visível no toque */
-@media (max-width: 700px) {
-    .category-dot {
-        position: relative;
-    }
-    
-    .category-dot:active .category-tooltip,
-    .category-dot.tooltip-visible .category-tooltip {
-        opacity: 1;
-        visibility: visible;
-    }
-}
-
-/* Ajuste na tabela para melhor visualização */
-.transactions-table td:nth-child(4) {
-    text-align: center;
-    padding: 8px 2px;
-}
-
-/* Melhor espaçamento para as células de descrição e valor */
-.transactions-table td:nth-child(1) { 
-    width: 30%; /* Mais espaço para descrição */
-    padding-right: 8px;
-}
-
-.transactions-table td:nth-child(2) { 
-    width: 20%; /* Mais espaço para valor */
-    padding-right: 8px;
-}
-
-.transactions-table td:nth-child(3) { 
-    width: 14%; 
-}
-
-.transactions-table td:nth-child(4) { 
-    width: 12%; /* Menos espaço para categoria (agora é só quadradinho) */
-}
-
-.transactions-table td:nth-child(5) { 
-    width: 24%; /* Mais espaço para ações */
-}
-
