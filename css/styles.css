@@ -734,3 +734,64 @@ input:focus, select:focus {
         transform: translateY(0);
     }
 }
+
+/* MELHORIAS PARA OS NOVOS CAMPOS */
+.form-grid {
+    display: grid;
+    gap: 8px 10px;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    #transaction-form-revenue .form-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    #transaction-form-expense .form-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+/* ÍCONE DE FIXA NA TABELA */
+.fixa-indicator {
+    color: #007bff;
+    font-size: 0.8rem;
+    margin-left: 4px;
+}
+
+/* AJUSTES PARA OS CHECKBOX ADICIONAIS */
+.check-add-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    justify-content: space-between;
+}
+
+.check-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.check-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+/* DATA INPUT STYLES */
+input[type="date"] {
+    font-family: Arial, sans-serif;
+    padding: 6px;
+}
+
+input[type="date"]:focus {
+    outline: 2px solid #28a745;
+    background: #eefbee;
+}
