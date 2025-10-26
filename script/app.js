@@ -536,6 +536,27 @@ const RENDER_MANAGER = {
         const { receita, despesa } = DATA_MANAGER.calcularTotais();
         const mesAtual = UTILS.mesAtualStr;
         
+        // Mapeamento de cores por categoria
+        const categoriaCores = {
+            // Receitas
+            'Adiantamento': CONFIG.chartColors.revenue,
+            'Pagamento': CONFIG.chartColors.revenue,
+            'Empréstimo': CONFIG.chartColors.revenue,
+            'Investimento': CONFIG.chartColors.revenue,
+            'Monetização': CONFIG.chartColors.revenue,
+            'Lucro': CONFIG.chartColors.revenue,
+            'Venda': CONFIG.chartColors.revenue,
+            'Outros': CONFIG.chartColors.revenue,
+            // Despesas
+            'Alimentação': CONFIG.chartColors.expenses[0],
+            'Lazer': CONFIG.chartColors.expenses[1],
+            'Transporte': CONFIG.chartColors.expenses[2],
+            'Moradia': CONFIG.chartColors.expenses[3],
+            'Saúde': CONFIG.chartColors.expenses[4],
+            'Educação': CONFIG.chartColors.expenses[5],
+            'Outros': CONFIG.chartColors.expenses[6]
+        };
+        
         STATE.transactions.forEach((transacao, index) => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             let mostra = false;
@@ -564,15 +585,22 @@ const RENDER_MANAGER = {
             
             const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
             const ehParcelada = infoParcela !== null;
+            const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
             
             const linha = document.createElement('tr');
             linha.innerHTML = `
-                <td style="white-space:nowrap">${descricaoDisplay}</td>
-                <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap">
+                <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
+                    ${descricaoDisplay}
+                </td>
+                <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
                     ${UTILS.formataReal(transacao.amount)}
                 </td>
                 <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-                <td style="white-space:nowrap">${transacao.category || '-'}</td>
+                <td style="text-align: center;">
+                    <div class="category-dot" style="background-color: ${corCategoria}" data-category="${transacao.category}">
+                        <div class="category-tooltip">${transacao.category}</div>
+                    </div>
+                </td>
                 <td>
                     <div class="actions-cell">
                         ${!ehParcelada ? 
@@ -586,8 +614,43 @@ const RENDER_MANAGER = {
             DOM.list.appendChild(linha);
         });
         
+        // Adicionar eventos para tooltips em mobile
+        this.configurarTooltipsMobile();
+        
         this.atualizarResumo(receita, despesa);
         DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
+    },
+    
+    configurarTooltipsMobile() {
+        const categoryDots = document.querySelectorAll('.category-dot');
+        
+        categoryDots.forEach(dot => {
+            // Para desktop - hover
+            dot.addEventListener('mouseenter', function() {
+                this.classList.add('tooltip-visible');
+            });
+            
+            dot.addEventListener('mouseleave', function() {
+                this.classList.remove('tooltip-visible');
+            });
+            
+            // Para mobile - touch
+            dot.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                this.classList.add('tooltip-visible');
+                
+                // Fechar tooltip quando tocar em outro lugar
+                setTimeout(() => {
+                    const closeTooltip = (e) => {
+                        if (!this.contains(e.target)) {
+                            this.classList.remove('tooltip-visible');
+                            document.removeEventListener('touchstart', closeTooltip);
+                        }
+                    };
+                    document.addEventListener('touchstart', closeTooltip);
+                }, 100);
+            });
+        });
     },
     
     atualizarResumo(receita, despesa) {
