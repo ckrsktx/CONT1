@@ -930,6 +930,133 @@ Gerado pelo CONT1 - Controle Financeiro`;
     }
 };
 
+/* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
+const MONTHLY_CLEANER = {
+    ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
+    mesAtual: UTILS.mesAtualStr,
+    
+    init() {
+        this.verificarMudancaMes();
+        this.configurarVerificacaoDiaria();
+    },
+    
+    verificarMudancaMes() {
+        // Se é um novo mês e ainda não verificamos
+        if (this.ultimoMesVerificado !== this.mesAtual) {
+            const transacoesAntigas = this.obterTransacoesMesesAnteriores();
+            
+            if (transacoesAntigas.length > 0) {
+                this.mostrarAlertaMudancaMes(transacoesAntigas.length);
+                this.limparTransacoesAntigas();
+            }
+            
+            // Atualizar o último mês verificado
+            localStorage.setItem('ultimoMesVerificado', this.mesAtual);
+            this.ultimoMesVerificado = this.mesAtual;
+        }
+    },
+    
+    obterTransacoesMesesAnteriores() {
+        const mesAtual = UTILS.mesAtualStr;
+        return STATE.transactions.filter(transacao => {
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            const mesTransacao = infoParcela 
+                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
+                : UTILS.getMesAnoStr(transacao.dataLancamento);
+            
+            return mesTransacao < mesAtual;
+        });
+    },
+    
+    limparTransacoesAntigas() {
+        const mesAtual = UTILS.mesAtualStr;
+        
+        STATE.transactions = STATE.transactions.filter(transacao => {
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+            
+            // Se é uma parcela, verifica se alguma parcela futura pertence a este mês ou meses futuros
+            if (infoParcela) {
+                for (let i = infoParcela.parcelaAtual; i <= infoParcela.totalParcelas; i++) {
+                    const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, i);
+                    if (mesParcela >= mesAtual) {
+                        return true; // Mantém se há parcelas futuras
+                    }
+                }
+                return false; // Remove se todas as parcelas são do passado
+            }
+            
+            // Para transações únicas, mantém apenas as do mês atual
+            const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
+            return mesTransacao >= mesAtual;
+        });
+        
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+    },
+    
+    mostrarAlertaMudancaMes(numTransacoesRemovidas) {
+        const mesAnterior = this.obterMesAnterior();
+        const alertaHTML = `
+            <div class="month-change-alert" id="month-change-alert">
+                <div class="month-change-content">
+                    <div class="month-change-header">
+                        <span>📅 Novo Mês - ${CONFIG.meses[UTILS.hoje.getMonth()]}</span>
+                        <button class="close-alert" id="close-month-alert">×</button>
+                    </div>
+                    <div class="month-change-body">
+                        <p>As transações de <strong>${mesAnterior}</strong> foram arquivadas automaticamente.</p>
+                        <p>Mantemos apenas as parcelas pendentes para o controle atual.</p>
+                        <p class="small-info">${numTransacoesRemovidas} transação(s) do mês anterior foram removidas da visualização.</p>
+                    </div>
+                    <div class="month-change-footer">
+                        <button class="month-change-btn" id="understand-month-alert">Entendi</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Adicionar o alerta ao body
+        document.body.insertAdjacentHTML('beforeend', alertaHTML);
+        
+        // Configurar eventos do alerta
+        const alerta = document.getElementById('month-change-alert');
+        const fecharBtn = document.getElementById('close-month-alert');
+        const entenderBtn = document.getElementById('understand-month-alert');
+        
+        const fecharAlerta = () => {
+            alerta.style.opacity = '0';
+            setTimeout(() => {
+                if (alerta.parentNode) {
+                    alerta.parentNode.removeChild(alerta);
+                }
+            }, 300);
+        };
+        
+        fecharBtn.addEventListener('click', fecharAlerta);
+        entenderBtn.addEventListener('click', fecharAlerta);
+        
+        // Fechar automaticamente após 8 segundos
+        setTimeout(fecharAlerta, 8000);
+    },
+    
+    obterMesAnterior() {
+        const data = new Date();
+        data.setMonth(data.getMonth() - 1);
+        return CONFIG.meses[data.getMonth()];
+    },
+    
+    configurarVerificacaoDiaria() {
+        // Verificar a cada hora se mudou o mês
+        setInterval(() => {
+            const novoMesAtual = UTILS.mesAtualStr;
+            if (novoMesAtual !== this.mesAtual) {
+                this.mesAtual = novoMesAtual;
+                this.verificarMudancaMes();
+            }
+        }, 3600000); // 1 hora
+    }
+};
+
 /* ---------- INICIALIZAÇÃO DA APLICAÇÃO ---------- */
 function init() {
     ZOOM_MANAGER.init();
@@ -937,6 +1064,7 @@ function init() {
     FORM_MANAGER.init();
     ACTION_MANAGER.configurarEventos();
     SHARE_MANAGER.init();
+    MONTHLY_CLEANER.init(); // ADICIONE ESTA LINHA
     
     // Renderização inicial
     RENDER_MANAGER.renderizarTudo();
