@@ -108,69 +108,86 @@
     </div>
 
     <!-- FORMULÁRIO RECEITA -->
-    <div class="form-overlay" id="form-overlay-revenue" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="revenue-form-title">
-        <div class="form-container">
-            <div class="form-header">
-                <div class="form-title" id="revenue-form-title">Nova Receita</div>
-                <button class="close-form" id="close-form-btn-revenue" aria-label="Fechar formulário de receita">×</button>
-            </div>
-            <form id="transaction-form-revenue" autocomplete="off">
-                <div class="form-grid">
-                    <div>
-                        <label for="origin-revenue">Origem</label>
-                        <select id="origin-revenue" required aria-required="true"></select>
-                    </div>
-                    <div>
-                        <label for="amount-revenue">Valor</label>
-                        <input id="amount-revenue" type="number" step="0.01" required aria-required="true">
-                    </div>
-                </div>
-                <div class="check-add-line">
-                    <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
-                </div>
-            </form>
+    <!-- FORMULÁRIO RECEITA - ATUALIZADO -->
+<div class="form-overlay" id="form-overlay-revenue" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="revenue-form-title">
+    <div class="form-container">
+        <div class="form-header">
+            <div class="form-title" id="revenue-form-title">Nova Receita</div>
+            <button class="close-form" id="close-form-btn-revenue" aria-label="Fechar formulário de receita">×</button>
         </div>
+        <form id="transaction-form-revenue" autocomplete="off">
+            <div class="form-grid">
+                <div>
+                    <label for="origin-revenue">Origem</label>
+                    <select id="origin-revenue" required aria-required="true"></select>
+                </div>
+                <div>
+                    <label for="amount-revenue">Valor</label>
+                    <input id="amount-revenue" type="number" step="0.01" required aria-required="true">
+                </div>
+                <div>
+                    <label for="date-revenue">📅 Data</label>
+                    <input id="date-revenue" type="date" required aria-required="true">
+                </div>
+            </div>
+            <div class="check-add-line">
+                <div class="check-group">
+                    <input id="fixa-revenue" type="checkbox">
+                    <label for="fixa-revenue">Receita Fixa</label>
+                </div>
+                <button class="add-btn" id="save-btn-revenue" type="submit">Adicionar</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- FORMULÁRIO DESPESA -->
-    <div class="form-overlay" id="form-overlay-expense" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="expense-form-title">
-        <div class="form-container">
-            <div class="form-header">
-                <div class="form-title" id="expense-form-title">Nova Despesa</div>
-                <button class="close-form" id="close-form-btn-expense" aria-label="Fechar formulário de despesa">×</button>
-            </div>
-            <form id="transaction-form-expense" autocomplete="off">
-                <div class="form-grid">
-                    <div>
-                        <label for="description-expense">Descrição</label>
-                        <input id="description-expense" maxlength="12" required aria-required="true" aria-describedby="desc-limit">
-                        <div class="char-counter" id="desc-limit">
-                            <span id="char-count-expense" aria-live="polite" aria-atomic="true">0</span>/12 caracteres permitidos
-                        </div>
-                    </div>
-                    <div>
-                        <label for="amount-expense">Valor</label>
-                        <input id="amount-expense" type="number" step="0.01" required aria-required="true">
-                    </div>
-                    <div>
-                        <label for="category-expense">Categoria</label>
-                        <select id="category-expense" required aria-required="true"></select>
-                    </div>
-                </div>
-                <div class="check-add-line">
-                    <div class="check-group">
-                        <input id="parcelado-expense" type="checkbox">
-                        <label for="parcelado-expense">Parcelado?</label>
-                        <div class="parcelas-field" id="parcelas-field-div-expense">
-                            <input id="parcelas-expense" type="number" min="2" value="2" aria-label="Quantidade de parcelas">
-                            <label for="parcelas-expense">x</label>
-                        </div>
-                    </div>
-                    <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
-                </div>
-            </form>
+<!-- FORMULÁRIO DESPESA - ATUALIZADO -->
+<div class="form-overlay" id="form-overlay-expense" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="expense-form-title">
+    <div class="form-container">
+        <div class="form-header">
+            <div class="form-title" id="expense-form-title">Nova Despesa</div>
+            <button class="close-form" id="close-form-btn-expense" aria-label="Fechar formulário de despesa">×</button>
         </div>
+        <form id="transaction-form-expense" autocomplete="off">
+            <div class="form-grid">
+                <div>
+                    <label for="description-expense">Descrição</label>
+                    <input id="description-expense" maxlength="12" required aria-required="true" aria-describedby="desc-limit">
+                    <div class="char-counter" id="desc-limit">
+                        <span id="char-count-expense" aria-live="polite" aria-atomic="true">0</span>/12 caracteres permitidos
+                    </div>
+                </div>
+                <div>
+                    <label for="amount-expense">Valor</label>
+                    <input id="amount-expense" type="number" step="0.01" required aria-required="true">
+                </div>
+                <div>
+                    <label for="category-expense">Categoria</label>
+                    <select id="category-expense" required aria-required="true"></select>
+                </div>
+                <div>
+                    <label for="date-expense">📅 Data</label>
+                    <input id="date-expense" type="date" required aria-required="true">
+                </div>
+            </div>
+            <div class="check-add-line">
+                <div class="check-group">
+                    <input id="parcelado-expense" type="checkbox">
+                    <label for="parcelado-expense">Parcelado?</label>
+                    <div class="parcelas-field" id="parcelas-field-div-expense">
+                        <input id="parcelas-expense" type="number" min="2" value="2" aria-label="Quantidade de parcelas">
+                        <label for="parcelas-expense">x</label>
+                    </div>
+                </div>
+                <div class="check-group">
+                    <input id="fixa-expense" type="checkbox">
+                    <label for="fixa-expense">Despesa Fixa</label>
+                </div>
+                <button class="add-btn" id="save-btn-expense" type="submit">Adicionar</button>
+            </div>
+        </form>
     </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <script src="script/app.js" defer></script>
