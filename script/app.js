@@ -111,7 +111,7 @@ const UTILS = {
     },
     
     parseParcelaInfo(texto) {
-        const textoLimpo = texto.replace(' 📌', '');
+        const textoLimpo = texto.replace('📌 ', '');
         const match = textoLimpo.match(/(.*)\s(\d+)\/(\d+)$/);
         return match ? {
             baseDesc: match[1],
@@ -393,8 +393,8 @@ const FORM_MANAGER = {
             descricao = descricao.slice(0, 12);
         }
         
-        // Se for fixa, adicionar ícone à descrição
-        const descricaoFinal = ehFixa ? `${descricao} 📌` : descricao;
+        // Se for fixa, adicionar ícone à descrição (pino na frente)
+        const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
         const dataLancamento = data ? new Date(data + 'T00:00:00').toISOString() : new Date().toISOString();
         const novasTransacoes = [];
         
@@ -795,7 +795,7 @@ const ACTION_MANAGER = {
     
     editarTransacao(indice) {
         const transacao = STATE.transactions[indice];
-        const descricaoSemFixa = transacao.description.replace(' 📌', '');
+        const descricaoSemFixa = transacao.description.replace('📌 ', '');
         const infoParcela = UTILS.parseParcelaInfo(descricaoSemFixa);
         const ehFixa = transacao.description.includes('📌');
         
@@ -1026,7 +1026,7 @@ const MONTHLY_CLEANER = {
                 return true;
             }
             
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description.replace(' 📌', ''));
+            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             
             // Se é uma parcela, verifica se alguma parcela futura pertence a este mês ou meses futuros
             if (infoParcela) {
