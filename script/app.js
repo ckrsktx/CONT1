@@ -938,7 +938,6 @@ const PWA_MANAGER = {
 
 /* ---------- COMPARTILHAMENTO ---------- */
 /* ---------- COMPARTILHAMENTO ---------- */
-/* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
@@ -996,9 +995,8 @@ Gerado pelo CONT1 - Controle Financeiro`;
                     text: texto
                 });
             } else {
-                // COMPORTAMENTO PARA APK (WebView) - apenas copia com mensagem personalizada
-                await navigator.clipboard.writeText(texto);
-                this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
+                // COMPORTAMENTO PARA APK - apenas copia com mensagem personalizada
+                await this.copiarParaAreaTransferencia(texto);
             }
         } catch (err) {
             console.log('Erro ao compartilhar:', err);
@@ -1010,15 +1008,13 @@ Gerado pelo CONT1 - Controle Financeiro`;
     async copiarParaAreaTransferencia(texto) {
         try {
             await navigator.clipboard.writeText(texto);
-            this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
+            this.mostrarMensagemSucesso();
         } catch (err) {
-            // Fallback para métodos antigos
             this.copiarTextoFallback(texto);
         }
     },
 
-    mostrarMensagemSucesso(mensagem) {
-        // Cria uma mensagem temporária mais amigável
+    mostrarMensagemSucesso() {
         const mensagemEl = document.createElement('div');
         mensagemEl.style.cssText = `
             position: fixed;
@@ -1036,10 +1032,9 @@ Gerado pelo CONT1 - Controle Financeiro`;
             max-width: 80%;
             font-weight: 600;
         `;
-        mensagemEl.textContent = mensagem;
+        mensagemEl.textContent = '📋 Resumo copiado para a área de transferência!';
         document.body.appendChild(mensagemEl);
 
-        // Remove a mensagem após 3 segundos
         setTimeout(() => {
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
@@ -1048,7 +1043,6 @@ Gerado pelo CONT1 - Controle Financeiro`;
     },
 
     copiarTextoFallback(texto) {
-        // Método alternativo para copiar texto
         const textarea = document.createElement('textarea');
         textarea.value = texto;
         textarea.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
@@ -1058,15 +1052,39 @@ Gerado pelo CONT1 - Controle Financeiro`;
         
         try {
             document.execCommand('copy');
-            this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
+            this.mostrarMensagemSucesso();
         } catch (err) {
-            this.mostrarMensagemSucesso('❌ Erro ao copiar. Tente novamente.');
+            // Mensagem de erro simplificada
+            const erroEl = document.createElement('div');
+            erroEl.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #dc3545;
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-size: 16px;
+                text-align: center;
+                max-width: 80%;
+                font-weight: 600;
+            `;
+            erroEl.textContent = '❌ Erro ao copiar. Tente novamente.';
+            document.body.appendChild(erroEl);
+
+            setTimeout(() => {
+                if (erroEl.parentNode) {
+                    erroEl.parentNode.removeChild(erroEl);
+                }
+            }, 3000);
         } finally {
             document.body.removeChild(textarea);
         }
     }
 };
-
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
 const MONTHLY_CLEANER = {
     ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
