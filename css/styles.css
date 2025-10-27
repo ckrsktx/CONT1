@@ -174,7 +174,7 @@ h1 {
 
 .spacer { height: 16px; }
 
-/* REMOVIDA A LEGENDA DOS QUADRADINHOS */
+/* REMOVIDA A LEGENDA COMPLETAMENTE */
 .categoria-legenda-container {
   display: none;
 }
@@ -260,11 +260,11 @@ h1 {
 }
 
 /* COLUNAS DISTRIBUÍDAS IGUALMENTE */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 35%; }
 .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
 .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
-.transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 8%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 22%; }
 
 .actions-cell {
   display: flex;
@@ -310,13 +310,18 @@ h1 {
   visibility: hidden;
 }
 
-/* QUADRADINHOS COLORIDOS SIMPLES - SEM DESCRIÇÃO */
+/* QUADRADINHOS COLORIDOS SIMPLES - SEM TOOLTIP E SEM LEGENDA */
 .category-dot {
   display: inline-block;
   width: 16px;
   height: 16px;
   border-radius: 3px;
   border: 1px solid #ccc;
+}
+
+/* REMOVIDO COMPLETAMENTE O TOOLTIP */
+.category-tooltip {
+  display: none !important;
 }
 
 /* MELHORIAS PARA MOBILE */
@@ -369,11 +374,11 @@ h1 {
   }
   
   /* LARGURAS MOBILE - DISTRIBUÍDAS */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 32%; }
   .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
   .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
-  .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
+  .transactions-table th:last-child, .transactions-table td:last-child { width: 23%; }
   
   .actions-cell {
     gap: 4px;
@@ -413,11 +418,11 @@ h1 {
   }
   
   /* LARGURAS CELULAR PEQUENO */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 26%; }
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
   .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
   .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 14%; }
-  .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
+  .transactions-table th:last-child, .transactions-table td:last-child { width: 23%; }
 }
 
 /* MODAIS, PWA, ALERTAS, FORMULÁRIOS */
