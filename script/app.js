@@ -526,9 +526,70 @@ const FORM_MANAGER = {
 /* ---------- GERENCIAMENTO DE RENDERIZAÇÃO ---------- */
 const RENDER_MANAGER = {
     renderizarTudo() {
-        this.renderizarTransacoes();
-        this.renderizarGrafico();
-    },
+    this.renderizarTransacoes();
+    this.renderizarLegenda(); // ADICIONAR ESTA LINHA
+    this.renderizarGrafico();
+},
+
+renderizarLegenda() {
+    const mesAtual = UTILS.mesAtualStr;
+    let receitaTotal = 0;
+    const despesasPorCategoria = {};
+    
+    // Inicializar categorias de despesa
+    CONFIG.categories.expense.forEach(categoria => {
+        despesasPorCategoria[categoria] = 0;
+    });
+    
+    // Calcular totais
+    STATE.transactions.forEach(transacao => {
+        const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+        const mesItem = infoParcela 
+            ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
+            : UTILS.getMesAnoStr(transacao.dataLancamento);
+        
+        if (mesItem !== mesAtual) return;
+        
+        if (transacao.type === 'revenue') {
+            receitaTotal += transacao.amount;
+        } else if (despesasPorCategoria.hasOwnProperty(transacao.category)) {
+            despesasPorCategoria[transacao.category] += transacao.amount;
+        }
+    });
+    
+    const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
+    const saldo = receitaTotal - totalDespesas;
+    
+    // Gerar HTML da legenda
+    const legendas = [];
+    
+    // Legenda para receita (saldo)
+    if (receitaTotal > 0) {
+        const percentual = saldo < 0 ? 0 : (saldo / receitaTotal) * 100;
+        legendas.push(`
+            <div class="categoria-legenda">
+                <span class="cor-blob" style="background:${CONFIG.chartColors.revenue}"></span>
+                Receita ${percentual.toFixed(0)}%
+            </div>
+        `);
+    }
+    
+    // Legendas para despesas
+    CONFIG.categories.expense.forEach((categoria, index) => {
+        const valor = despesasPorCategoria[categoria] || 0;
+        if (valor > 0) {
+            const percentual = receitaTotal > 0 ? (valor / receitaTotal) * 100 : 0;
+            legendas.push(`
+                <div class="categoria-legenda">
+                    <span class="cor-blob" style="background:${CONFIG.chartColors.expenses[index]}"></span>
+                    ${categoria} ${percentual.toFixed(0)}%
+                </div>
+            `);
+        }
+    });
+    
+    DOM.legenda.innerHTML = legendas.join('');
+},
     
     renderizarTransacoes() {
         DOM.list.innerHTML = '';
