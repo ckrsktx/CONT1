@@ -175,9 +175,26 @@ h1 {
 
 .spacer { height: 16px; }
 
-/* REMOVIDA A LEGENDA COMPLETAMENTE */
+/* LEGENDA DOS QUADRADINHOS RESTAURADA */
 .categoria-legenda-container {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 5px 10px;
+  margin-bottom: 10px;
+  font-size: .75rem;
+}
+
+.categoria-legenda {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cor-blob {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
 }
 
 .pie-container { text-align: center; margin: 14px 0; }
