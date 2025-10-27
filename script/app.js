@@ -938,6 +938,7 @@ const PWA_MANAGER = {
 
 /* ---------- COMPARTILHAMENTO ---------- */
 /* ---------- COMPARTILHAMENTO ---------- */
+/* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
@@ -961,7 +962,7 @@ const SHARE_MANAGER = {
                     : UTILS.getMesAnoStr(transacao.dataLancamento);
                 
                 if (mesItem === UTILS.mesAtualStr && despesasPorCategoria.hasOwnProperty(transacao.category)) {
-                    despesasPorCategoria[transacao.category] += transacao.amount;
+                    despesasPorCategoria[categoria] += transacao.amount;
                 }
             }
         });
@@ -988,37 +989,20 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 Gerado pelo CONT1 - Controle Financeiro`;
 
         try {
-            // Verifica se o navegador suporta a API de compartilhamento
-            if (navigator.share && this.isMobile()) {
+            // COMPORTAMENTO ORIGINAL PARA NAVEGADOR WEB
+            if (navigator.share) {
                 await navigator.share({
                     title: `Resumo Financeiro - ${mesAtual}`,
                     text: texto
                 });
             } else {
-                // Método alternativo para APK/WebView
-                await this.compartilharAlternativo(texto, mesAtual);
+                // COMPORTAMENTO PARA APK (WebView) - apenas copia com mensagem personalizada
+                await navigator.clipboard.writeText(texto);
+                this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
             }
         } catch (err) {
             console.log('Erro ao compartilhar:', err);
-            // Fallback para copiar para área de transferência
-            await this.copiarParaAreaTransferencia(texto);
-        }
-    },
-
-    isMobile() {
-        return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    },
-
-    async compartilharAlternativo(texto, mesAtual) {
-        // Tenta usar o window.open para apps nativos
-        const textoCodificado = encodeURIComponent(texto);
-        const urlCompartilhamento = `https://api.whatsapp.com/send?text=${textoCodificado}`;
-        
-        // Abre em uma nova janela para WhatsApp
-        const novaJanela = window.open(urlCompartilhamento, '_blank');
-        
-        if (!novaJanela || novaJanela.closed || typeof novaJanela.closed == 'undefined') {
-            // Se não conseguiu abrir WhatsApp, tenta copiar para área de transferência
+            // Fallback para APK
             await this.copiarParaAreaTransferencia(texto);
         }
     },
@@ -1026,9 +1010,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
     async copiarParaAreaTransferencia(texto) {
         try {
             await navigator.clipboard.writeText(texto);
-            
-            // Mostra uma mensagem mais amigável
-            this.mostrarMensagemSucesso('Resumo copiado! Cole no WhatsApp ou outro app para compartilhar.');
+            this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
         } catch (err) {
             // Fallback para métodos antigos
             this.copiarTextoFallback(texto);
@@ -1052,6 +1034,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
             font-size: 16px;
             text-align: center;
             max-width: 80%;
+            font-weight: 600;
         `;
         mensagemEl.textContent = mensagem;
         document.body.appendChild(mensagemEl);
@@ -1075,9 +1058,9 @@ Gerado pelo CONT1 - Controle Financeiro`;
         
         try {
             document.execCommand('copy');
-            this.mostrarMensagemSucesso('Resumo copiado! Cole no WhatsApp ou outro app.');
+            this.mostrarMensagemSucesso('📋 Resumo copiado para a área de transferência!');
         } catch (err) {
-            this.mostrarMensagemSucesso('Erro ao copiar. Tente novamente.');
+            this.mostrarMensagemSucesso('❌ Erro ao copiar. Tente novamente.');
         } finally {
             document.body.removeChild(textarea);
         }
