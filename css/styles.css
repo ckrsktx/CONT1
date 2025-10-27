@@ -176,14 +176,14 @@ h1 {
 
 /* REMOVIDA A LEGENDA DOS QUADRADINHOS */
 .categoria-legenda-container {
-  display: none; /* REMOVIDA A LEGENDA */
+  display: none;
 }
 
 .pie-container { text-align: center; margin: 14px 0; }
 #pieChart { max-width: 210px; margin: auto; }
 .chart-label { font-size: .78rem; color: #555; margin-top: 7px; }
 
-/* TABELA DE TRANSAÇÕES - CORRIGIDA */
+/* TABELA DE TRANSAÇÕES - COLUNAS DISTRIBUÍDAS IGUALMENTE */
 .transactions-section {
   margin: 0 auto;
   max-width: 900px;
@@ -226,11 +226,10 @@ h1 {
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
   vertical-align: middle;
+  text-align: center;
 }
 
 .transactions-table th {
-  text-align: center;
-  vertical-align: middle;
   font-weight: 600;
   color: #495057;
   padding: 10px 4px;
@@ -241,44 +240,31 @@ h1 {
 }
 
 .transactions-table td {
-  text-align: center;
-  vertical-align: middle;
   padding: 8px 4px;
   border-bottom: 1px solid #eee;
   font-size: 0.82rem;
 }
 
-/* DESCRIÇÃO E VALOR SEM CORTE */
+/* DESCRIÇÃO E VALOR SEM CORTE - ALINHADOS */
 .transactions-table td:nth-child(1) {
   text-align: left;
-  white-space: normal !important; /* PERMITE QUEBRA DE LINHA */
+  white-space: normal;
   word-wrap: break-word;
-  overflow: visible !important; /* REMOVE O CORTE */
+  overflow: visible;
 }
 
 .transactions-table td:nth-child(2) {
   white-space: nowrap;
-  overflow: visible !important; /* REMOVE O CORTE */
-  text-overflow: unset !important;
+  overflow: visible;
+  text-overflow: unset;
 }
 
-.transactions-table th:first-child,
-.transactions-table td:first-child {
-  text-align: left;
-}
-
-.transactions-table th:last-child,
-.transactions-table td:last-child {
-  text-align: center;
-  vertical-align: middle;
-}
-
-/* NOVAS LARGURAS - CATEGORIA MENOR */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 35%; } /* MAIS ESPAÇO PARA DESCRIÇÃO */
-.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; } /* VALOR */
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 14%; } /* DATA */
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 8%; } /* CATEGORIA MENOR */
-.transactions-table th:last-child, .transactions-table td:last-child { width: 23%; } /* AÇÕES */
+/* COLUNAS DISTRIBUÍDAS IGUALMENTE */
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
 
 .actions-cell {
   display: flex;
@@ -324,11 +310,11 @@ h1 {
   visibility: hidden;
 }
 
-/* QUADRADINHOS COLORIDOS SIMPLES - SEM TOOLTIP */
+/* QUADRADINHOS COLORIDOS SIMPLES - SEM DESCRIÇÃO */
 .category-dot {
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   border: 1px solid #ccc;
 }
@@ -382,11 +368,11 @@ h1 {
     padding: 8px 2px;
   }
   
-  /* LARGURAS MOBILE */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 32%; }
-  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
+  /* LARGURAS MOBILE - DISTRIBUÍDAS */
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
+  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
   .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
   .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
   
   .actions-cell {
@@ -406,8 +392,8 @@ h1 {
   }
   
   .category-dot {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -427,10 +413,10 @@ h1 {
   }
   
   /* LARGURAS CELULAR PEQUENO */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
-  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 18%; }
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 26%; }
+  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
   .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 14%; }
   .transactions-table th:last-child, .transactions-table td:last-child { width: 25%; }
 }
 
