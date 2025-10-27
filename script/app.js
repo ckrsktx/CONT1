@@ -527,7 +527,6 @@ const FORM_MANAGER = {
 const RENDER_MANAGER = {
     renderizarTudo() {
         this.renderizarTransacoes();
-        this.renderizarLegenda();
         this.renderizarGrafico();
     },
     
@@ -597,9 +596,7 @@ const RENDER_MANAGER = {
                 </td>
                 <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
                 <td style="text-align: center;">
-                    <div class="category-dot" style="background-color: ${corCategoria}" data-category="${transacao.category}">
-                        <div class="category-tooltip">${transacao.category}</div>
-                    </div>
+                    <div class="category-dot" style="background-color: ${corCategoria}"></div>
                 </td>
                 <td>
                     <div class="actions-cell">
@@ -614,43 +611,8 @@ const RENDER_MANAGER = {
             DOM.list.appendChild(linha);
         });
         
-        // Adicionar eventos para tooltips em mobile
-        this.configurarTooltipsMobile();
-        
         this.atualizarResumo(receita, despesa);
         DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
-    },
-    
-    configurarTooltipsMobile() {
-        const categoryDots = document.querySelectorAll('.category-dot');
-        
-        categoryDots.forEach(dot => {
-            // Para desktop - hover
-            dot.addEventListener('mouseenter', function() {
-                this.classList.add('tooltip-visible');
-            });
-            
-            dot.addEventListener('mouseleave', function() {
-                this.classList.remove('tooltip-visible');
-            });
-            
-            // Para mobile - touch
-            dot.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                this.classList.add('tooltip-visible');
-                
-                // Fechar tooltip quando tocar em outro lugar
-                setTimeout(() => {
-                    const closeTooltip = (e) => {
-                        if (!this.contains(e.target)) {
-                            this.classList.remove('tooltip-visible');
-                            document.removeEventListener('touchstart', closeTooltip);
-                        }
-                    };
-                    document.addEventListener('touchstart', closeTooltip);
-                }, 100);
-            });
-        });
     },
     
     atualizarResumo(receita, despesa) {
@@ -661,66 +623,6 @@ const RENDER_MANAGER = {
         DOM.totalDes.textContent = UTILS.formataReal(despesa);
         DOM.balance.textContent = UTILS.formataReal(saldo);
         DOM.balance.className = saldo < 0 ? 'negative' : 'info';
-    },
-    
-    renderizarLegenda() {
-        const mesAtual = UTILS.mesAtualStr;
-        let receitaTotal = 0;
-        const despesasPorCategoria = {};
-        
-        // Inicializar categorias de despesa
-        CONFIG.categories.expense.forEach(categoria => {
-            despesasPorCategoria[categoria] = 0;
-        });
-        
-        // Calcular totais
-        STATE.transactions.forEach(transacao => {
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            const mesItem = infoParcela 
-                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
-                : UTILS.getMesAnoStr(transacao.dataLancamento);
-            
-            if (mesItem !== mesAtual) return;
-            
-            if (transacao.type === 'revenue') {
-                receitaTotal += transacao.amount;
-            } else if (despesasPorCategoria.hasOwnProperty(transacao.category)) {
-                despesasPorCategoria[transacao.category] += transacao.amount;
-            }
-        });
-        
-        const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
-        const saldo = receitaTotal - totalDespesas;
-        
-        // Gerar HTML da legenda
-        const legendas = [];
-        
-        // Legenda para receita (saldo)
-        if (receitaTotal > 0) {
-            const percentual = saldo < 0 ? 0 : (saldo / receitaTotal) * 100;
-            legendas.push(`
-                <div class="categoria-legenda">
-                    <span class="cor-blob" style="background:${CONFIG.chartColors.revenue}"></span>
-                    Receita ${percentual.toFixed(0)}%
-                </div>
-            `);
-        }
-        
-        // Legendas para despesas
-        CONFIG.categories.expense.forEach((categoria, index) => {
-            const valor = despesasPorCategoria[categoria] || 0;
-            if (valor > 0) {
-                const percentual = receitaTotal > 0 ? (valor / receitaTotal) * 100 : 0;
-                legendas.push(`
-                    <div class="categoria-legenda">
-                        <span class="cor-blob" style="background:${CONFIG.chartColors.expenses[index]}"></span>
-                        ${categoria} ${percentual.toFixed(0)}%
-                    </div>
-                `);
-            }
-        });
-        
-        DOM.legenda.innerHTML = legendas.join('');
     },
     
     renderizarGrafico() {
