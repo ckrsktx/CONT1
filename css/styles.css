@@ -770,3 +770,169 @@ input:focus, select:focus {
   background: #e6f0ff !important;
   color: #111 !important;
 }
+
+
+/* FORMULÁRIO DESPESA - LAYOUT EM DUAS LINHAS */
+#transaction-form-expense .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 15px;
+    margin-bottom: 12px;
+}
+
+/* PRIMEIRA LINHA: Descrição e Valor */
+#transaction-form-expense .form-grid > div:nth-child(1),
+#transaction-form-expense .form-grid > div:nth-child(2) {
+    grid-column: span 1;
+}
+
+/* SEGUNDA LINHA: Categoria e Data */
+#transaction-form-expense .form-grid > div:nth-child(3),
+#transaction-form-expense .form-grid > div:nth-child(4) {
+    grid-column: span 1;
+}
+
+/* LINHA DOS CHECKBOXES E BOTÃO */
+#transaction-form-expense .check-add-line {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 15px;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+#transaction-form-expense .check-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* CAMPO DE PARCELAS ALINHADO COM OS CHECKBOXES */
+#transaction-form-expense .parcelas-field {
+    display: none;
+    gap: 5px;
+    align-items: center;
+    margin-left: 5px;
+}
+
+#transaction-form-expense .parcelas-field.visible {
+    display: flex;
+}
+
+#transaction-form-expense .parcelas-field input {
+    width: 50px;
+    padding: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: var(--radius);
+}
+
+/* BOTÃO ADICIONAR ALINHADO À DIREITA */
+#transaction-form-expense .add-btn {
+    margin-left: 0;
+    padding: 8px 20px;
+    background: var(--clr-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+#transaction-form-expense .add-btn:hover,
+#transaction-form-expense .add-btn:focus {
+    background: #0056b3;
+    outline: 2px solid #007bff;
+}
+
+/* CONTADOR DE CARACTERES MAIS COMPACTO */
+#transaction-form-expense .char-counter {
+    font-size: 0.75rem;
+    color: var(--clr-muted);
+    text-align: right;
+    margin-top: 2px;
+    height: 14px;
+}
+
+/* MELHORIAS PARA DESKTOP */
+@media (min-width: 600px) {
+    #transaction-form-expense .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    #transaction-form-expense .check-add-line {
+        grid-template-columns: 1fr auto;
+    }
+}
+
+/* AJUSTES PARA MOBILE */
+@media (max-width: 599px) {
+    #transaction-form-expense .form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    #transaction-form-expense .check-add-line {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    #transaction-form-expense .check-group {
+        justify-content: flex-start;
+        gap: 15px;
+    }
+    
+    #transaction-form-expense .add-btn {
+        width: 100%;
+        margin-top: 5px;
+    }
+}
+
+/* ESTILOS PARA OS LABELS E INPUTS NO NOVO LAYOUT */
+#transaction-form-expense .form-grid label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.88rem;
+    color: #444;
+    font-weight: 600;
+}
+
+#transaction-form-expense .form-grid input,
+#transaction-form-expense .form-grid select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+#transaction-form-expense .form-grid input:focus,
+#transaction-form-expense .form-grid select:focus {
+    outline: 2px solid #28a745;
+    background: #f8fff8;
+    border-color: #28a745;
+}
+
+/* CHECKBOXES MAIS VISÍVEIS */
+#transaction-form-expense .check-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--clr-accent);
+}
+
+#transaction-form-expense .check-group label {
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+}
