@@ -987,42 +987,113 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
-        // SEMPRE copia para área de transferência - funciona em tudo
-        this.copiarTexto(texto);
+        // Método que funciona no WebView do Android
+        this.copiarNoWebView(texto);
     },
 
-    copiarTexto(texto) {
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        document.body.appendChild(textarea);
-        textarea.select();
+    copiarNoWebView(texto) {
+        // Cria um input temporário visível (funciona melhor no WebView)
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = texto;
+        input.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 200px;
+            height: 40px;
+            font-size: 14px;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ccc;
+        `;
         
+        document.body.appendChild(input);
+        
+        // Seleciona o texto
+        input.select();
+        input.setSelectionRange(0, 99999);
+        
+        // Tenta copiar
         try {
             const successful = document.execCommand('copy');
-            document.body.removeChild(textarea);
+            input.blur(); // Remove o foco
+            document.body.removeChild(input);
             
             if (successful) {
                 this.mostrarMensagem('📋 Resumo copiado!');
             } else {
-                this.mostrarMensagem('❌ Erro ao copiar');
+                this.mostrarMensagem('⚠️ Toque em Copiar no teclado');
+                // Mostra o input para usuário copiar manualmente
+                this.mostrarInputParaCopiar(texto);
             }
         } catch (err) {
-            document.body.removeChild(textarea);
-            this.mostrarMensagem('❌ Erro ao copiar');
+            document.body.removeChild(input);
+            this.mostrarMensagem('⚠️ Toque em Copiar no teclado');
+            this.mostrarInputParaCopiar(texto);
         }
     },
 
-    mostrarMensagem(mensagem) {
-        // Remove mensagem anterior se existir
-        const mensagemAntiga = document.querySelector('.mensagem-copiado');
-        if (mensagemAntiga) {
-            mensagemAntiga.remove();
-        }
+    mostrarInputParaCopiar(texto) {
+        // Cria um input visível para o usuário copiar manualmente
+        const container = document.createElement('div');
+        container.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10001;
+            max-width: 90%;
+            max-height: 80%;
+            overflow: auto;
+        `;
 
+        const mensagem = document.createElement('div');
+        mensagem.textContent = 'Toque no texto abaixo e selecione "Copiar":';
+        mensagem.style.cssText = 'margin-bottom: 15px; font-size: 14px; color: #333;';
+
+        const input = document.createElement('textarea');
+        input.value = texto;
+        input.style.cssText = `
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 12px;
+            resize: none;
+            background: #f9f9f9;
+        `;
+        input.readOnly = true;
+
+        const botao = document.createElement('button');
+        botao.textContent = 'Fechar';
+        botao.style.cssText = `
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        `;
+        botao.onclick = () => document.body.removeChild(container);
+
+        container.appendChild(mensagem);
+        container.appendChild(input);
+        container.appendChild(botao);
+        document.body.appendChild(container);
+
+        // Seleciona o texto automaticamente
+        input.select();
+    },
+
+    mostrarMensagem(mensagem) {
         const mensagemEl = document.createElement('div');
-        mensagemEl.className = 'mensagem-copiado';
         mensagemEl.style.cssText = `
             position: fixed;
             top: 50%;
@@ -1045,141 +1116,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
-        }, 2000);
-    }
-};
-/* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
-const MONTHLY_CLEANER = {
-    ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
-    mesAtual: UTILS.mesAtualStr,
-    
-    init() {
-        this.verificarMudancaMes();
-        this.configurarVerificacaoDiaria();
-    },
-    
-    verificarMudancaMes() {
-        // Se é um novo mês e ainda não verificamos
-        if (this.ultimoMesVerificado !== this.mesAtual) {
-            const transacoesAntigas = this.obterTransacoesMesesAnteriores();
-            
-            if (transacoesAntigas.length > 0) {
-                this.mostrarAlertaMudancaMes(transacoesAntigas.length);
-                this.limparTransacoesAntigas();
-            }
-            
-            // Atualizar o último mês verificado
-            localStorage.setItem('ultimoMesVerificado', this.mesAtual);
-            this.ultimoMesVerificado = this.mesAtual;
-        }
-    },
-    
-    obterTransacoesMesesAnteriores() {
-        const mesAtual = UTILS.mesAtualStr;
-        return STATE.transactions.filter(transacao => {
-            // Ignorar transações fixas
-            if (transacao.fixa) return false;
-            
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            const mesTransacao = infoParcela 
-                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
-                : UTILS.getMesAnoStr(transacao.dataLancamento);
-            
-            return mesTransacao < mesAtual;
-        });
-    },
-    
-    limparTransacoesAntigas() {
-        const mesAtual = UTILS.mesAtualStr;
-        
-        STATE.transactions = STATE.transactions.filter(transacao => {
-            // MANTER transações fixas independentemente do mês
-            if (transacao.fixa) {
-                return true;
-            }
-            
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            
-            // Se é uma parcela, verifica se alguma parcela futura pertence a este mês ou meses futuros
-            if (infoParcela) {
-                for (let i = infoParcela.parcelaAtual; i <= infoParcela.totalParcelas; i++) {
-                    const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, i);
-                    if (mesParcela >= mesAtual) {
-                        return true; // Mantém se há parcelas futuras
-                    }
-                }
-                return false; // Remove se todas as parcelas são do passado
-            }
-            
-            // Para transações únicas, mantém apenas as do mês atual ou futuras
-            const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
-            return mesTransacao >= mesAtual;
-        });
-        
-        DATA_MANAGER.salvar();
-        RENDER_MANAGER.renderizarTudo();
-    },
-    
-    mostrarAlertaMudancaMes(numTransacoesRemovidas) {
-        const mesAnterior = this.obterMesAnterior();
-        const alertaHTML = `
-            <div class="month-change-alert" id="month-change-alert">
-                <div class="month-change-content">
-                    <div class="month-change-header">
-                        <span>📅 Novo Mês - ${CONFIG.meses[UTILS.hoje.getMonth()]}</span>
-                        <button class="close-alert" id="close-month-alert">×</button>
-                    </div>
-                    <div class="month-change-body">
-                        <p>As transações de <strong>${mesAnterior}</strong> foram arquivadas automaticamente.</p>
-                        <p>Mantemos apenas as parcelas pendentes para o controle atual.</p>
-                        <p class="small-info">${numTransacoesRemovidas} transação(s) do mês anterior foram removidas da visualização.</p>
-                    </div>
-                    <div class="month-change-footer">
-                        <button class="month-change-btn" id="understand-month-alert">Entendi</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Adicionar o alerta ao body
-        document.body.insertAdjacentHTML('beforeend', alertaHTML);
-        
-        // Configurar eventos do alerta
-        const alerta = document.getElementById('month-change-alert');
-        const fecharBtn = document.getElementById('close-month-alert');
-        const entenderBtn = document.getElementById('understand-month-alert');
-        
-        const fecharAlerta = () => {
-            alerta.style.opacity = '0';
-            setTimeout(() => {
-                if (alerta.parentNode) {
-                    alerta.parentNode.removeChild(alerta);
-                }
-            }, 300);
-        };
-        
-        fecharBtn.addEventListener('click', fecharAlerta);
-        entenderBtn.addEventListener('click', fecharAlerta);
-        
-        // Fechar automaticamente após 8 segundos
-        setTimeout(fecharAlerta, 8000);
-    },
-    
-    obterMesAnterior() {
-        const data = new Date();
-        data.setMonth(data.getMonth() - 1);
-        return CONFIG.meses[data.getMonth()];
-    },
-    
-    configurarVerificacaoDiaria() {
-        // Verificar a cada hora se mudou o mês
-        setInterval(() => {
-            const novoMesAtual = UTILS.mesAtualStr;
-            if (novoMesAtual !== this.mesAtual) {
-                this.mesAtual = novoMesAtual;
-                this.verificarMudancaMes();
-            }
-        }, 3600000); // 1 hora
+        }, 3000);
     }
 };
 
