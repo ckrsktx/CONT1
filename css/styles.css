@@ -317,10 +317,26 @@ h1 {
   border-radius: 4px;
   vertical-align: middle;
   flex-shrink: 0;
+  font-family: Arial, sans-serif; /* Garante compatibilidade */
 }
 
-.edit-btn { color: #28a745; }
-.delete-btn { color: #dc3545; }
+.edit-btn { 
+  color: #28a745; 
+  font-weight: bold;
+}
+.delete-btn { 
+  color: #dc3545; 
+  font-weight: bold;
+}
+
+/* Ícones Unicode mais compatíveis */
+.edit-btn::before {
+  content: "✎"; /* Lápis Unicode mais compatível */
+}
+.delete-btn::before {
+  content: "×"; /* X Unicode - funciona em tudo */
+  font-size: 1.3rem;
+}
 
 .edit-btn:focus, .delete-btn:focus {
   outline: 2px solid #007bff;
