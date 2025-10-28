@@ -943,7 +943,7 @@ const SHARE_MANAGER = {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
     },
     
-    async compartilharResumo() {
+    compartilharResumo() {
         const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
         const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
         
@@ -987,83 +987,52 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
-        // Método universal que funciona em APK e web
-        await this.copiarTexto(texto);
+        // Método direto que funciona com gráficos
+        this.copiarTextoDireto(texto);
     },
 
-    async copiarTexto(texto) {
-        // Método mais robusto que funciona com gráficos
-        return new Promise((resolve) => {
-            const textarea = document.createElement('textarea');
-            textarea.value = texto;
-            textarea.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 2em;
-                height: 2em;
-                padding: 0;
-                border: none;
-                outline: none;
-                boxShadow: none;
-                background: transparent;
-                opacity: 0;
-                z-index: -1;
-            `;
-            
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
-            
-            try {
-                // Tenta o método moderno primeiro
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(texto).then(() => {
-                        this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
-                        document.body.removeChild(textarea);
-                        resolve(true);
-                    }).catch(() => {
-                        this.tentarCopiarFallback(textarea, texto, resolve);
-                    });
-                } else {
-                    // Fallback para método antigo
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    
-                    if (successful) {
-                        this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
-                        resolve(true);
-                    } else {
-                        this.tentarCopiarFallback(null, texto, resolve);
-                    }
-                }
-            } catch (err) {
-                document.body.removeChild(textarea);
-                this.tentarCopiarFallback(null, texto, resolve);
-            }
-        });
-    },
-
-    tentarCopiarFallback(textareaExistente, texto, resolve) {
-        // Última tentativa - método alternativo
+    copiarTextoDireto(texto) {
+        // Cria um elemento temporário fora do container principal
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+            position: fixed;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+            opacity: 0.01;
+            pointer-events: none;
+        `;
+        
+        const tempInput = document.createElement('textarea');
+        tempInput.value = texto;
+        tempInput.style.cssText = `
+            width: 100px;
+            height: 50px;
+            border: none;
+            background: transparent;
+        `;
+        
+        tempDiv.appendChild(tempInput);
+        document.body.appendChild(tempDiv);
+        
+        // Foca e seleciona o texto
+        tempInput.focus();
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);
+        
         try {
-            const input = document.createElement('input');
-            input.value = texto;
-            input.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
-            document.body.appendChild(input);
-            input.select();
-            input.setSelectionRange(0, 99999);
+            const success = document.execCommand('copy');
+            document.body.removeChild(tempDiv);
             
-            if (document.execCommand('copy')) {
+            if (success) {
                 this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
             } else {
                 this.mostrarMensagem('❌ Erro ao copiar');
             }
-            document.body.removeChild(input);
-            resolve(true);
         } catch (err) {
+            document.body.removeChild(tempDiv);
             this.mostrarMensagem('❌ Erro ao copiar');
-            resolve(false);
         }
     },
 
