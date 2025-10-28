@@ -937,18 +937,21 @@ const PWA_MANAGER = {
 };
 
 /* ---------- COMPARTILHAMENTO ---------- */
-/* ---------- COMPARTILHAMENTO ---------- */
+/* ---------- COMPARTILHAMENTO VISUAL ---------- */
 const SHARE_MANAGER = {
     init() {
-        DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
+        DOM.shareReceita.addEventListener('click', () => this.mostrarResumoVisual());
     },
     
-    compartilharResumo() {
+    mostrarResumoVisual() {
         const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
         const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
+        const anoAtual = UTILS.hoje.getFullYear();
         
-        // Calcular porcentagens por categoria
+        // Calcular despesas por categoria
         const despesasPorCategoria = {};
+        let totalDespesas = 0;
+        
         CONFIG.categories.expense.forEach(categoria => {
             despesasPorCategoria[categoria] = 0;
         });
@@ -962,151 +965,416 @@ const SHARE_MANAGER = {
                 
                 if (mesItem === UTILS.mesAtualStr && despesasPorCategoria.hasOwnProperty(transacao.category)) {
                     despesasPorCategoria[categoria] += transacao.amount;
+                    totalDespesas += transacao.amount;
                 }
             }
         });
 
-        // Gerar texto das categorias com emojis de quadrado colorido
-        const categoriasTexto = CONFIG.categories.expense.map((categoria, index) => {
-            const valor = despesasPorCategoria[categoria] || 0;
-            if (valor > 0 && receita > 0) {
-                const percentual = (valor / receita) * 100;
-                const quadrado = ['🟥','🟨','🟦','🟪','🟩','🟧','⬜'][index];
-                return `${quadrado} ${categoria}: ${percentual.toFixed(1)}%`;
-            }
-            return '';
-        }).filter(texto => texto !== '').join('\n');
-
-        const texto = `💰 RESUMO FINANCEIRO - ${mesAtual}
-
-📈 Receitas: ${UTILS.formataReal(receita)}
-📉 Despesas: ${UTILS.formataReal(despesa)}
-💎 Saldo: ${UTILS.formataReal(saldo)}
-
-${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nenhuma despesa registrada este mês'}
-
-Gerado pelo CONT1 - Controle Financeiro`;
-
-        // Método que SEMPRE funciona
-        this.copiarComFallback(texto);
+        // Criar o resumo visual
+        this.criarModalResumo({
+            mes: mesAtual,
+            ano: anoAtual,
+            receita: receita,
+            despesa: despesa,
+            saldo: saldo,
+            categorias: despesasPorCategoria,
+            totalDespesas: totalDespesas
+        });
     },
 
-    copiarComFallback(texto) {
-        // Método 1: Tenta criar um elemento temporário visível momentaneamente
-        const tempElement = document.createElement('textarea');
-        tempElement.value = texto;
-        tempElement.style.position = 'fixed';
-        tempElement.style.top = '0';
-        tempElement.style.left = '0';
-        tempElement.style.width = '2px';
-        tempElement.style.height = '2px';
-        tempElement.style.opacity = '0';
-        tempElement.style.pointerEvents = 'none';
-        
-        document.body.appendChild(tempElement);
-        tempElement.focus();
-        tempElement.select();
-        
-        let copiado = false;
-        
-        try {
-            copiado = document.execCommand('copy');
-        } catch (err) {
-            console.log('Método 1 falhou:', err);
+    criarModalResumo(dados) {
+        // Remove modal anterior se existir
+        const modalAnterior = document.getElementById('modal-resumo-visual');
+        if (modalAnterior) {
+            modalAnterior.remove();
         }
-        
-        document.body.removeChild(tempElement);
-        
-        if (copiado) {
-            this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
-            return;
-        }
-        
-        // Método 2: Tenta usar a API moderna do clipboard
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(texto).then(() => {
-                this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
-            }).catch(() => {
-                this.metodo3(texto);
-            });
-        } else {
-            this.metodo3(texto);
-        }
-    },
 
-    metodo3(texto) {
-        // Método 3: Cria um prompt para o usuário copiar manualmente
-        const mensagem = `📋 RESUMO FINANCEIRO\n\n${texto}\n\nSelecione e copie o texto acima (Ctrl+C)`;
-        
-        // Cria uma área de texto editável para facilitar a cópia
         const modal = document.createElement('div');
+        modal.id = 'modal-resumo-visual';
         modal.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
-        `;
-        
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 90%;
-            max-height: 80%;
-            overflow: auto;
-        `;
-        
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        textarea.style.cssText = `
-            width: 100%;
-            height: 200px;
-            margin: 10px 0;
-            padding: 10px;
-            border: 2px solid #007bff;
-            border-radius: 5px;
             font-family: Arial, sans-serif;
-            resize: none;
         `;
+
+        const conteudo = document.createElement('div');
+        conteudo.style.cssText = `
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        `;
+
+        // Título
+        const titulo = document.createElement('h2');
+        titulo.textContent = `💰 RESUMO FINANCEIRO - ${dados.mes}/${dados.ano}`;
+        titulo.style.cssText = `
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        `;
+
+        // Container principal
+        const container = document.createElement('div');
+        container.style.cssText = `
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr;
+            margin-bottom: 20px;
+        `;
+
+        // Cards de Resumo
+        const cardsResumo = document.createElement('div');
+        cardsResumo.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        `;
+
+        const cardReceita = this.criarCard('📈 Receitas', dados.receita, '#28a745');
+        const cardDespesa = this.criarCard('📉 Despesas', dados.despesa, '#dc3545');
+        const cardSaldo = this.criarCard('💎 Saldo', dados.saldo, dados.saldo >= 0 ? '#17a2b8' : '#dc3545');
+
+        cardsResumo.appendChild(cardReceita);
+        cardsResumo.appendChild(cardDespesa);
+        cardsResumo.appendChild(cardSaldo);
+
+        // Gráfico de categorias (simulado com HTML)
+        const graficoCategorias = this.criarGraficoCategorias(dados.categorias, dados.receita);
+
+        // Tabela de categorias
+        const tabelaCategorias = this.criarTabelaCategorias(dados.categorias, dados.receita);
+
+        // Botões de ação
+        const botoes = document.createElement('div');
+        botoes.style.cssText = `
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        `;
+
+        const btnCopiar = this.criarBotao('📋 Copiar Texto', '#28a745', () => this.copiarTextoResumo(dados));
+        const btnFechar = this.criarBotao('❌ Fechar', '#6c757d', () => modal.remove());
+        const btnPrint = this.criarBotao('🖨️ Capturar Tela', '#007bff', () => this.capturarTela(conteudo));
+
+        botoes.appendChild(btnCopiar);
+        botoes.appendChild(btnPrint);
+        botoes.appendChild(btnFechar);
+
+        // Montar o conteúdo
+        container.appendChild(cardsResumo);
+        container.appendChild(graficoCategorias);
+        container.appendChild(tabelaCategorias);
         
-        const button = document.createElement('button');
-        button.textContent = 'Fechar';
-        button.style.cssText = `
-            background: #007bff;
+        conteudo.appendChild(titulo);
+        conteudo.appendChild(container);
+        conteudo.appendChild(botoes);
+        modal.appendChild(conteudo);
+        document.body.appendChild(modal);
+
+        // Fechar modal clicando fora
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    },
+
+    criarCard(titulo, valor, cor) {
+        const card = document.createElement('div');
+        card.style.cssText = `
+            background: ${cor}15;
+            border: 2px solid ${cor};
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        `;
+
+        const tituloEl = document.createElement('div');
+        tituloEl.textContent = titulo;
+        tituloEl.style.cssText = `
+            font-weight: bold;
+            color: ${cor};
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        `;
+
+        const valorEl = document.createElement('div');
+        valorEl.textContent = UTILS.formataReal(valor);
+        valorEl.style.cssText = `
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        `;
+
+        card.appendChild(tituloEl);
+        card.appendChild(valorEl);
+        return card;
+    },
+
+    criarGraficoCategorias(categorias, receitaTotal) {
+        const container = document.createElement('div');
+        container.style.cssText = `
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        `;
+
+        const titulo = document.createElement('h3');
+        titulo.textContent = '📊 Distribuição por Categoria';
+        titulo.style.cssText = `
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+        `;
+
+        const barrasContainer = document.createElement('div');
+        barrasContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        `;
+
+        Object.entries(categorias).forEach(([categoria, valor], index) => {
+            if (valor > 0) {
+                const percentual = receitaTotal > 0 ? (valor / receitaTotal) * 100 : 0;
+                const barra = this.criarBarraCategoria(categoria, valor, percentual, index);
+                barrasContainer.appendChild(barra);
+            }
+        });
+
+        container.appendChild(titulo);
+        container.appendChild(barrasContainer);
+        return container;
+    },
+
+    criarBarraCategoria(categoria, valor, percentual, index) {
+        const cores = ['#e74c3c', '#f1c40f', '#3498db', '#9b59b6', '#1abc9c', '#e67e22', '#95a5a6'];
+        const cor = cores[index] || '#95a5a6';
+
+        const container = document.createElement('div');
+        container.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        `;
+
+        const nome = document.createElement('div');
+        nome.textContent = categoria;
+        nome.style.cssText = `
+            width: 80px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: left;
+        `;
+
+        const barraContainer = document.createElement('div');
+        barraContainer.style.cssText = `
+            flex: 1;
+            background: #e9ecef;
+            border-radius: 5px;
+            height: 20px;
+            overflow: hidden;
+        `;
+
+        const barra = document.createElement('div');
+        barra.style.cssText = `
+            background: ${cor};
+            height: 100%;
+            border-radius: 5px;
+            width: ${Math.min(percentual, 100)}%;
+            transition: width 0.5s ease;
+        `;
+
+        const info = document.createElement('div');
+        info.style.cssText = `
+            width: 100px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: right;
+        `;
+        info.textContent = `${UTILS.formataReal(valor)} (${percentual.toFixed(1)}%)`;
+
+        barraContainer.appendChild(barra);
+        container.appendChild(nome);
+        container.appendChild(barraContainer);
+        container.appendChild(info);
+
+        return container;
+    },
+
+    criarTabelaCategorias(categorias, receitaTotal) {
+        const container = document.createElement('div');
+        
+        const titulo = document.createElement('h3');
+        titulo.textContent = '📋 Detalhamento por Categoria';
+        titulo.style.cssText = `
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+        `;
+
+        const tabela = document.createElement('div');
+        tabela.style.cssText = `
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1px;
+            background: #dee2e6;
+            border-radius: 5px;
+            overflow: hidden;
+        `;
+
+        // Cabeçalho
+        const cabecalhos = ['Categoria', 'Valor', '%'];
+        cabecalhos.forEach(texto => {
+            const celula = document.createElement('div');
+            celula.textContent = texto;
+            celula.style.cssText = `
+                background: #007bff;
+                color: white;
+                padding: 10px;
+                font-weight: bold;
+                text-align: center;
+            `;
+            tabela.appendChild(celula);
+        });
+
+        // Linhas
+        Object.entries(categorias).forEach(([categoria, valor]) => {
+            if (valor > 0) {
+                const percentual = receitaTotal > 0 ? (valor / receitaTotal) * 100 : 0;
+                
+                const celulaCategoria = document.createElement('div');
+                celulaCategoria.textContent = categoria;
+                celulaCategoria.style.cssText = `
+                    background: white;
+                    padding: 8px 10px;
+                    text-align: left;
+                `;
+
+                const celulaValor = document.createElement('div');
+                celulaValor.textContent = UTILS.formataReal(valor);
+                celulaValor.style.cssText = `
+                    background: white;
+                    padding: 8px 10px;
+                    text-align: right;
+                    font-weight: bold;
+                `;
+
+                const celulaPercentual = document.createElement('div');
+                celulaPercentual.textContent = `${percentual.toFixed(1)}%`;
+                celulaPercentual.style.cssText = `
+                    background: white;
+                    padding: 8px 10px;
+                    text-align: center;
+                    color: #666;
+                `;
+
+                tabela.appendChild(celulaCategoria);
+                tabela.appendChild(celulaValor);
+                tabela.appendChild(celulaPercentual);
+            }
+        });
+
+        container.appendChild(titulo);
+        container.appendChild(tabela);
+        return container;
+    },
+
+    criarBotao(texto, cor, onClick) {
+        const botao = document.createElement('button');
+        botao.textContent = texto;
+        botao.style.cssText = `
+            background: ${cor};
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 10px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
         `;
-        
-        button.onclick = () => document.body.removeChild(modal);
-        
-        content.innerHTML = '<h3>📋 Copiar Resumo</h3><p>Selecione e copie o texto abaixo (Ctrl+C):</p>';
-        content.appendChild(textarea);
-        content.appendChild(button);
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-        
-        // Seleciona automaticamente o texto
+        botao.onclick = onClick;
+        botao.onmouseover = () => botao.style.background = this.escurecerCor(cor);
+        botao.onmouseout = () => botao.style.background = cor;
+        return botao;
+    },
+
+    escurecerCor(cor) {
+        // Simples escurecimento da cor
+        return cor.replace(/^#/, '').replace(/../g, color => 
+            ('0' + Math.min(255, Math.max(0, parseInt(color, 16) - 30)).toString(16)).substr(-2)
+        );
+    },
+
+    copiarTextoResumo(dados) {
+        let texto = `💰 RESUMO FINANCEIRO - ${dados.mes}/${dados.ano}\n\n`;
+        texto += `📈 Receitas: ${UTILS.formataReal(dados.receita)}\n`;
+        texto += `📉 Despesas: ${UTILS.formataReal(dados.despesa)}\n`;
+        texto += `💎 Saldo: ${UTILS.formataReal(dados.saldo)}\n\n`;
+        texto += `📊 Gastos por Categoria:\n`;
+
+        Object.entries(dados.categorias).forEach(([categoria, valor]) => {
+            if (valor > 0) {
+                const percentual = dados.receita > 0 ? (valor / dados.receita) * 100 : 0;
+                texto += `• ${categoria}: ${UTILS.formataReal(valor)} (${percentual.toFixed(1)}%)\n`;
+            }
+        });
+
+        texto += `\nGerado pelo CONT1 - Controle Financeiro`;
+
+        // Método simples de cópia
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        document.body.appendChild(textarea);
         textarea.select();
-        textarea.setSelectionRange(0, 99999);
-        
-        // Foca no textarea
-        textarea.focus();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        this.mostrarMensagem('📋 Texto copiado!');
+    },
+
+    capturarTela(elemento) {
+        // Em um ambiente real, você usaria html2canvas ou similar
+        // Aqui vamos apenas dar instruções
+        this.mostrarMensagem('📸 Use a ferramenta de print do seu dispositivo (Ctrl+P ou compartilhar tela)');
     },
 
     mostrarMensagem(mensagem) {
         const mensagemEl = document.createElement('div');
-        mensagemEl.className = 'mensagem-copiado';
+        mensagemEl.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            z-index: 10001;
+            font-weight: bold;
+        `;
         mensagemEl.textContent = mensagem;
         document.body.appendChild(mensagemEl);
 
@@ -1114,7 +1382,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
-        }, 2000);
+        }, 3000);
     }
 };
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
