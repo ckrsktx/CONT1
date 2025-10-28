@@ -937,7 +937,6 @@ const PWA_MANAGER = {
 };
 
 /* ---------- COMPARTILHAMENTO ---------- */
-/* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
