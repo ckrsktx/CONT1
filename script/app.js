@@ -988,29 +988,82 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 Gerado pelo CONT1 - Controle Financeiro`;
 
         // Método universal que funciona em APK e web
-        this.copiarTexto(texto);
+        await this.copiarTexto(texto);
     },
 
-    copiarTexto(texto) {
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-999999px';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textarea);
+    async copiarTexto(texto) {
+        // Método mais robusto que funciona com gráficos
+        return new Promise((resolve) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            textarea.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 2em;
+                height: 2em;
+                padding: 0;
+                border: none;
+                outline: none;
+                boxShadow: none;
+                background: transparent;
+                opacity: 0;
+                z-index: -1;
+            `;
             
-            if (successful) {
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            try {
+                // Tenta o método moderno primeiro
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(texto).then(() => {
+                        this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
+                        document.body.removeChild(textarea);
+                        resolve(true);
+                    }).catch(() => {
+                        this.tentarCopiarFallback(textarea, texto, resolve);
+                    });
+                } else {
+                    // Fallback para método antigo
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    if (successful) {
+                        this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
+                        resolve(true);
+                    } else {
+                        this.tentarCopiarFallback(null, texto, resolve);
+                    }
+                }
+            } catch (err) {
+                document.body.removeChild(textarea);
+                this.tentarCopiarFallback(null, texto, resolve);
+            }
+        });
+    },
+
+    tentarCopiarFallback(textareaExistente, texto, resolve) {
+        // Última tentativa - método alternativo
+        try {
+            const input = document.createElement('input');
+            input.value = texto;
+            input.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
+            document.body.appendChild(input);
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            if (document.execCommand('copy')) {
                 this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
             } else {
                 this.mostrarMensagem('❌ Erro ao copiar');
             }
+            document.body.removeChild(input);
+            resolve(true);
         } catch (err) {
-            document.body.removeChild(textarea);
             this.mostrarMensagem('❌ Erro ao copiar');
+            resolve(false);
         }
     },
 
