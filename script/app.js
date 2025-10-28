@@ -987,62 +987,124 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
-        // Método direto que funciona com gráficos
-        this.copiarTextoDireto(texto);
+        // Método que SEMPRE funciona
+        this.copiarComFallback(texto);
     },
 
-    copiarTextoDireto(texto) {
-        // Cria um elemento temporário fora do container principal
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = `
-            position: fixed;
-            top: -100px;
-            left: -100px;
-            width: 1px;
-            height: 1px;
-            opacity: 0.01;
-            pointer-events: none;
-        `;
+    copiarComFallback(texto) {
+        // Método 1: Tenta criar um elemento temporário visível momentaneamente
+        const tempElement = document.createElement('textarea');
+        tempElement.value = texto;
+        tempElement.style.position = 'fixed';
+        tempElement.style.top = '0';
+        tempElement.style.left = '0';
+        tempElement.style.width = '2px';
+        tempElement.style.height = '2px';
+        tempElement.style.opacity = '0';
+        tempElement.style.pointerEvents = 'none';
         
-        const tempInput = document.createElement('textarea');
-        tempInput.value = texto;
-        tempInput.style.cssText = `
-            width: 100px;
-            height: 50px;
-            border: none;
-            background: transparent;
-        `;
+        document.body.appendChild(tempElement);
+        tempElement.focus();
+        tempElement.select();
         
-        tempDiv.appendChild(tempInput);
-        document.body.appendChild(tempDiv);
-        
-        // Foca e seleciona o texto
-        tempInput.focus();
-        tempInput.select();
-        tempInput.setSelectionRange(0, 99999);
+        let copiado = false;
         
         try {
-            const success = document.execCommand('copy');
-            document.body.removeChild(tempDiv);
-            
-            if (success) {
-                this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
-            } else {
-                this.mostrarMensagem('❌ Erro ao copiar');
-            }
+            copiado = document.execCommand('copy');
         } catch (err) {
-            document.body.removeChild(tempDiv);
-            this.mostrarMensagem('❌ Erro ao copiar');
+            console.log('Método 1 falhou:', err);
         }
+        
+        document.body.removeChild(tempElement);
+        
+        if (copiado) {
+            this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
+            return;
+        }
+        
+        // Método 2: Tenta usar a API moderna do clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto).then(() => {
+                this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
+            }).catch(() => {
+                this.metodo3(texto);
+            });
+        } else {
+            this.metodo3(texto);
+        }
+    },
+
+    metodo3(texto) {
+        // Método 3: Cria um prompt para o usuário copiar manualmente
+        const mensagem = `📋 RESUMO FINANCEIRO\n\n${texto}\n\nSelecione e copie o texto acima (Ctrl+C)`;
+        
+        // Cria uma área de texto editável para facilitar a cópia
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 80%;
+            overflow: auto;
+        `;
+        
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.cssText = `
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            resize: none;
+        `;
+        
+        const button = document.createElement('button');
+        button.textContent = 'Fechar';
+        button.style.cssText = `
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        `;
+        
+        button.onclick = () => document.body.removeChild(modal);
+        
+        content.innerHTML = '<h3>📋 Copiar Resumo</h3><p>Selecione e copie o texto abaixo (Ctrl+C):</p>';
+        content.appendChild(textarea);
+        content.appendChild(button);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Seleciona automaticamente o texto
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        
+        // Foca no textarea
+        textarea.focus();
     },
 
     mostrarMensagem(mensagem) {
-        // Remove mensagem anterior se existir
-        const mensagemAntiga = document.querySelector('.mensagem-copiado');
-        if (mensagemAntiga) {
-            mensagemAntiga.remove();
-        }
-
         const mensagemEl = document.createElement('div');
         mensagemEl.className = 'mensagem-copiado';
         mensagemEl.textContent = mensagem;
