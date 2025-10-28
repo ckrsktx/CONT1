@@ -987,113 +987,42 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
-        // Método que funciona no WebView do Android
-        this.copiarNoWebView(texto);
+        // SEMPRE copia para área de transferência - funciona em tudo
+        this.copiarTexto(texto);
     },
 
-    copiarNoWebView(texto) {
-        // Cria um input temporário visível (funciona melhor no WebView)
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = texto;
-        input.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            width: 200px;
-            height: 40px;
-            font-size: 14px;
-            z-index: 1000;
-            background: white;
-            border: 1px solid #ccc;
-        `;
+    copiarTexto(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-999999px';
+        document.body.appendChild(textarea);
+        textarea.select();
         
-        document.body.appendChild(input);
-        
-        // Seleciona o texto
-        input.select();
-        input.setSelectionRange(0, 99999);
-        
-        // Tenta copiar
         try {
             const successful = document.execCommand('copy');
-            input.blur(); // Remove o foco
-            document.body.removeChild(input);
+            document.body.removeChild(textarea);
             
             if (successful) {
                 this.mostrarMensagem('📋 Resumo copiado!');
             } else {
-                this.mostrarMensagem('⚠️ Toque em Copiar no teclado');
-                // Mostra o input para usuário copiar manualmente
-                this.mostrarInputParaCopiar(texto);
+                this.mostrarMensagem('❌ Erro ao copiar');
             }
         } catch (err) {
-            document.body.removeChild(input);
-            this.mostrarMensagem('⚠️ Toque em Copiar no teclado');
-            this.mostrarInputParaCopiar(texto);
+            document.body.removeChild(textarea);
+            this.mostrarMensagem('❌ Erro ao copiar');
         }
     },
 
-    mostrarInputParaCopiar(texto) {
-        // Cria um input visível para o usuário copiar manualmente
-        const container = document.createElement('div');
-        container.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 10001;
-            max-width: 90%;
-            max-height: 80%;
-            overflow: auto;
-        `;
-
-        const mensagem = document.createElement('div');
-        mensagem.textContent = 'Toque no texto abaixo e selecione "Copiar":';
-        mensagem.style.cssText = 'margin-bottom: 15px; font-size: 14px; color: #333;';
-
-        const input = document.createElement('textarea');
-        input.value = texto;
-        input.style.cssText = `
-            width: 100%;
-            height: 120px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 12px;
-            resize: none;
-            background: #f9f9f9;
-        `;
-        input.readOnly = true;
-
-        const botao = document.createElement('button');
-        botao.textContent = 'Fechar';
-        botao.style.cssText = `
-            margin-top: 10px;
-            padding: 8px 16px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        `;
-        botao.onclick = () => document.body.removeChild(container);
-
-        container.appendChild(mensagem);
-        container.appendChild(input);
-        container.appendChild(botao);
-        document.body.appendChild(container);
-
-        // Seleciona o texto automaticamente
-        input.select();
-    },
-
     mostrarMensagem(mensagem) {
+        // Remove mensagem anterior se existir
+        const mensagemAntiga = document.querySelector('.mensagem-copiado');
+        if (mensagemAntiga) {
+            mensagemAntiga.remove();
+        }
+
         const mensagemEl = document.createElement('div');
+        mensagemEl.className = 'mensagem-copiado';
         mensagemEl.style.cssText = `
             position: fixed;
             top: 50%;
@@ -1116,7 +1045,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
-        }, 3000);
+        }, 2000);
     }
 };
 
