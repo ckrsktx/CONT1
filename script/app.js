@@ -662,10 +662,10 @@ renderizarLegenda() {
                 <td>
                     <div class="actions-cell">
     ${!ehParcelada ? 
-        `<button class="edit-btn" data-i="${index}" title="Editar">✏️</button>` : 
+        `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
         '<span class="edit-placeholder"></span>'
     }
-    <button class="delete-btn" data-i="${index}" title="Excluir">🗑️</button>
+    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
 </div>
                 </td>
             `;
