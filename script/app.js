@@ -660,13 +660,13 @@ renderizarLegenda() {
                     <div class="category-dot" style="background-color: ${corCategoria}"></div>
                 </td>
                 <td>
-                    <div class="actions-cell">
-                        ${!ehParcelada ? 
-                          `<button class="edit-btn" data-i="${index}" title="Editar"></button>`
-                            '<span class="edit-placeholder"></span>'
-                        }
-                       `<button class="delete-btn" data-i="${index}" title="Excluir"></button>`
-                    </div>
+                    `<div class="actions-cell">
+    ${!ehParcelada ? 
+        `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
+        '<span class="edit-placeholder"></span>'
+    }
+    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
+</div>`
                 </td>
             `;
             DOM.list.appendChild(linha);
