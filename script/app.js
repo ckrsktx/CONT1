@@ -937,6 +937,7 @@ const PWA_MANAGER = {
 };
 
 /* ---------- COMPARTILHAMENTO ---------- */
+/* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
@@ -986,47 +987,42 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
+        // SEMPRE copia para área de transferência - funciona em tudo
+        this.copiarTexto(texto);
+    },
+
+    copiarTexto(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-999999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
         try {
-            // Verifica se é WebView/APK (não funciona bem com share)
-            if (this.isWebView()) {
-                // COMPORTAMENTO APK - apenas copiar
-                await this.copiarParaAreaTransferencia(texto);
-            } else if (navigator.share) {
-                // COMPORTAMENTO NAVEGADOR WEB - share nativo
-                await navigator.share({
-                    title: `Resumo Financeiro - ${mesAtual}`,
-                    text: texto
-                });
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            if (successful) {
+                this.mostrarMensagem('📋 Resumo copiado!');
             } else {
-                // Fallback para navegadores sem share
-                await this.copiarParaAreaTransferencia(texto);
+                this.mostrarMensagem('❌ Erro ao copiar');
             }
         } catch (err) {
-            console.log('Erro ao compartilhar:', err);
-            await this.copiarParaAreaTransferencia(texto);
+            document.body.removeChild(textarea);
+            this.mostrarMensagem('❌ Erro ao copiar');
         }
     },
 
-    isWebView() {
-        // Detectar se está em WebView/APK
-        const userAgent = navigator.userAgent.toLowerCase();
-        return userAgent.includes('wv') || 
-               userAgent.includes('android') && !userAgent.includes('chrome') ||
-               userAgent.includes('webview');
-    },
-
-    async copiarParaAreaTransferencia(texto) {
-        try {
-            await navigator.clipboard.writeText(texto);
-            this.mostrarMensagemSucesso('📋 Resumo copiado!');
-            return true;
-        } catch (err) {
-            return this.copiarTextoFallback(texto);
+    mostrarMensagem(mensagem) {
+        // Remove mensagem anterior se existir
+        const mensagemAntiga = document.querySelector('.mensagem-copiado');
+        if (mensagemAntiga) {
+            mensagemAntiga.remove();
         }
-    },
 
-    mostrarMensagemSucesso(mensagem) {
         const mensagemEl = document.createElement('div');
+        mensagemEl.className = 'mensagem-copiado';
         mensagemEl.style.cssText = `
             position: fixed;
             top: 50%;
@@ -1040,7 +1036,6 @@ Gerado pelo CONT1 - Controle Financeiro`;
             z-index: 10000;
             font-size: 14px;
             text-align: center;
-            max-width: 80%;
             font-weight: 600;
         `;
         mensagemEl.textContent = mensagem;
@@ -1051,30 +1046,6 @@ Gerado pelo CONT1 - Controle Financeiro`;
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
         }, 2000);
-    },
-
-    copiarTextoFallback(texto) {
-        try {
-            const textarea = document.createElement('textarea');
-            textarea.value = texto;
-            textarea.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
-            document.body.appendChild(textarea);
-            textarea.select();
-            textarea.setSelectionRange(0, 99999);
-            
-            const success = document.execCommand('copy');
-            document.body.removeChild(textarea);
-            
-            if (success) {
-                this.mostrarMensagemSucesso('📋 Resumo copiado!');
-                return true;
-            }
-        } catch (err) {
-            console.error('Erro ao copiar:', err);
-        }
-        
-        this.mostrarMensagemSucesso('❌ Erro ao copiar');
-        return false;
     }
 };
 
