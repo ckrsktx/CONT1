@@ -938,7 +938,6 @@ const PWA_MANAGER = {
 
 /* ---------- COMPARTILHAMENTO ---------- */
 /* ---------- COMPARTILHAMENTO ---------- */
-/* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
         DOM.shareReceita.addEventListener('click', () => this.compartilharResumo());
@@ -962,7 +961,7 @@ const SHARE_MANAGER = {
                     : UTILS.getMesAnoStr(transacao.dataLancamento);
                 
                 if (mesItem === UTILS.mesAtualStr && despesasPorCategoria.hasOwnProperty(transacao.category)) {
-                    despesasPorCategoria[transacao.category] += transacao.amount;
+                    despesasPorCategoria[categoria] += transacao.amount;
                 }
             }
         });
@@ -988,57 +987,42 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
+        // SEMPRE copia para área de transferência - funciona em tudo
+        this.copiarTexto(texto);
+    },
+
+    copiarTexto(texto) {
+        const textarea = document.createElement('textarea');
+        textarea.value = texto;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-999999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
         try {
-            // Verifica se o navegador suporta a API de compartilhamento
-            if (navigator.share && this.isMobile()) {
-                await navigator.share({
-                    title: `Resumo Financeiro - ${mesAtual}`,
-                    text: texto
-                });
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            if (successful) {
+                this.mostrarMensagem('📋 Resumo copiado!');
             } else {
-                // Método alternativo para APK/WebView
-                await this.compartilharAlternativo(texto, mesAtual);
+                this.mostrarMensagem('❌ Erro ao copiar');
             }
         } catch (err) {
-            console.log('Erro ao compartilhar:', err);
-            // Fallback para copiar para área de transferência
-            await this.copiarParaAreaTransferencia(texto);
+            document.body.removeChild(textarea);
+            this.mostrarMensagem('❌ Erro ao copiar');
         }
     },
 
-    isMobile() {
-        return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    },
-
-    async compartilharAlternativo(texto, mesAtual) {
-        // Tenta usar o window.open para apps nativos
-        const textoCodificado = encodeURIComponent(texto);
-        const urlCompartilhamento = `https://api.whatsapp.com/send?text=${textoCodificado}`;
-        
-        // Abre em uma nova janela para WhatsApp
-        const novaJanela = window.open(urlCompartilhamento, '_blank');
-        
-        if (!novaJanela || novaJanela.closed || typeof novaJanela.closed == 'undefined') {
-            // Se não conseguiu abrir WhatsApp, tenta copiar para área de transferência
-            await this.copiarParaAreaTransferencia(texto);
+    mostrarMensagem(mensagem) {
+        // Remove mensagem anterior se existir
+        const mensagemAntiga = document.querySelector('.mensagem-copiado');
+        if (mensagemAntiga) {
+            mensagemAntiga.remove();
         }
-    },
 
-    async copiarParaAreaTransferencia(texto) {
-        try {
-            await navigator.clipboard.writeText(texto);
-            
-            // Mostra uma mensagem mais amigável
-            this.mostrarMensagemSucesso('Resumo copiado! Cole no WhatsApp ou outro app para compartilhar.');
-        } catch (err) {
-            // Fallback para métodos antigos
-            this.copiarTextoFallback(texto);
-        }
-    },
-
-    mostrarMensagemSucesso(mensagem) {
-        // Cria uma mensagem temporária mais amigável
         const mensagemEl = document.createElement('div');
+        mensagemEl.className = 'mensagem-copiado';
         mensagemEl.style.cssText = `
             position: fixed;
             top: 50%;
@@ -1046,42 +1030,22 @@ Gerado pelo CONT1 - Controle Financeiro`;
             transform: translate(-50%, -50%);
             background: #28a745;
             color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
+            padding: 15px 25px;
+            border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 10000;
-            font-size: 16px;
+            font-size: 14px;
             text-align: center;
-            max-width: 80%;
+            font-weight: 600;
         `;
         mensagemEl.textContent = mensagem;
         document.body.appendChild(mensagemEl);
 
-        // Remove a mensagem após 3 segundos
         setTimeout(() => {
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
-        }, 3000);
-    },
-
-    copiarTextoFallback(texto) {
-        // Método alternativo para copiar texto
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        textarea.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
-        document.body.appendChild(textarea);
-        textarea.select();
-        textarea.setSelectionRange(0, 99999);
-        
-        try {
-            document.execCommand('copy');
-            this.mostrarMensagemSucesso('Resumo copiado! Cole no WhatsApp ou outro app.');
-        } catch (err) {
-            this.mostrarMensagemSucesso('Erro ao copiar. Tente novamente.');
-        } finally {
-            document.body.removeChild(textarea);
-        }
+        }, 2000);
     }
 };
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
