@@ -317,7 +317,7 @@ h1 {
   border-radius: 4px;
   vertical-align: middle;
   flex-shrink: 0;
-  font-family: Arial, sans-serif; /* Garante compatibilidade */
+  font-family: Arial, sans-serif;
 }
 
 .edit-btn { 
@@ -329,12 +329,12 @@ h1 {
   font-weight: bold;
 }
 
-/* Ícones Unicode mais compatíveis */
-.edit-btn::before {
-  content: "✎"; /* Lápis Unicode mais compatível */
+/* Ícones via pseudo-elementos - SEM duplicação */
+.edit-btn::after {
+  content: "✎";
 }
-.delete-btn::before {
-  content: "×"; /* X Unicode - funciona em tudo */
+.delete-btn::after {
+  content: "×";
   font-size: 1.3rem;
 }
 
