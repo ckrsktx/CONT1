@@ -988,33 +988,45 @@ ${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nen
 Gerado pelo CONT1 - Controle Financeiro`;
 
         try {
-            // COMPORTAMENTO ORIGINAL PARA NAVEGADOR WEB
-            if (navigator.share) {
+            // Verifica se é WebView/APK (não funciona bem com share)
+            if (this.isWebView()) {
+                // COMPORTAMENTO APK - apenas copiar
+                await this.copiarParaAreaTransferencia(texto);
+            } else if (navigator.share) {
+                // COMPORTAMENTO NAVEGADOR WEB - share nativo
                 await navigator.share({
                     title: `Resumo Financeiro - ${mesAtual}`,
                     text: texto
                 });
             } else {
-                // COMPORTAMENTO PARA APK - apenas copia com mensagem personalizada
+                // Fallback para navegadores sem share
                 await this.copiarParaAreaTransferencia(texto);
             }
         } catch (err) {
             console.log('Erro ao compartilhar:', err);
-            // Fallback para APK
             await this.copiarParaAreaTransferencia(texto);
         }
+    },
+
+    isWebView() {
+        // Detectar se está em WebView/APK
+        const userAgent = navigator.userAgent.toLowerCase();
+        return userAgent.includes('wv') || 
+               userAgent.includes('android') && !userAgent.includes('chrome') ||
+               userAgent.includes('webview');
     },
 
     async copiarParaAreaTransferencia(texto) {
         try {
             await navigator.clipboard.writeText(texto);
-            this.mostrarMensagemSucesso();
+            this.mostrarMensagemSucesso('📋 Resumo copiado!');
+            return true;
         } catch (err) {
-            this.copiarTextoFallback(texto);
+            return this.copiarTextoFallback(texto);
         }
     },
 
-    mostrarMensagemSucesso() {
+    mostrarMensagemSucesso(mensagem) {
         const mensagemEl = document.createElement('div');
         mensagemEl.style.cssText = `
             position: fixed;
@@ -1023,68 +1035,51 @@ Gerado pelo CONT1 - Controle Financeiro`;
             transform: translate(-50%, -50%);
             background: #28a745;
             color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
+            padding: 15px 25px;
+            border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 10000;
-            font-size: 16px;
+            font-size: 14px;
             text-align: center;
             max-width: 80%;
             font-weight: 600;
         `;
-        mensagemEl.textContent = '📋 Resumo copiado para a área de transferência!';
+        mensagemEl.textContent = mensagem;
         document.body.appendChild(mensagemEl);
 
         setTimeout(() => {
             if (mensagemEl.parentNode) {
                 mensagemEl.parentNode.removeChild(mensagemEl);
             }
-        }, 3000);
+        }, 2000);
     },
 
     copiarTextoFallback(texto) {
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        textarea.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
-        document.body.appendChild(textarea);
-        textarea.select();
-        textarea.setSelectionRange(0, 99999);
-        
         try {
-            document.execCommand('copy');
-            this.mostrarMensagemSucesso();
-        } catch (err) {
-            // Mensagem de erro simplificada
-            const erroEl = document.createElement('div');
-            erroEl.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: #dc3545;
-                color: white;
-                padding: 20px 30px;
-                border-radius: 10px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 10000;
-                font-size: 16px;
-                text-align: center;
-                max-width: 80%;
-                font-weight: 600;
-            `;
-            erroEl.textContent = '❌ Erro ao copiar. Tente novamente.';
-            document.body.appendChild(erroEl);
-
-            setTimeout(() => {
-                if (erroEl.parentNode) {
-                    erroEl.parentNode.removeChild(erroEl);
-                }
-            }, 3000);
-        } finally {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            textarea.style.cssText = 'position: fixed; left: -9999px; opacity: 0;';
+            document.body.appendChild(textarea);
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            
+            const success = document.execCommand('copy');
             document.body.removeChild(textarea);
+            
+            if (success) {
+                this.mostrarMensagemSucesso('📋 Resumo copiado!');
+                return true;
+            }
+        } catch (err) {
+            console.error('Erro ao copiar:', err);
         }
+        
+        this.mostrarMensagemSucesso('❌ Erro ao copiar');
+        return false;
     }
 };
+
+
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
 const MONTHLY_CLEANER = {
     ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
