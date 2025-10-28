@@ -329,7 +329,7 @@ h1 {
   font-weight: bold;
 }
 
-/* Ícones via pseudo-elementos - SEM duplicação */
+/* Ícones via pseudo-elementos */
 .edit-btn::after {
   content: "✎";
 }
@@ -350,7 +350,6 @@ h1 {
   height: 26px;
   visibility: hidden;
 }
-
 /* QUADRADINHOS COLORIDOS SIMPLES - SEM TOOLTIP E SEM LEGENDA */
 .category-dot {
   display: inline-block;
