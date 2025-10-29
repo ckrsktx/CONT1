@@ -219,22 +219,23 @@ const ALERT_MANAGER = {
 };
 
 /* ---------- GERENCIAMENTO DE FORMULÁRIOS ---------- */
+/* ---------- GERENCIAMENTO DE FORMULÁRIOS ---------- */
 const FORM_MANAGER = {
     init() {
-        this.inicializarContadorCaracteres();
+        this.inicializarMaiusculas();
         this.popularSelects();
         this.configurarEventos();
     },
     
-    inicializarContadorCaracteres() {
-        DOM.descExpense.addEventListener('input', () => {
-            let count = DOM.descExpense.value.length;
-            if (count > 12) {
-                DOM.descExpense.value = DOM.descExpense.value.slice(0, 12);
-                count = 12;
+    inicializarMaiusculas() {
+        DOM.descExpense.addEventListener('input', (e) => {
+            // Limita a 12 caracteres e converte para maiúscula
+            let valor = e.target.value;
+            if (valor.length > 12) {
+                valor = valor.slice(0, 12);
             }
-            DOM.charCountExpense.textContent = count;
-            DOM.charCountExpense.parentElement.classList.toggle('warning', count >= 12);
+            // Converte primeira letra de cada palavra para maiúscula
+            e.target.value = valor.replace(/\b\w/g, char => char.toUpperCase());
         });
     },
     
@@ -294,8 +295,6 @@ const FORM_MANAGER = {
             DOM.fixaExpense.checked = false;
             DOM.btnSaveExpense.textContent = 'Adicionar';
             DOM.parcelasDivExpense.classList.remove('visible');
-            DOM.charCountExpense.textContent = '0';
-            DOM.charCountExpense.parentElement.classList.remove('warning');
             DOM.descExpense.focus();
             DOM.formOverlayExpense.style.display = 'flex';
         }
@@ -316,8 +315,6 @@ const FORM_MANAGER = {
             DOM.formOverlayExpense.style.display = 'none';
             DOM.formExpense.reset();
             DOM.parcelasDivExpense.classList.remove('visible');
-            DOM.charCountExpense.textContent = '0';
-            DOM.charCountExpense.parentElement.classList.remove('warning');
         }
         STATE.editIndex = null;
     },
@@ -354,13 +351,16 @@ const FORM_MANAGER = {
     },
     
     processarDespesa() {
-        const descricao = DOM.descExpense.value.trim();
+        let descricao = DOM.descExpense.value.trim();
         const valor = parseFloat(DOM.amountExpense.value);
         const categoria = DOM.categoryExpense.value;
         const data = DOM.dateExpense.value;
         const ehParcelado = DOM.parceladoExpense.checked;
         const numParcelas = parseInt(DOM.parcelasExpense.value) || 1;
         const ehFixa = DOM.fixaExpense.checked;
+        
+        // Garante que a descrição está formatada corretamente
+        descricao = this.formatarDescricao(descricao);
         
         if (!descricao) {
             alert('Por favor, insira uma descrição para a despesa.');
@@ -384,14 +384,18 @@ const FORM_MANAGER = {
         }, 'expense');
     },
     
+    formatarDescricao(descricao) {
+        // Remove espaços extras e limita a 12 caracteres
+        descricao = descricao.trim().slice(0, 12);
+        // Converte primeira letra de cada palavra para maiúscula
+        return descricao.replace(/\b\w/g, char => char.toUpperCase());
+    },
+    
     salvarTransacao(dados, formType) {
         let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
         
-        // Limitar descrição a 12 caracteres
-        descricao = descricao.trim();
-        if (descricao.length > 12) {
-            descricao = descricao.slice(0, 12);
-        }
+        // Garante formatação correta da descrição
+        descricao = this.formatarDescricao(descricao);
         
         // Se for fixa, adicionar ícone à descrição (pino na frente)
         const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
@@ -431,6 +435,98 @@ const FORM_MANAGER = {
             STATE.transactions.push(...novasTransacoes);
         }
         
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+        this.fechar(formType);
+        
+        if (STATE.editIndex === null) {
+            setTimeout(() => {
+                DOM.transactionsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+    },
+    
+    processarEdicao(descricao, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas) {
+        const transacaoOriginal = STATE.transactions[STATE.editIndex];
+        const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
+        const novasTransacoes = [];
+        
+        // Caso 1: Era parcelada, agora não é mais
+        if (infoParcela && !ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            novasTransacoes.push({
+                description: descricao,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento,
+                fixa: ehFixa
+            });
+        }
+        // Caso 2: Não era parcelada, agora é
+        else if (!infoParcela && ehParcelado) {
+            const valorParcela = valor / numParcelas;
+            for (let i = 1; i <= numParcelas; i++) {
+                const dataParcela = new Date(dataLancamento);
+                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+                
+                novasTransacoes.push({
+                    description: `${descricao} ${i}/${numParcelas}`,
+                    amount: parseFloat(valorParcela.toFixed(2)),
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataParcela.toISOString(),
+                    fixa: ehFixa
+                });
+            }
+            STATE.transactions.splice(STATE.editIndex, 1);
+        }
+        // Caso 3: Era parcelada e continua sendo (possivelmente com alterações)
+        else if (infoParcela && ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            const valorParcela = valor / numParcelas;
+            for (let i = 1; i <= numParcelas; i++) {
+                const dataParcela = new Date(dataLancamento);
+                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+                
+                novasTransacoes.push({
+                    description: `${descricao} ${i}/${numParcelas}`,
+                    amount: parseFloat(valorParcela.toFixed(2)),
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataParcela.toISOString(),
+                    fixa: ehFixa
+                });
+            }
+        }
+        // Caso 4: Edição simples sem mudança de parcelamento
+        else {
+            STATE.transactions[STATE.editIndex] = {
+                description: descricao,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento,
+                fixa: ehFixa
+            };
+        }
+        
+        if (novasTransacoes.length) {
+            STATE.transactions.push(...novasTransacoes);
+        }
+        STATE.editIndex = null;
+    }
+};
+  /* ---------- GERENCIAMENTO DE RENDERIZAÇÃO ---------- */      
         DATA_MANAGER.salvar();
         RENDER_MANAGER.renderizarTudo();
         this.fechar(formType);
