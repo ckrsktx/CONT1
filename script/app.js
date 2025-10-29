@@ -957,8 +957,10 @@ const SHARE_MANAGER = {
         const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
         const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
         
-        // Calcular porcentagens por categoria
+        // Calcular porcentagens por categoria - CORRIGIDO
         const despesasPorCategoria = {};
+        let temDespesas = false;
+
         CONFIG.categories.expense.forEach(categoria => {
             despesasPorCategoria[categoria] = 0;
         });
@@ -971,29 +973,38 @@ const SHARE_MANAGER = {
                     : UTILS.getMesAnoStr(transacao.dataLancamento);
                 
                 if (mesItem === UTILS.mesAtualStr && despesasPorCategoria.hasOwnProperty(transacao.category)) {
-                    despesasPorCategoria[categoria] += transacao.amount;
+                    despesasPorCategoria[transacao.category] += transacao.amount;
+                    temDespesas = true;
                 }
             }
         });
 
-        // Gerar texto das categorias com emojis de quadrado colorido
-        const categoriasTexto = CONFIG.categories.expense.map((categoria, index) => {
-            const valor = despesasPorCategoria[categoria] || 0;
-            if (valor > 0 && receita > 0) {
-                const percentual = (valor / receita) * 100;
-                const quadrado = ['🟥','🟨','🟦','🟪','🟩','🟧','⬜'][index];
-                return `${quadrado} ${categoria}: ${percentual.toFixed(1)}%`;
+        // Gerar texto das categorias - CORRIGIDO
+        let categoriasTexto = '';
+        if (temDespesas) {
+            const categoriasArray = CONFIG.categories.expense.map((categoria, index) => {
+                const valor = despesasPorCategoria[categoria] || 0;
+                if (valor > 0 && receita > 0) {
+                    const percentual = (valor / receita) * 100;
+                    const quadrado = ['🟥','🟨','🟦','🟪','🟩','🟧','⬜'][index];
+                    return `${quadrado} ${categoria}: ${percentual.toFixed(1)}%`;
+                }
+                return '';
+            }).filter(texto => texto !== '');
+            
+            if (categoriasArray.length > 0) {
+                categoriasTexto = '📊 Gastos por Categoria:\n' + categoriasArray.join('\n');
             }
-            return '';
-        }).filter(texto => texto !== '').join('\n');
+        }
 
+        // Texto final - CORRIGIDO
         const texto = `💰 RESUMO FINANCEIRO - ${mesAtual}
 
 📈 Receitas: ${UTILS.formataReal(receita)}
 📉 Despesas: ${UTILS.formataReal(despesa)}
 💎 Saldo: ${UTILS.formataReal(saldo)}
 
-${categoriasTexto ? '📊 Gastos por Categoria:\n' + categoriasTexto : '📊 Nenhuma despesa registrada este mês'}
+${categoriasTexto || '📊 Nenhuma despesa registrada este mês'}
 
 Gerado pelo CONT1 - Controle Financeiro`;
 
