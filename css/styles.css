@@ -10,6 +10,34 @@
   --shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 
+/* LOGO HEADER */
+.page-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+
+.logo-header {
+    max-width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Ajustes responsivos para o logo */
+@media (max-width: 700px) {
+    .logo-header {
+        max-width: 180px;
+    }
+}
+
+@media (max-width: 460px) {
+    .logo-header {
+        max-width: 160px;
+    }
+}
 /* RESET E BASE */
 * {
   box-sizing: border-box;
@@ -64,9 +92,10 @@ h1 {
 }
 
 .share-receita-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+    margin-top: -8px; /* Aproxima mais do logo */
 }
 
 #share-receita {
