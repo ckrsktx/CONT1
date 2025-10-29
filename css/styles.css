@@ -38,6 +38,24 @@
         max-width: 160px;
     }
 }
+
+.mensagem-copiado {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: #28a745 !important;
+    color: white !important;
+    padding: 15px 25px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    z-index: 10000 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+    max-width: 80% !important;
+}
+
 /* RESET E BASE */
 * {
   box-sizing: border-box;
