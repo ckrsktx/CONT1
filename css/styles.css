@@ -909,9 +909,6 @@ h1 {
 
 .add-btn:hover, .add-btn:focus { background: #0056b3; outline: 2px solid #007bff; color: #e6f0ff; }
 
-.char-counter { font-size: .78rem; color: var(--clr-muted); text-align: right; margin-top: 1px; }
-.char-counter.warning { color: var(--clr-danger); }
-
 /* DATA INPUT STYLES */
 input[type="date"] {
   font-family: Arial, sans-serif;
