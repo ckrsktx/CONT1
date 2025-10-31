@@ -1238,7 +1238,7 @@ function init() {
 // Inicializar quando o DOM estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
-} else {
+} else
    
 
 /* ---------- TESTE LIMPEZA MENSAL ---------- */
@@ -1398,5 +1398,5 @@ if (document.readyState === 'loading') {
 } else {
     SECURITY_MANAGER.init();
 }
- init();
+ { init();
 }
