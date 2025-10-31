@@ -593,7 +593,7 @@ const RENDER_MANAGER = {
         DOM.legenda.innerHTML = legendas.join('');
     },
     
-    renderizarTransacoes() {
+   renderizarTransacoes() {
     DOM.list.innerHTML = '';
     const { receita, despesa } = DATA_MANAGER.calcularTotais();
     const mesAtual = UTILS.mesAtualStr;
@@ -682,95 +682,6 @@ const RENDER_MANAGER = {
     this.atualizarResumo(receita, despesa);
     DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
 }
-    
-    atualizarResumo(receita, despesa) {
-        const saldo = receita - despesa;
-        ALERT_MANAGER.verificarSaldoNegativo(saldo);
-        
-        DOM.totalRev.textContent = UTILS.formataReal(receita);
-        DOM.totalDes.textContent = UTILS.formataReal(despesa);
-        DOM.balance.textContent = UTILS.formataReal(saldo);
-        DOM.balance.className = saldo < 0 ? 'negative' : 'info';
-    },
-    
-    renderizarGrafico() {
-        const mesAtual = UTILS.mesAtualStr;
-        let receitaTotal = 0;
-        const despesasPorCategoria = {};
-        
-        // Inicializar categorias
-        CONFIG.categories.expense.forEach(categoria => {
-            despesasPorCategoria[categoria] = 0;
-        });
-        
-        // Calcular totais para o gráfico
-        STATE.transactions.forEach(transacao => {
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            const mesItem = infoParcela
-                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
-                : UTILS.getMesAnoStr(transacao.dataLancamento);
-            
-            if (mesItem !== mesAtual) return;
-            
-            if (transacao.type === 'revenue') {
-                receitaTotal += transacao.amount;
-            } else if (despesasPorCategoria.hasOwnProperty(transacao.category)) {
-                despesasPorCategoria[transacao.category] += transacao.amount;
-            }
-        });
-        
-        const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
-        const receitaDisponivel = receitaTotal - totalDespesas;
-        
-        // Preparar dados para o gráfico
-        const labels = [];
-        const dados = [];
-        const cores = [];
-        
-        // Adicionar receita disponível (saldo)
-        if (receitaDisponivel > 0) {
-            labels.push('Receita');
-            dados.push(receitaDisponivel);
-            cores.push(CONFIG.chartColors.revenue);
-        }
-        
-        // Adicionar despesas por categoria
-        CONFIG.categories.expense.forEach((categoria, index) => {
-            const valor = despesasPorCategoria[categoria] || 0;
-            if (valor > 0) {
-                labels.push(categoria);
-                dados.push(valor);
-                cores.push(CONFIG.chartColors.expenses[index]);
-            }
-        });
-        
-        // Destruir gráfico existente
-        if (STATE.chart) {
-            STATE.chart.destroy();
-        }
-        
-        // Criar novo gráfico
-        if (dados.length > 0) {
-            STATE.chart = new Chart(DOM.canvas, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dados,
-                        backgroundColor: cores
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: true
-                }
-            });
-        }
-    }
-};
 
 /* ---------- GERENCIAMENTO DE AÇÕES ---------- */
 const ACTION_MANAGER = {
