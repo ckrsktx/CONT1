@@ -1239,8 +1239,7 @@ function init() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
-    init();
-}
+   
 
 /* ---------- TESTE LIMPEZA MENSAL ---------- */
 const TEST_MANAGER = {
@@ -1399,4 +1398,5 @@ if (document.readyState === 'loading') {
 } else {
     SECURITY_MANAGER.init();
 }
-
+ init();
+}
