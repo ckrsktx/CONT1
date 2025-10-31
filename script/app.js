@@ -1238,6 +1238,6 @@ function init() {
 // Inicializar quando o DOM estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
-} else
-    { init();
+} else {
+    init();
 }
