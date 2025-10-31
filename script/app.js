@@ -1398,7 +1398,3 @@ if (document.readyState === 'loading') {
     SECURITY_MANAGER.init();
 }
 
-
-{
-    init();
-}
