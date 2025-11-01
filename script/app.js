@@ -1088,6 +1088,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
     }
 };
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
+/* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
 const MONTHLY_CLEANER = {
     ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
     mesAtual: UTILS.mesAtualStr,
@@ -1100,9 +1101,15 @@ const MONTHLY_CLEANER = {
     verificarMudancaMes() {
         // Se é um novo mês e ainda não verificamos
         if (this.ultimoMesVerificado !== this.mesAtual) {
+            console.log('🔄 Verificando mudança de mês...', {
+                ultimoMes: this.ultimoMesVerificado,
+                mesAtual: this.mesAtual
+            });
+            
             const transacoesAntigas = this.obterTransacoesMesesAnteriores();
             
             if (transacoesAntigas.length > 0) {
+                console.log(`📊 Encontradas ${transacoesAntigas.length} transações antigas`);
                 this.mostrarAlertaMudancaMes(transacoesAntigas.length);
                 this.limparTransacoesAntigas();
             }
@@ -1116,47 +1123,88 @@ const MONTHLY_CLEANER = {
     obterTransacoesMesesAnteriores() {
         const mesAtual = UTILS.mesAtualStr;
         return STATE.transactions.filter(transacao => {
-            // Ignorar transações fixas
-            if (transacao.fixa) return false;
+            // MANTER transações fixas - NUNCA remover
+            if (transacao.fixa) {
+                return false;
+            }
             
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            const mesTransacao = infoParcela 
-                ? UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual)
-                : UTILS.getMesAnoStr(transacao.dataLancamento);
+            let mesTransacao;
             
+            if (infoParcela) {
+                // Para parcelas, usa a data da parcela atual
+                mesTransacao = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
+            } else {
+                // Para transações únicas, usa a data normal
+                mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
+            }
+            
+            // Retorna true se a transação é de um mês anterior
             return mesTransacao < mesAtual;
         });
     },
     
     limparTransacoesAntigas() {
         const mesAtual = UTILS.mesAtualStr;
+        const transacoesAntes = STATE.transactions.length;
+        
+        console.log('🧹 Iniciando limpeza de transações antigas...');
         
         STATE.transactions = STATE.transactions.filter(transacao => {
-            // MANTER transações fixas independentemente do mês
+            // REGRA 1: MANTER todas as transações fixas
             if (transacao.fixa) {
+                console.log('✅ Mantida (fixa):', transacao.description);
                 return true;
             }
             
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             
-            // Se é uma parcela, verifica se alguma parcela futura pertence a este mês ou meses futuros
+            // REGRA 2: Para transações parceladas
             if (infoParcela) {
-                for (let i = infoParcela.parcelaAtual; i <= infoParcela.totalParcelas; i++) {
-                    const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, i);
-                    if (mesParcela >= mesAtual) {
-                        return true; // Mantém se há parcelas futuras
-                    }
+                // Verifica se existe alguma parcela FUTURA
+                const temParcelaFutura = this.temParcelaFutura(transacao, infoParcela, mesAtual);
+                
+                if (temParcelaFutura) {
+                    console.log('✅ Mantida (parcela futura):', transacao.description);
+                    return true;
+                } else {
+                    console.log('❌ Removida (parcela antiga):', transacao.description);
+                    return false;
                 }
-                return false; // Remove se todas as parcelas são do passado
             }
             
-            // Para transações únicas, mantém apenas as do mês atual ou futuras
+            // REGRA 3: Para transações únicas
             const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
-            return mesTransacao >= mesAtual;
+            const deveManter = mesTransacao >= mesAtual;
+            
+            if (deveManter) {
+                console.log('✅ Mantida (mês atual/futuro):', transacao.description);
+            } else {
+                console.log('❌ Removida (mês anterior):', transacao.description);
+            }
+            
+            return deveManter;
         });
+        
+        const transacoesDepois = STATE.transactions.length;
+        const removidas = transacoesAntes - transacoesDepois;
+        
+        console.log(`📈 Limpeza concluída: ${removidas} transações removidas`);
+        console.log(`📊 Total: ${transacoesAntes} → ${transacoesDepois} transações`);
         
         DATA_MANAGER.salvar();
         RENDER_MANAGER.renderizarTudo();
+    },
+    
+    temParcelaFutura(transacao, infoParcela, mesAtual) {
+        // Verifica se existe alguma parcela que ainda não venceu
+        for (let i = infoParcela.parcelaAtual; i <= infoParcela.totalParcelas; i++) {
+            const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, i);
+            if (mesParcela >= mesAtual) {
+                return true;
+            }
+        }
+        return false;
     },
     
     mostrarAlertaMudancaMes(numTransacoesRemovidas) {
@@ -1215,13 +1263,13 @@ const MONTHLY_CLEANER = {
         setInterval(() => {
             const novoMesAtual = UTILS.mesAtualStr;
             if (novoMesAtual !== this.mesAtual) {
+                console.log('📅 Mudança de mês detectada!');
                 this.mesAtual = novoMesAtual;
                 this.verificarMudancaMes();
             }
         }, 3600000); // 1 hora
     }
 };
-
 /* ---------- INICIALIZAÇÃO DA APLICAÇÃO ---------- */
 function init() {
     ZOOM_MANAGER.init();
