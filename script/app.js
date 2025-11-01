@@ -400,141 +400,139 @@ const FORM_MANAGER = {
 },
     
     salvarTransacao(dados, formType) {
-        let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
-        
-        // Garante formatação correta da descrição
-        descricao = this.formatarDescricao(descricao);
-        
-        // Se for fixa, adicionar ícone à descrição (pino na frente)
-        const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
-        const dataLancamento = data ? new Date(data + 'T00:00:00').toISOString() : new Date().toISOString();
-        const novasTransacoes = [];
-        
-        // Modo edição
-        if (STATE.editIndex !== null) {
-            this.processarEdicao(descricaoFinal, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas);
-        } else {
-            // Modo criação
-            if (ehParcelado && numParcelas >= 2) {
-                const valorParcela = valor / numParcelas;
-                for (let i = 1; i <= numParcelas; i++) {
-                    const dataParcela = new Date(dataLancamento);
-                    dataParcela.setMonth(dataParcela.getMonth() + i - 1);
-                    
-                    novasTransacoes.push({
-                        description: `${descricaoFinal} ${i}/${numParcelas}`,
-                        amount: parseFloat(valorParcela.toFixed(2)),
-                        type: tipo,
-                        category: categoria,
-                        dataLancamento: dataParcela.toISOString(),
-                        fixa: ehFixa
-                    });
-                }
-            } else {
+    let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
+    
+    // Garante formatação correta da descrição
+    descricao = this.formatarDescricao(descricao);
+    
+    // Se for fixa, adicionar ícone à descrição (pino na frente)
+    const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
+    const dataLancamento = data ? new Date(data + 'T00:00:00').toISOString() : new Date().toISOString();
+    const novasTransacoes = [];
+    
+    // Modo edição
+    if (STATE.editIndex !== null) {
+        this.processarEdicao(descricaoFinal, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas);
+    } else {
+        // Modo criação
+        if (ehParcelado && numParcelas >= 2) {
+            // CORREÇÃO: Cada parcela tem o MESMO valor, não divide
+            for (let i = 1; i <= numParcelas; i++) {
+                const dataParcela = new Date(dataLancamento);
+                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+                
                 novasTransacoes.push({
-                    description: descricaoFinal,
-                    amount: valor,
+                    description: `${descricaoFinal} (${i}/${numParcelas})`,
+                    amount: valor, // MESMO valor para cada parcela
                     type: tipo,
                     category: categoria,
-                    dataLancamento: dataLancamento,
+                    dataLancamento: dataParcela.toISOString(),
                     fixa: ehFixa
                 });
             }
-            STATE.transactions.push(...novasTransacoes);
+        } else {
+            novasTransacoes.push({
+                description: descricaoFinal,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento,
+                fixa: ehFixa
+            });
         }
-        
-        DATA_MANAGER.salvar();
-        RENDER_MANAGER.renderizarTudo();
-        this.fechar(formType);
-        
-        if (STATE.editIndex === null) {
-            setTimeout(() => {
-                DOM.transactionsSection.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 100);
-        }
-    },
+        STATE.transactions.push(...novasTransacoes);
+    }
+    
+    DATA_MANAGER.salvar();
+    RENDER_MANAGER.renderizarTudo();
+    this.fechar(formType);
+    
+    if (STATE.editIndex === null) {
+        setTimeout(() => {
+            DOM.transactionsSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 100);
+    }
+},
     
     processarEdicao(descricao, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas) {
-        const transacaoOriginal = STATE.transactions[STATE.editIndex];
-        const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
-        const novasTransacoes = [];
-        
-        // Caso 1: Era parcelada, agora não é mais
-        if (infoParcela && !ehParcelado) {
-            STATE.transactions = STATE.transactions.filter(transacao => {
-                const info = UTILS.parseParcelaInfo(transacao.description);
-                return !info || info.baseDesc !== infoParcela.baseDesc;
-            });
-            novasTransacoes.push({
-                description: descricao,
-                amount: valor,
-                type: tipo,
-                category: categoria,
-                dataLancamento: dataLancamento,
-                fixa: ehFixa
-            });
-        }
-        // Caso 2: Não era parcelada, agora é
-        else if (!infoParcela && ehParcelado) {
-            const valorParcela = valor / numParcelas;
-            for (let i = 1; i <= numParcelas; i++) {
-                const dataParcela = new Date(dataLancamento);
-                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
-                
-                novasTransacoes.push({
-                    description: `${descricao} ${i}/${numParcelas}`,
-                    amount: parseFloat(valorParcela.toFixed(2)),
-                    type: tipo,
-                    category: categoria,
-                    dataLancamento: dataParcela.toISOString(),
-                    fixa: ehFixa
-                });
-            }
-            STATE.transactions.splice(STATE.editIndex, 1);
-        }
-        // Caso 3: Era parcelada e continua sendo (possivelmente com alterações)
-        else if (infoParcela && ehParcelado) {
-            STATE.transactions = STATE.transactions.filter(transacao => {
-                const info = UTILS.parseParcelaInfo(transacao.description);
-                return !info || info.baseDesc !== infoParcela.baseDesc;
-            });
-            const valorParcela = valor / numParcelas;
-            for (let i = 1; i <= numParcelas; i++) {
-                const dataParcela = new Date(dataLancamento);
-                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
-                
-                novasTransacoes.push({
-                    description: `${descricao} ${i}/${numParcelas}`,
-                    amount: parseFloat(valorParcela.toFixed(2)),
-                    type: tipo,
-                    category: categoria,
-                    dataLancamento: dataParcela.toISOString(),
-                    fixa: ehFixa
-                });
-            }
-        }
-        // Caso 4: Edição simples sem mudança de parcelamento
-        else {
-            STATE.transactions[STATE.editIndex] = {
-                description: descricao,
-                amount: valor,
-                type: tipo,
-                category: categoria,
-                dataLancamento: dataLancamento,
-                fixa: ehFixa
-            };
-        }
-        
-        if (novasTransacoes.length) {
-            STATE.transactions.push(...novasTransacoes);
-        }
-        STATE.editIndex = null;
+    const transacaoOriginal = STATE.transactions[STATE.editIndex];
+    const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
+    const novasTransacoes = [];
+    
+    // Caso 1: Era parcelada, agora não é mais
+    if (infoParcela && !ehParcelado) {
+        STATE.transactions = STATE.transactions.filter(transacao => {
+            const info = UTILS.parseParcelaInfo(transacao.description);
+            return !info || info.baseDesc !== infoParcela.baseDesc;
+        });
+        novasTransacoes.push({
+            description: descricao,
+            amount: valor,
+            type: tipo,
+            category: categoria,
+            dataLancamento: dataLancamento,
+            fixa: ehFixa
+        });
     }
-};
-
+    // Caso 2: Não era parcelada, agora é
+    else if (!infoParcela && ehParcelado) {
+        // CORREÇÃO: Cada parcela tem o MESMO valor
+        for (let i = 1; i <= numParcelas; i++) {
+            const dataParcela = new Date(dataLancamento);
+            dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+            
+            novasTransacoes.push({
+                description: `${descricao} (${i}/${numParcelas})`,
+                amount: valor, // MESMO valor para cada parcela
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataParcela.toISOString(),
+                fixa: ehFixa
+            });
+        }
+        STATE.transactions.splice(STATE.editIndex, 1);
+    }
+    // Caso 3: Era parcelada e continua sendo (possivelmente com alterações)
+    else if (infoParcela && ehParcelado) {
+        STATE.transactions = STATE.transactions.filter(transacao => {
+            const info = UTILS.parseParcelaInfo(transacao.description);
+            return !info || info.baseDesc !== infoParcela.baseDesc;
+        });
+        // CORREÇÃO: Cada parcela tem o MESMO valor
+        for (let i = 1; i <= numParcelas; i++) {
+            const dataParcela = new Date(dataLancamento);
+            dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+            
+            novasTransacoes.push({
+                description: `${descricao} (${i}/${numParcelas})`,
+                amount: valor, // MESMO valor para cada parcela
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataParcela.toISOString(),
+                fixa: ehFixa
+            });
+        }
+    }
+    // Caso 4: Edição simples sem mudança de parcelamento
+    else {
+        STATE.transactions[STATE.editIndex] = {
+            description: descricao,
+            amount: valor,
+            type: tipo,
+            category: categoria,
+            dataLancamento: dataLancamento,
+            fixa: ehFixa
+        };
+    }
+    
+    if (novasTransacoes.length) {
+        STATE.transactions.push(...novasTransacoes);
+    }
+    STATE.editIndex = null;
+}
 /* ---------- GERENCIAMENTO DE RENDERIZAÇÃO ---------- */
 const RENDER_MANAGER = {
     renderizarTudo() {
