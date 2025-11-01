@@ -383,11 +383,16 @@ const FORM_MANAGER = {
     },
     
     formatarDescricao(descricao) {
-        // Remove espaços extras e limita a 12 caracteres
-        descricao = descricao.trim().slice(0, 12);
-        // Converte primeira letra de cada palavra para maiúscula
-        return descricao.replace(/\b\w/g, char => char.toUpperCase());
-    },
+    // Remove espaços extras e limita a 12 caracteres
+    descricao = descricao.trim().slice(0, 12);
+    
+    // Converte apenas a PRIMEIRA letra para maiúscula, mantendo o resto original
+    if (descricao.length > 0) {
+        descricao = descricao.charAt(0).toUpperCase() + descricao.slice(1).toLowerCase();
+    }
+    
+    return descricao;
+},
     
     salvarTransacao(dados, formType) {
         let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
