@@ -594,36 +594,39 @@ const RENDER_MANAGER = {
     },
     
     renderizarTransacoes() {
-        DOM.list.innerHTML = '';
-        const { receita, despesa } = DATA_MANAGER.calcularTotais();
-        const mesAtual = UTILS.mesAtualStr;
-        
-        // Mapeamento de cores por categoria
-        const categoriaCores = {
-            // Receitas
-            'Adiantamento': CONFIG.chartColors.revenue,
-            'Pagamento': CONFIG.chartColors.revenue,
-            'Empréstimo': CONFIG.chartColors.revenue,
-            'Investimento': CONFIG.chartColors.revenue,
-            'Monetização': CONFIG.chartColors.revenue,
-            'Lucro': CONFIG.chartColors.revenue,
-            'Venda': CONFIG.chartColors.revenue,
-            'Outros': CONFIG.chartColors.revenue,
-            // Despesas
-            'Alimentação': CONFIG.chartColors.expenses[0],
-            'Lazer': CONFIG.chartColors.expenses[1],
-            'Transporte': CONFIG.chartColors.expenses[2],
-            'Moradia': CONFIG.chartColors.expenses[3],
-            'Saúde': CONFIG.chartColors.expenses[4],
-            'Educação': CONFIG.chartColors.expenses[5],
-            'Outros': CONFIG.chartColors.expenses[6]
-        };
-        
-        STATE.transactions.forEach((transacao, index) => {
+    DOM.list.innerHTML = '';
+    const { receita, despesa } = DATA_MANAGER.calcularTotais();
+    const mesAtual = UTILS.mesAtualStr;
+    
+    // Mapeamento de cores por categoria
+    const categoriaCores = {
+        // Receitas
+        'Adiantamento': CONFIG.chartColors.revenue,
+        'Pagamento': CONFIG.chartColors.revenue,
+        'Empréstimo': CONFIG.chartColors.revenue,
+        'Investimento': CONFIG.chartColors.revenue,
+        'Monetização': CONFIG.chartColors.revenue,
+        'Lucro': CONFIG.chartColors.revenue,
+        'Venda': CONFIG.chartColors.revenue,
+        'Outros': CONFIG.chartColors.revenue,
+        // Despesas
+        'Alimentação': CONFIG.chartColors.expenses[0],
+        'Lazer': CONFIG.chartColors.expenses[1],
+        'Transporte': CONFIG.chartColors.expenses[2],
+        'Moradia': CONFIG.chartColors.expenses[3],
+        'Saúde': CONFIG.chartColors.expenses[4],
+        'Educação': CONFIG.chartColors.expenses[5],
+        'Outros': CONFIG.chartColors.expenses[6]
+    };
+    
+    // Filtrar transações do mês atual e ordenar por data (mais recente primeiro)
+    const transacoesDoMes = STATE.transactions
+        .map((transacao, index) => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             let mostra = false;
             let descricaoDisplay = transacao.description;
             let mesDisplay = '';
+            let dataParaOrdenacao = new Date(transacao.dataLancamento);
             
             // Verificar se a transação pertence ao mês atual
             if (infoParcela) {
@@ -634,6 +637,7 @@ const RENDER_MANAGER = {
                     data.setMonth(data.getMonth() + infoParcela.parcelaAtual - 1);
                     mesDisplay = CONFIG.meses[data.getMonth()];
                     descricaoDisplay = `${infoParcela.baseDesc} (${infoParcela.parcelaAtual}/${infoParcela.totalParcelas})`;
+                    dataParaOrdenacao = data;
                 }
             } else {
                 const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
@@ -643,40 +647,56 @@ const RENDER_MANAGER = {
                 }
             }
             
-            if (!mostra) return;
-            
-            const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
-            const ehParcelada = infoParcela !== null;
-            const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
-            
-            const linha = document.createElement('tr');
-            linha.innerHTML = `
-                <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
-                    ${descricaoDisplay}
-                </td>
-                <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
-                    ${UTILS.formataReal(transacao.amount)}
-                </td>
-                <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-                <td style="text-align: center;">
-                    <div class="category-dot" style="background-color: ${corCategoria}"></div>
-                </td>
-                <td>
-                    <div class="actions-cell">
-                        ${!ehParcelada ? 
-                            `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
-                            '<span class="edit-placeholder"></span>'
-                        }
-                        <button class="delete-btn" data-i="${index}" title="Excluir"></button>
-                    </div>
-                </td>
-            `;
-            DOM.list.appendChild(linha);
-        });
+            return {
+                transacao,
+                index,
+                mostra,
+                descricaoDisplay,
+                mesDisplay,
+                dataParaOrdenacao,
+                infoParcela
+            };
+        })
+        .filter(item => item.mostra)
+        // ORDENAR POR DATA DECRESCENTE (mais recente primeiro)
+        .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
+    
+    // Renderizar transações ordenadas
+    transacoesDoMes.forEach(item => {
+        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela } = item;
         
-        this.atualizarResumo(receita, despesa);
-        DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
-    },
+        const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
+        const ehParcelada = infoParcela !== null;
+        const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
+        
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+            <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
+                ${descricaoDisplay}
+            </td>
+            <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
+                ${UTILS.formataReal(transacao.amount)}
+            </td>
+            <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+            <td style="text-align: center;">
+                <div class="category-dot" style="background-color: ${corCategoria}"></div>
+            </td>
+            <td>
+                <div class="actions-cell">
+                    ${!ehParcelada ? 
+                        `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
+                        '<span class="edit-placeholder"></span>'
+                    }
+                    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
+                </div>
+            </td>
+        `;
+        DOM.list.appendChild(linha);
+    });
+    
+    this.atualizarResumo(receita, despesa);
+    DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
+},
     
     atualizarResumo(receita, despesa) {
         const saldo = receita - despesa;
