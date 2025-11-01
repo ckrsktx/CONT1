@@ -111,7 +111,7 @@ const UTILS = {
     
     parseParcelaInfo(texto) {
         const textoLimpo = texto.replace('📌 ', '');
-        const match = textoLimpo.match(/(.*)\s(\d+)\/(\d+)$/);
+        const match = textoLimpo.match(/(.*)\s\((\d+)\/(\d+)\)$/);
         return match ? {
             baseDesc: match[1],
             parcelaAtual: parseInt(match[2]),
@@ -226,28 +226,24 @@ const FORM_MANAGER = {
     },
     
     inicializarMaiusculas() {
-    DOM.descExpense.addEventListener('input', (e) => {
-        // Limita a 12 caracteres
-        let valor = e.target.value;
-        if (valor.length > 12) {
-            valor = valor.slice(0, 12);
-        }
-        
-        // Apenas primeira letra maiúscula, mantém acentos
-        if (valor.length > 0) {
-            e.target.value = valor.charAt(0).toUpperCase() + valor.slice(1);
-        } else {
-            e.target.value = valor;
-        }
-    });
-},
+        DOM.descExpense.addEventListener('input', (e) => {
+            let valor = e.target.value;
+            if (valor.length > 12) {
+                valor = valor.slice(0, 12);
+            }
+            // Apenas primeira letra maiúscula, mantém acentos
+            if (valor.length > 0) {
+                e.target.value = valor.charAt(0).toUpperCase() + valor.slice(1);
+            } else {
+                e.target.value = valor;
+            }
+        });
+    },
     
     popularSelects() {
-        // Limpar selects existentes
         DOM.originRevenue.innerHTML = '';
         DOM.categoryExpense.innerHTML = '';
         
-        // Popular origem de receitas
         CONFIG.categories.revenue.forEach(origem => {
             const option = document.createElement('option');
             option.value = origem;
@@ -255,7 +251,6 @@ const FORM_MANAGER = {
             DOM.originRevenue.appendChild(option);
         });
         
-        // Popular categorias de despesas
         CONFIG.categories.expense.forEach(categoria => {
             const option = document.createElement('option');
             option.value = categoria;
@@ -265,13 +260,11 @@ const FORM_MANAGER = {
     },
     
     configurarEventos() {
-        // Eventos de formulário de receita
         DOM.formRevenue.addEventListener('submit', (e) => {
             e.preventDefault();
             this.processarFormulario('revenue');
         });
         
-        // Eventos de formulário de despesa
         DOM.formExpense.addEventListener('submit', (e) => {
             e.preventDefault();
             this.processarFormulario('expense');
@@ -362,7 +355,6 @@ const FORM_MANAGER = {
         const numParcelas = parseInt(DOM.parcelasExpense.value) || 1;
         const ehFixa = DOM.fixaExpense.checked;
         
-        // Garante que a descrição está formatada corretamente
         descricao = this.formatarDescricao(descricao);
         
         if (!descricao) {
@@ -388,42 +380,111 @@ const FORM_MANAGER = {
     },
     
     formatarDescricao(descricao) {
-    // Remove espaços extras e limita a 12 caracteres
-    descricao = descricao.trim().slice(0, 12);
-    
-    // Converte apenas a PRIMEIRA letra para maiúscula, mantendo o resto original
-    if (descricao.length > 0) {
-        descricao = descricao.charAt(0).toUpperCase() + descricao.slice(1).toLowerCase();
-    }
-    
-    return descricao;
-},
+        descricao = descricao.trim().slice(0, 12);
+        if (descricao.length > 0) {
+            descricao = descricao.charAt(0).toUpperCase() + descricao.slice(1).toLowerCase();
+        }
+        return descricao;
+    },
     
     salvarTransacao(dados, formType) {
-    let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
+        let { descricao, valor, tipo, categoria, data, ehFixa, ehParcelado, numParcelas } = dados;
+        
+        descricao = this.formatarDescricao(descricao);
+        const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
+        const dataLancamento = data ? new Date(data + 'T00:00:00').toISOString() : new Date().toISOString();
+        const novasTransacoes = [];
+        
+        if (STATE.editIndex !== null) {
+            this.processarEdicao(descricaoFinal, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas);
+        } else {
+            if (ehParcelado && numParcelas >= 2) {
+                // CADA PARCELA TEM O MESMO VALOR (não divide)
+                for (let i = 1; i <= numParcelas; i++) {
+                    const dataParcela = new Date(dataLancamento);
+                    dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+                    
+                    novasTransacoes.push({
+                        description: `${descricaoFinal} (${i}/${numParcelas})`,
+                        amount: valor, // MESMO valor para cada parcela
+                        type: tipo,
+                        category: categoria,
+                        dataLancamento: dataParcela.toISOString(),
+                        fixa: ehFixa
+                    });
+                }
+            } else {
+                novasTransacoes.push({
+                    description: descricaoFinal,
+                    amount: valor,
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataLancamento,
+                    fixa: ehFixa
+                });
+            }
+            STATE.transactions.push(...novasTransacoes);
+        }
+        
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+        this.fechar(formType);
+        
+        if (STATE.editIndex === null) {
+            setTimeout(() => {
+                DOM.transactionsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+    },
     
-    // Garante formatação correta da descrição
-    descricao = this.formatarDescricao(descricao);
-    
-    // Se for fixa, adicionar ícone à descrição (pino na frente)
-    const descricaoFinal = ehFixa ? `📌 ${descricao}` : descricao;
-    const dataLancamento = data ? new Date(data + 'T00:00:00').toISOString() : new Date().toISOString();
-    const novasTransacoes = [];
-    
-    // Modo edição
-    if (STATE.editIndex !== null) {
-        this.processarEdicao(descricaoFinal, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas);
-    } else {
-        // Modo criação
-        if (ehParcelado && numParcelas >= 2) {
-            // CORREÇÃO: Cada parcela tem o MESMO valor, não divide
+    processarEdicao(descricao, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas) {
+        const transacaoOriginal = STATE.transactions[STATE.editIndex];
+        const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
+        const novasTransacoes = [];
+        
+        if (infoParcela && !ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            novasTransacoes.push({
+                description: descricao,
+                amount: valor,
+                type: tipo,
+                category: categoria,
+                dataLancamento: dataLancamento,
+                fixa: ehFixa
+            });
+        } else if (!infoParcela && ehParcelado) {
             for (let i = 1; i <= numParcelas; i++) {
                 const dataParcela = new Date(dataLancamento);
                 dataParcela.setMonth(dataParcela.getMonth() + i - 1);
                 
                 novasTransacoes.push({
-                    description: `${descricaoFinal} (${i}/${numParcelas})`,
-                    amount: valor, // MESMO valor para cada parcela
+                    description: `${descricao} (${i}/${numParcelas})`,
+                    amount: valor,
+                    type: tipo,
+                    category: categoria,
+                    dataLancamento: dataParcela.toISOString(),
+                    fixa: ehFixa
+                });
+            }
+            STATE.transactions.splice(STATE.editIndex, 1);
+        } else if (infoParcela && ehParcelado) {
+            STATE.transactions = STATE.transactions.filter(transacao => {
+                const info = UTILS.parseParcelaInfo(transacao.description);
+                return !info || info.baseDesc !== infoParcela.baseDesc;
+            });
+            for (let i = 1; i <= numParcelas; i++) {
+                const dataParcela = new Date(dataLancamento);
+                dataParcela.setMonth(dataParcela.getMonth() + i - 1);
+                
+                novasTransacoes.push({
+                    description: `${descricao} (${i}/${numParcelas})`,
+                    amount: valor,
                     type: tipo,
                     category: categoria,
                     dataLancamento: dataParcela.toISOString(),
@@ -431,108 +492,23 @@ const FORM_MANAGER = {
                 });
             }
         } else {
-            novasTransacoes.push({
-                description: descricaoFinal,
+            STATE.transactions[STATE.editIndex] = {
+                description: descricao,
                 amount: valor,
                 type: tipo,
                 category: categoria,
                 dataLancamento: dataLancamento,
                 fixa: ehFixa
-            });
+            };
         }
-        STATE.transactions.push(...novasTransacoes);
-    }
-    
-    DATA_MANAGER.salvar();
-    RENDER_MANAGER.renderizarTudo();
-    this.fechar(formType);
-    
-    if (STATE.editIndex === null) {
-        setTimeout(() => {
-            DOM.transactionsSection.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }, 100);
-    }
-},
-    
-    processarEdicao(descricao, valor, tipo, categoria, dataLancamento, ehFixa, ehParcelado, numParcelas) {
-    const transacaoOriginal = STATE.transactions[STATE.editIndex];
-    const infoParcela = UTILS.parseParcelaInfo(transacaoOriginal.description);
-    const novasTransacoes = [];
-    
-    // Caso 1: Era parcelada, agora não é mais
-    if (infoParcela && !ehParcelado) {
-        STATE.transactions = STATE.transactions.filter(transacao => {
-            const info = UTILS.parseParcelaInfo(transacao.description);
-            return !info || info.baseDesc !== infoParcela.baseDesc;
-        });
-        novasTransacoes.push({
-            description: descricao,
-            amount: valor,
-            type: tipo,
-            category: categoria,
-            dataLancamento: dataLancamento,
-            fixa: ehFixa
-        });
-    }
-    // Caso 2: Não era parcelada, agora é
-    else if (!infoParcela && ehParcelado) {
-        // CORREÇÃO: Cada parcela tem o MESMO valor
-        for (let i = 1; i <= numParcelas; i++) {
-            const dataParcela = new Date(dataLancamento);
-            dataParcela.setMonth(dataParcela.getMonth() + i - 1);
-            
-            novasTransacoes.push({
-                description: `${descricao} (${i}/${numParcelas})`,
-                amount: valor, // MESMO valor para cada parcela
-                type: tipo,
-                category: categoria,
-                dataLancamento: dataParcela.toISOString(),
-                fixa: ehFixa
-            });
+        
+        if (novasTransacoes.length) {
+            STATE.transactions.push(...novasTransacoes);
         }
-        STATE.transactions.splice(STATE.editIndex, 1);
+        STATE.editIndex = null;
     }
-    // Caso 3: Era parcelada e continua sendo (possivelmente com alterações)
-    else if (infoParcela && ehParcelado) {
-        STATE.transactions = STATE.transactions.filter(transacao => {
-            const info = UTILS.parseParcelaInfo(transacao.description);
-            return !info || info.baseDesc !== infoParcela.baseDesc;
-        });
-        // CORREÇÃO: Cada parcela tem o MESMO valor
-        for (let i = 1; i <= numParcelas; i++) {
-            const dataParcela = new Date(dataLancamento);
-            dataParcela.setMonth(dataParcela.getMonth() + i - 1);
-            
-            novasTransacoes.push({
-                description: `${descricao} (${i}/${numParcelas})`,
-                amount: valor, // MESMO valor para cada parcela
-                type: tipo,
-                category: categoria,
-                dataLancamento: dataParcela.toISOString(),
-                fixa: ehFixa
-            });
-        }
-    }
-    // Caso 4: Edição simples sem mudança de parcelamento
-    else {
-        STATE.transactions[STATE.editIndex] = {
-            description: descricao,
-            amount: valor,
-            type: tipo,
-            category: categoria,
-            dataLancamento: dataLancamento,
-            fixa: ehFixa
-        };
-    }
-    
-    if (novasTransacoes.length) {
-        STATE.transactions.push(...novasTransacoes);
-    }
-    STATE.editIndex = null;
-}
+};
+
 /* ---------- GERENCIAMENTO DE RENDERIZAÇÃO ---------- */
 const RENDER_MANAGER = {
     renderizarTudo() {
@@ -546,12 +522,10 @@ const RENDER_MANAGER = {
         let receitaTotal = 0;
         const despesasPorCategoria = {};
         
-        // Inicializar categorias de despesa
         CONFIG.categories.expense.forEach(categoria => {
             despesasPorCategoria[categoria] = 0;
         });
         
-        // Calcular totais
         STATE.transactions.forEach(transacao => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             const mesItem = infoParcela 
@@ -570,10 +544,8 @@ const RENDER_MANAGER = {
         const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
         const saldo = receitaTotal - totalDespesas;
         
-        // Gerar HTML da legenda
         const legendas = [];
         
-        // Legenda para receita (saldo)
         if (receitaTotal > 0) {
             const percentual = saldo < 0 ? 0 : (saldo / receitaTotal) * 100;
             legendas.push(`
@@ -584,7 +556,6 @@ const RENDER_MANAGER = {
             `);
         }
         
-        // Legendas para despesas
         CONFIG.categories.expense.forEach((categoria, index) => {
             const valor = despesasPorCategoria[categoria] || 0;
             if (valor > 0) {
@@ -602,109 +573,102 @@ const RENDER_MANAGER = {
     },
     
     renderizarTransacoes() {
-    DOM.list.innerHTML = '';
-    const { receita, despesa } = DATA_MANAGER.calcularTotais();
-    const mesAtual = UTILS.mesAtualStr;
-    
-    // Mapeamento de cores por categoria
-    const categoriaCores = {
-        // Receitas
-        'Adiantamento': CONFIG.chartColors.revenue,
-        'Pagamento': CONFIG.chartColors.revenue,
-        'Empréstimo': CONFIG.chartColors.revenue,
-        'Investimento': CONFIG.chartColors.revenue,
-        'Monetização': CONFIG.chartColors.revenue,
-        'Lucro': CONFIG.chartColors.revenue,
-        'Venda': CONFIG.chartColors.revenue,
-        'Outros': CONFIG.chartColors.revenue,
-        // Despesas
-        'Alimentação': CONFIG.chartColors.expenses[0],
-        'Lazer': CONFIG.chartColors.expenses[1],
-        'Transporte': CONFIG.chartColors.expenses[2],
-        'Moradia': CONFIG.chartColors.expenses[3],
-        'Saúde': CONFIG.chartColors.expenses[4],
-        'Educação': CONFIG.chartColors.expenses[5],
-        'Outros': CONFIG.chartColors.expenses[6]
-    };
-    
-    // Filtrar transações do mês atual e ordenar por data (mais recente primeiro)
-    const transacoesDoMes = STATE.transactions
-        .map((transacao, index) => {
-            const infoParcela = UTILS.parseParcelaInfo(transacao.description);
-            let mostra = false;
-            let descricaoDisplay = transacao.description;
-            let mesDisplay = '';
-            let dataParaOrdenacao = new Date(transacao.dataLancamento);
-            
-            // Verificar se a transação pertence ao mês atual
-            if (infoParcela) {
-                const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
-                mostra = mesParcela === mesAtual;
-                if (mostra) {
-                    const data = new Date(transacao.dataLancamento);
-                    data.setMonth(data.getMonth() + infoParcela.parcelaAtual - 1);
-                    mesDisplay = CONFIG.meses[data.getMonth()];
-                    descricaoDisplay = `${infoParcela.baseDesc} (${infoParcela.parcelaAtual}/${infoParcela.totalParcelas})`;
-                    dataParaOrdenacao = data;
-                }
-            } else {
-                const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
-                mostra = mesTransacao === mesAtual;
-                if (mostra) {
-                    mesDisplay = CONFIG.meses[new Date(transacao.dataLancamento).getMonth()];
-                }
-            }
-            
-            return {
-                transacao,
-                index,
-                mostra,
-                descricaoDisplay,
-                mesDisplay,
-                dataParaOrdenacao,
-                infoParcela
-            };
-        })
-        .filter(item => item.mostra)
-        // ORDENAR POR DATA DECRESCENTE (mais recente primeiro)
-        .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
-    
-    // Renderizar transações ordenadas
-    transacoesDoMes.forEach(item => {
-        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela } = item;
+        DOM.list.innerHTML = '';
+        const { receita, despesa } = DATA_MANAGER.calcularTotais();
+        const mesAtual = UTILS.mesAtualStr;
         
-        const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
-        const ehParcelada = infoParcela !== null;
-        const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
+        const categoriaCores = {
+            'Adiantamento': CONFIG.chartColors.revenue,
+            'Pagamento': CONFIG.chartColors.revenue,
+            'Empréstimo': CONFIG.chartColors.revenue,
+            'Investimento': CONFIG.chartColors.revenue,
+            'Monetização': CONFIG.chartColors.revenue,
+            'Lucro': CONFIG.chartColors.revenue,
+            'Venda': CONFIG.chartColors.revenue,
+            'Outros': CONFIG.chartColors.revenue,
+            'Alimentação': CONFIG.chartColors.expenses[0],
+            'Lazer': CONFIG.chartColors.expenses[1],
+            'Transporte': CONFIG.chartColors.expenses[2],
+            'Moradia': CONFIG.chartColors.expenses[3],
+            'Saúde': CONFIG.chartColors.expenses[4],
+            'Educação': CONFIG.chartColors.expenses[5],
+            'Outros': CONFIG.chartColors.expenses[6]
+        };
         
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-            <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
-                ${descricaoDisplay}
-            </td>
-            <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
-                ${UTILS.formataReal(transacao.amount)}
-            </td>
-            <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-            <td style="text-align: center;">
-                <div class="category-dot" style="background-color: ${corCategoria}"></div>
-            </td>
-            <td>
-                <div class="actions-cell">
-                    ${!ehParcelada ? 
-                        `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
-                        '<span class="edit-placeholder"></span>'
+        const transacoesDoMes = STATE.transactions
+            .map((transacao, index) => {
+                const infoParcela = UTILS.parseParcelaInfo(transacao.description);
+                let mostra = false;
+                let descricaoDisplay = transacao.description;
+                let mesDisplay = '';
+                let dataParaOrdenacao = new Date(transacao.dataLancamento);
+                
+                if (infoParcela) {
+                    const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
+                    mostra = mesParcela === mesAtual;
+                    if (mostra) {
+                        const data = new Date(transacao.dataLancamento);
+                        data.setMonth(data.getMonth() + infoParcela.parcelaAtual - 1);
+                        mesDisplay = CONFIG.meses[data.getMonth()];
+                        descricaoDisplay = `${infoParcela.baseDesc} (${infoParcela.parcelaAtual}/${infoParcela.totalParcelas})`;
+                        dataParaOrdenacao = data;
                     }
-                    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
-                </div>
-            </td>
-        `;
-        DOM.list.appendChild(linha);
-    });
-    
-    this.atualizarResumo(receita, despesa);
-    DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
-},
+                } else {
+                    const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
+                    mostra = mesTransacao === mesAtual;
+                    if (mostra) {
+                        mesDisplay = CONFIG.meses[new Date(transacao.dataLancamento).getMonth()];
+                    }
+                }
+                
+                return {
+                    transacao,
+                    index,
+                    mostra,
+                    descricaoDisplay,
+                    mesDisplay,
+                    dataParaOrdenacao,
+                    infoParcela
+                };
+            })
+            .filter(item => item.mostra)
+            .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
+        
+        transacoesDoMes.forEach(item => {
+            const { transacao, index, descricaoDisplay, mesDisplay, infoParcela } = item;
+            
+            const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
+            const ehParcelada = infoParcela !== null;
+            const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
+            
+            const linha = document.createElement('tr');
+            linha.innerHTML = `
+                <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
+                    ${descricaoDisplay}
+                </td>
+                <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
+                    ${UTILS.formataReal(transacao.amount)}
+                </td>
+                <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+                <td style="text-align: center;">
+                    <div class="category-dot" style="background-color: ${corCategoria}"></div>
+                </td>
+                <td>
+                    <div class="actions-cell">
+                        ${!ehParcelada ? 
+                            `<button class="edit-btn" data-i="${index}" title="Editar"></button>` : 
+                            '<span class="edit-placeholder"></span>'
+                        }
+                        <button class="delete-btn" data-i="${index}" title="Excluir"></button>
+                    </div>
+                </td>
+            `;
+            DOM.list.appendChild(linha);
+        });
+        
+        this.atualizarResumo(receita, despesa);
+        DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
+    },
     
     atualizarResumo(receita, despesa) {
         const saldo = receita - despesa;
@@ -721,12 +685,10 @@ const RENDER_MANAGER = {
         let receitaTotal = 0;
         const despesasPorCategoria = {};
         
-        // Inicializar categorias
         CONFIG.categories.expense.forEach(categoria => {
             despesasPorCategoria[categoria] = 0;
         });
         
-        // Calcular totais para o gráfico
         STATE.transactions.forEach(transacao => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             const mesItem = infoParcela
@@ -745,19 +707,16 @@ const RENDER_MANAGER = {
         const totalDespesas = Object.values(despesasPorCategoria).reduce((a, b) => a + b, 0);
         const receitaDisponivel = receitaTotal - totalDespesas;
         
-        // Preparar dados para o gráfico
         const labels = [];
         const dados = [];
         const cores = [];
         
-        // Adicionar receita disponível (saldo)
         if (receitaDisponivel > 0) {
             labels.push('Receita');
             dados.push(receitaDisponivel);
             cores.push(CONFIG.chartColors.revenue);
         }
         
-        // Adicionar despesas por categoria
         CONFIG.categories.expense.forEach((categoria, index) => {
             const valor = despesasPorCategoria[categoria] || 0;
             if (valor > 0) {
@@ -767,12 +726,10 @@ const RENDER_MANAGER = {
             }
         });
         
-        // Destruir gráfico existente
         if (STATE.chart) {
             STATE.chart.destroy();
         }
         
-        // Criar novo gráfico
         if (dados.length > 0) {
             STATE.chart = new Chart(DOM.canvas, {
                 type: 'pie',
@@ -798,30 +755,24 @@ const RENDER_MANAGER = {
 /* ---------- GERENCIAMENTO DE AÇÕES ---------- */
 const ACTION_MANAGER = {
     configurarEventos() {
-        // Ações de clique na lista
         DOM.list.addEventListener('click', (e) => this.handleAcoes(e));
         
-        // Botões de adicionar
         DOM.addRevenueBtn.addEventListener('click', () => FORM_MANAGER.abrir('revenue'));
         DOM.addExpenseBtn.addEventListener('click', () => FORM_MANAGER.abrir('expense'));
         
-        // Fechar formulários
         DOM.closeFormBtnRevenue.addEventListener('click', () => FORM_MANAGER.fechar('revenue'));
         DOM.closeFormBtnExpense.addEventListener('click', () => FORM_MANAGER.fechar('expense'));
         
-        // Modais de reset
         DOM.reset.addEventListener('click', () => DOM.resetModal.style.display = 'flex');
         DOM.resetCancel.addEventListener('click', () => DOM.resetModal.style.display = 'none');
         DOM.resetConfirm.addEventListener('click', () => this.resetarDados());
         
-        // Modais de exclusão
         DOM.deleteCancel.addEventListener('click', () => {
             DOM.deleteModal.style.display = 'none';
             STATE.deleteIndex = null;
         });
         DOM.deleteConfirm.addEventListener('click', () => this.confirmarExclusao());
         
-        // Cliques fora dos modais/formulários
         window.addEventListener('click', (e) => this.handleCliqueFora(e));
     },
     
@@ -855,13 +806,12 @@ const ACTION_MANAGER = {
         const infoParcela = UTILS.parseParcelaInfo(descricaoSemFixa);
         const ehFixa = transacao.description.includes('📌');
         
-        // Format date for input (YYYY-MM-DD)
         const dataTransacao = new Date(transacao.dataLancamento);
         const dataFormatada = dataTransacao.toISOString().split('T')[0];
         
         if (transacao.type === 'revenue') {
             FORM_MANAGER.abrir('revenue');
-            DOM.amountRevenue.value = transacao.amount * (infoParcela ? infoParcela.totalParcelas : 1);
+            DOM.amountRevenue.value = transacao.amount;
             DOM.originRevenue.value = transacao.category;
             DOM.dateRevenue.value = dataFormatada;
             DOM.fixaRevenue.checked = ehFixa;
@@ -869,7 +819,7 @@ const ACTION_MANAGER = {
         } else {
             FORM_MANAGER.abrir('expense');
             DOM.descExpense.value = infoParcela ? infoParcela.baseDesc : descricaoSemFixa;
-            DOM.amountExpense.value = transacao.amount * (infoParcela ? infoParcela.totalParcelas : 1);
+            DOM.amountExpense.value = transacao.amount;
             DOM.categoryExpense.value = transacao.category;
             DOM.dateExpense.value = dataFormatada;
             DOM.fixaExpense.checked = ehFixa;
@@ -962,11 +912,9 @@ const PWA_MANAGER = {
     }
 };
 
-/* ---------- COMPARTILHAMENTO VISUAL ---------- */
 /* ---------- COMPARTILHAMENTO ---------- */
 const SHARE_MANAGER = {
     init() {
-        // Muda o texto do botão se for APK
         if (this.isWebView()) {
             DOM.shareReceita.textContent = '📋 Copiar Receita';
         }
@@ -974,7 +922,6 @@ const SHARE_MANAGER = {
     },
 
     isWebView() {
-        // Detectar se está em WebView/APK
         const userAgent = navigator.userAgent.toLowerCase();
         return userAgent.includes('wv') || 
                userAgent.includes('webview') ||
@@ -985,7 +932,6 @@ const SHARE_MANAGER = {
         const { receita, despesa, saldo } = DATA_MANAGER.calcularTotais();
         const mesAtual = CONFIG.meses[UTILS.hoje.getMonth()];
         
-        // Calcular porcentagens por categoria - CORRIGIDO
         const despesasPorCategoria = {};
         let temDespesas = false;
 
@@ -1007,7 +953,6 @@ const SHARE_MANAGER = {
             }
         });
 
-        // Gerar texto das categorias - CORRIGIDO
         let categoriasTexto = '';
         if (temDespesas) {
             const categoriasArray = CONFIG.categories.expense.map((categoria, index) => {
@@ -1025,7 +970,6 @@ const SHARE_MANAGER = {
             }
         }
 
-        // Texto final - CORRIGIDO
         const texto = `💰 RESUMO FINANCEIRO - ${mesAtual}
 
 📈 Receitas: ${UTILS.formataReal(receita)}
@@ -1037,32 +981,26 @@ ${categoriasTexto || '📊 Nenhuma despesa registrada este mês'}
 Gerado pelo CONT1 - Controle Financeiro`;
 
         try {
-            // COMPORTAMENTO ORIGINAL - Web
             if (navigator.share && !this.isWebView()) {
                 await navigator.share({
                     title: `Resumo Financeiro - ${mesAtual}`,
                     text: texto
                 });
             } else {
-                // COMPORTAMENTO APK - Apenas copiar
                 await this.copiarParaAreaTransferencia(texto);
             }
         } catch (err) {
-            console.log('Erro ao compartilhar:', err);
-            // Fallback - sempre copiar
             await this.copiarParaAreaTransferencia(texto);
         }
     },
 
     async copiarParaAreaTransferencia(texto) {
         try {
-            // Tenta o método moderno primeiro
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 await navigator.clipboard.writeText(texto);
                 this.mostrarMensagem('📋 Resumo copiado para a área de transferência!');
                 return true;
             } else {
-                // Método fallback
                 return this.copiarTextoFallback(texto);
             }
         } catch (err) {
@@ -1097,7 +1035,6 @@ Gerado pelo CONT1 - Controle Financeiro`;
     },
 
     mostrarMensagem(mensagem) {
-        // Remove mensagem anterior se existir
         const mensagemAntiga = document.querySelector('.mensagem-copiado');
         if (mensagemAntiga) {
             mensagemAntiga.remove();
@@ -1115,7 +1052,7 @@ Gerado pelo CONT1 - Controle Financeiro`;
         }, 3000);
     }
 };
-/* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
+
 /* ---------- GERENCIAMENTO DE LIMPEZA MENSAL ---------- */
 const MONTHLY_CLEANER = {
     ultimoMesVerificado: localStorage.getItem('ultimoMesVerificado'),
@@ -1127,7 +1064,6 @@ const MONTHLY_CLEANER = {
     },
     
     verificarMudancaMes() {
-        // Se é um novo mês e ainda não verificamos
         if (this.ultimoMesVerificado !== this.mesAtual) {
             console.log('🔄 Verificando mudança de mês...', {
                 ultimoMes: this.ultimoMesVerificado,
@@ -1142,7 +1078,6 @@ const MONTHLY_CLEANER = {
                 this.limparTransacoesAntigas();
             }
             
-            // Atualizar o último mês verificado
             localStorage.setItem('ultimoMesVerificado', this.mesAtual);
             this.ultimoMesVerificado = this.mesAtual;
         }
@@ -1151,7 +1086,6 @@ const MONTHLY_CLEANER = {
     obterTransacoesMesesAnteriores() {
         const mesAtual = UTILS.mesAtualStr;
         return STATE.transactions.filter(transacao => {
-            // MANTER transações fixas - NUNCA remover
             if (transacao.fixa) {
                 return false;
             }
@@ -1160,14 +1094,11 @@ const MONTHLY_CLEANER = {
             let mesTransacao;
             
             if (infoParcela) {
-                // Para parcelas, usa a data da parcela atual
                 mesTransacao = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
             } else {
-                // Para transações únicas, usa a data normal
                 mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
             }
             
-            // Retorna true se a transação é de um mês anterior
             return mesTransacao < mesAtual;
         });
     },
@@ -1179,7 +1110,6 @@ const MONTHLY_CLEANER = {
         console.log('🧹 Iniciando limpeza de transações antigas...');
         
         STATE.transactions = STATE.transactions.filter(transacao => {
-            // REGRA 1: MANTER todas as transações fixas
             if (transacao.fixa) {
                 console.log('✅ Mantida (fixa):', transacao.description);
                 return true;
@@ -1187,9 +1117,7 @@ const MONTHLY_CLEANER = {
             
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
             
-            // REGRA 2: Para transações parceladas
             if (infoParcela) {
-                // Verifica se existe alguma parcela FUTURA
                 const temParcelaFutura = this.temParcelaFutura(transacao, infoParcela, mesAtual);
                 
                 if (temParcelaFutura) {
@@ -1201,7 +1129,6 @@ const MONTHLY_CLEANER = {
                 }
             }
             
-            // REGRA 3: Para transações únicas
             const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
             const deveManter = mesTransacao >= mesAtual;
             
@@ -1225,7 +1152,6 @@ const MONTHLY_CLEANER = {
     },
     
     temParcelaFutura(transacao, infoParcela, mesAtual) {
-        // Verifica se existe alguma parcela que ainda não venceu
         for (let i = infoParcela.parcelaAtual; i <= infoParcela.totalParcelas; i++) {
             const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, i);
             if (mesParcela >= mesAtual) {
@@ -1256,10 +1182,8 @@ const MONTHLY_CLEANER = {
             </div>
         `;
         
-        // Adicionar o alerta ao body
         document.body.insertAdjacentHTML('beforeend', alertaHTML);
         
-        // Configurar eventos do alerta
         const alerta = document.getElementById('month-change-alert');
         const fecharBtn = document.getElementById('close-month-alert');
         const entenderBtn = document.getElementById('understand-month-alert');
@@ -1276,7 +1200,6 @@ const MONTHLY_CLEANER = {
         fecharBtn.addEventListener('click', fecharAlerta);
         entenderBtn.addEventListener('click', fecharAlerta);
         
-        // Fechar automaticamente após 8 segundos
         setTimeout(fecharAlerta, 8000);
     },
     
@@ -1287,7 +1210,6 @@ const MONTHLY_CLEANER = {
     },
     
     configurarVerificacaoDiaria() {
-        // Verificar a cada hora se mudou o mês
         setInterval(() => {
             const novoMesAtual = UTILS.mesAtualStr;
             if (novoMesAtual !== this.mesAtual) {
@@ -1295,9 +1217,139 @@ const MONTHLY_CLEANER = {
                 this.mesAtual = novoMesAtual;
                 this.verificarMudancaMes();
             }
-        }, 3600000); // 1 hora
+        }, 3600000);
     }
 };
+
+/* ---------- TESTE LIMPEZA MENSAL ---------- */
+const TEST_MANAGER = {
+    criarDadosTeste() {
+        const hoje = new Date();
+        const mesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 15);
+        
+        STATE.transactions = [];
+        
+        STATE.transactions.push(
+            {
+                description: "🏠 Aluguel",
+                amount: 800.00,
+                type: "expense",
+                category: "Moradia",
+                dataLancamento: mesPassado.toISOString(),
+                fixa: false
+            },
+            {
+                description: "🛒 Mercado",
+                amount: 350.00, 
+                type: "expense",
+                category: "Alimentação",
+                dataLancamento: mesPassado.toISOString(),
+                fixa: false
+            },
+            {
+                description: "💼 Salário",
+                amount: 2500.00,
+                type: "revenue", 
+                category: "Pagamento",
+                dataLancamento: mesPassado.toISOString(),
+                fixa: false
+            },
+            {
+                description: "📌 Academia",
+                amount: 80.00,
+                type: "expense",
+                category: "Lazer", 
+                dataLancamento: mesPassado.toISOString(),
+                fixa: true
+            }
+        );
+        
+        const dataParcela = new Date(mesPassado);
+        for (let i = 1; i <= 2; i++) {
+            STATE.transactions.push({
+                description: `Celular (${i}/2)`,
+                amount: 150.00,
+                type: "expense",
+                category: "Outros",
+                dataLancamento: dataParcela.toISOString(),
+                fixa: false
+            });
+            dataParcela.setMonth(dataParcela.getMonth() + 1);
+        }
+        
+        DATA_MANAGER.salvar();
+        RENDER_MANAGER.renderizarTudo();
+        
+        console.log('📊 Dados de teste criados!');
+        console.log('Transações:', STATE.transactions);
+    },
+    
+    testarLimpeza() {
+        console.log('🧪 INICIANDO TESTE DE LIMPEZA MENSAL');
+        
+        const transacoesAntes = [...STATE.transactions];
+        console.log('📈 Antes da limpeza:', transacoesAntes.length, 'transações');
+        
+        const mesAnterior = UTILS.mesAtualStr;
+        MONTHLY_CLEANER.mesAtual = this.getMesAnterior();
+        localStorage.setItem('ultimoMesVerificado', mesAnterior);
+        
+        console.log('🔄 Simulando mudança de mês...');
+        console.log('Mês anterior:', mesAnterior);
+        console.log('Mês atual:', MONTHLY_CLEANER.mesAtual);
+        
+        MONTHLY_CLEANER.verificarMudancaMes();
+        
+        setTimeout(() => {
+            console.log('📉 Depois da limpeza:', STATE.transactions.length, 'transações');
+            console.log('🎯 Transações mantidas:', STATE.transactions);
+            
+            const removidas = transacoesAntes.filter(t => 
+                !STATE.transactions.some(nt => nt.description === t.description)
+            );
+            console.log('🗑️ Transações removidas:', removidas);
+            
+            MONTHLY_CLEANER.mesAtual = UTILS.mesAtualStr;
+        }, 1000);
+    },
+    
+    getMesAnterior() {
+        const data = new Date();
+        data.setMonth(data.getMonth() - 1);
+        return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+    },
+    
+    adicionarBotaoTeste() {
+        const btn = document.createElement('button');
+        btn.textContent = '🧪 Testar Limpeza';
+        btn.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 12px;
+        `;
+        
+        btn.onclick = () => {
+            if (confirm('Criar dados de teste e simular limpeza mensal?')) {
+                this.criarDadosTeste();
+                setTimeout(() => this.testarLimpeza(), 1000);
+            }
+        };
+        
+        document.body.appendChild(btn);
+    }
+};
+
+// ========== ATIVAÇÃO DO BOTÃO DE TESTE ==========
+TEST_MANAGER.adicionarBotaoTeste();
+
 /* ---------- INICIALIZAÇÃO DA APLICAÇÃO ---------- */
 function init() {
     ZOOM_MANAGER.init();
@@ -1307,11 +1359,9 @@ function init() {
     SHARE_MANAGER.init();
     MONTHLY_CLEANER.init();
     
-    // Renderização inicial
     RENDER_MANAGER.renderizarTudo();
 }
 
-// Inicializar quando o DOM estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
