@@ -226,16 +226,21 @@ const FORM_MANAGER = {
     },
     
     inicializarMaiusculas() {
-        DOM.descExpense.addEventListener('input', (e) => {
-            // Limita a 12 caracteres e converte para maiúscula
-            let valor = e.target.value;
-            if (valor.length > 12) {
-                valor = valor.slice(0, 12);
-            }
-            // Converte primeira letra de cada palavra para maiúscula
-            e.target.value = valor.replace(/\b\w/g, char => char.toUpperCase());
-        });
-    },
+    DOM.descExpense.addEventListener('input', (e) => {
+        // Limita a 12 caracteres
+        let valor = e.target.value;
+        if (valor.length > 12) {
+            valor = valor.slice(0, 12);
+        }
+        
+        // Apenas primeira letra maiúscula, mantém acentos
+        if (valor.length > 0) {
+            e.target.value = valor.charAt(0).toUpperCase() + valor.slice(1);
+        } else {
+            e.target.value = valor;
+        }
+    });
+},
     
     popularSelects() {
         // Limpar selects existentes
