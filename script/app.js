@@ -575,34 +575,13 @@ const RENDER_MANAGER = {
     
     renderizarTransacoes() {
     DOM.list.innerHTML = '';
-    const { receita, despesa } = DATA_MANAGER.calcularTotais();
     const mesAtual = UTILS.mesAtualStr;
-    
     const hoje = new Date();
     hoje.setHours(0,0,0,0);
 
-    // Mapeia as cores das categorias
-    const categoriaCores = {
-        // Receitas
-        'Adiantamento': CONFIG.chartColors.revenue,
-        'Pagamento': CONFIG.chartColors.revenue,
-        'Empréstimo': CONFIG.chartColors.revenue,
-        'Investimento': CONFIG.chartColors.revenue,
-        'Monetização': CONFIG.chartColors.revenue,
-        'Lucro': CONFIG.chartColors.revenue,
-        'Venda': CONFIG.chartColors.revenue,
-        'Outros': CONFIG.chartColors.revenue,
-        // Despesas
-        'Alimentação': CONFIG.chartColors.expenses[0],
-        'Lazer': CONFIG.chartColors.expenses[1],
-        'Transporte': CONFIG.chartColors.expenses[2],
-        'Moradia': CONFIG.chartColors.expenses[3],
-        'Saúde': CONFIG.chartColors.expenses[4],
-        'Educação': CONFIG.chartColors.expenses[5],
-        'Outros': CONFIG.chartColors.expenses[6]
-    };
+    const categoriaCores = { ... }; // igual como no seu código
 
-    // --- Modificação AQUI: calcula todas as transações do MES até hoje (sem futuras)
+    // Inclua todas do mês, só marcando futuras, vencidas, etc
     const transacoesDoMes = STATE.transactions
         .map((transacao, index) => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
@@ -613,8 +592,8 @@ const RENDER_MANAGER = {
             let dataTransacao = new Date(transacao.dataLancamento);
             let estaVencida = false;
             let ehHoje = false;
+            let ehFutura = false;
 
-            // Verifica mês e DATA (até hoje)
             if (infoParcela) {
                 const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
                 mostra = mesParcela === mesAtual;
@@ -627,10 +606,9 @@ const RENDER_MANAGER = {
                     dataParaOrdenacao = data;
                     dataTransacao = data;
 
-                    // NOVA REGRA: só mostra se a data chegou!
-                    mostra = dataTransacao <= hoje;
                     ehHoje = dataTransacao.getTime() === hoje.getTime();
                     estaVencida = dataTransacao < hoje;
+                    ehFutura = dataTransacao > hoje;
                 }
             } else {
                 const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
@@ -639,10 +617,9 @@ const RENDER_MANAGER = {
                     mesDisplay = CONFIG.meses[new Date(transacao.dataLancamento).getMonth()];
                     dataTransacao = new Date(transacao.dataLancamento);
                     dataTransacao.setHours(0,0,0,0);
-
-                    mostra = dataTransacao <= hoje; // só exibe se chegou o dia
                     ehHoje = dataTransacao.getTime() === hoje.getTime();
                     estaVencida = dataTransacao < hoje;
+                    ehFutura = dataTransacao > hoje;
                 }
             }
 
@@ -656,34 +633,36 @@ const RENDER_MANAGER = {
                 dataTransacao,
                 infoParcela,
                 estaVencida,
-                ehHoje
+                ehHoje,
+                ehFutura
             };
         })
         .filter(item => item.mostra)
         .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
 
-    // --- Renderização das linhas
     transacoesDoMes.forEach(item => {
-        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida, ehHoje, dataTransacao } = item;
+        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida, ehHoje, ehFutura, dataTransacao } = item;
         const dia = dataTransacao.getDate().toString().padStart(2, '0');
         const ehParcelada = infoParcela !== null;
         const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
 
-        // Prepara ícones
+        // Ícones
         let icones = '';
         if (transacao.fixa) icones += '<div title="Fixo">📌</div>';
         if (estaVencida) icones += '<div title="Vencida">⏰</div>';
+        if (ehFutura) icones += '<div title="Futura">🎯</div>'; // opcional
 
-        // Aplica a(s) classe(s)
+        // Classes visuais
         let classList = '';
         if (ehHoje) classList += 'transacao-hoje ';
-        if (estaVencida) classList += 'transacao-vencida';
+        if (estaVencida) classList += 'transacao-vencida ';
+        if (ehFutura) classList += 'transacao-futura';
 
         const tr = document.createElement('tr');
         tr.className = classList.trim();
 
         tr.innerHTML = `
-            <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}${estaVencida ? ' ⏰ VENCIDA' : ''}">
+            <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
                 ${descricaoDisplay}
             </td>
             <td class="icon-col">${icones}</td>
@@ -697,23 +676,30 @@ const RENDER_MANAGER = {
             <td>
                 <div class="actions-cell">
                     ${!ehParcelada 
-                        ? `<button class="edit-btn" data-i="${index}" title="Editar" ${estaVencida ? 'disabled' : ''}></button>` 
+                        ? `<button class="edit-btn" data-i="${index}" title="Editar"></button>` //'${estaVencida || ehFutura ? 'disabled' : ''}'
                         : '<span class="edit-placeholder"></span>'}
-                    <button class="delete-btn" data-i="${index}" title="Excluir" ${estaVencida ? 'disabled' : ''}></button>
+                    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
                 </div>
             </td>
         `;
         DOM.list.appendChild(tr);
     });
 
-    // Se nada encontrado
     if (transacoesDoMes.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="6" style="text-align:center;color:#888;padding:20px;">Nenhuma transação lançada até o dia de hoje.</td>`;
+        tr.innerHTML = `<td colspan="6" style="text-align:center;color:#888;padding:20px;">Nenhuma transação lançada neste mês.</td>`;
         DOM.list.appendChild(tr);
     }
 
-    this.atualizarResumo(receita, despesa);
+    // Totais computam só receitas/despesas até hoje!
+    let receitasComputadas = 0, despesasComputadas = 0;
+    transacoesDoMes.forEach(item => {
+        if (item.dataTransacao > hoje) return; // FUTURAS NÃO computam
+        if (item.transacao.type === 'revenue') receitasComputadas += item.transacao.amount;
+        else despesasComputadas += item.transacao.amount;
+    });
+
+    this.atualizarResumo(receitasComputadas, despesasComputadas);
     DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
 },
     
