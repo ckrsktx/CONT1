@@ -1000,3 +1000,16 @@ input:focus, select:focus {
 .transacao-vencida .delete-btn {
     opacity: 0.7;
 }
+
+.transacao-futura {
+    opacity: 0.56;
+    color: #5b5b5b !important;
+    font-style: italic;
+}
+.transacao-futura .positive, 
+.transacao-futura .negative {
+    color: #5b5b5b !important;
+}
+.transacao-futura .category-dot {
+    opacity: 0.35;
+}
