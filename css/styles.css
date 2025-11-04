@@ -1,3 +1,4 @@
+
 :root {
   --clr-bg: #f5f7fa;
   --clr-card: #fff;
@@ -341,29 +342,25 @@ h1 {
   overflow: visible;
 }
 
-/* NOVO: Coluna dos ícones fixo/vencida */
-.transactions-table th:nth-child(2),
-.transactions-table td:nth-child(2),
-.icon-col {
-  width: 38px;
-  min-width: 26px;
-  max-width: 46px;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 1.25rem;
-  line-height: 1.1;
-}
-.icon-col div {
-  display: block;
-  margin: 2px auto;
+.transactions-table td:nth-child(2) {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 /* COLUNAS DISTRIBUÍDAS IGUALMENTE */
-.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 28%; }
-.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 18%; }
-.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 15%; }
-.transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { width: 8%; }
-.transactions-table th:last-child, .transactions-table td:last-child { width: 23%; }
+.transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 35%; }
+.transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
+.transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
+.transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 8%; }
+.transactions-table th:last-child, .transactions-table td:last-child { width: 22%; }
+
+/* TÍTULOS ABREVIADOS - R/D */
+.transactions-table th:nth-child(1)::after { content: "Descrição"; }
+.transactions-table th:nth-child(2)::after { content: "Valor"; }
+.transactions-table th:nth-child(3)::after { content: "Data"; }
+.transactions-table th:nth-child(4)::after { content: "R/D"; }
+.transactions-table th:last-child::after { content: "Ações"; }
 
 .actions-cell {
   display: flex;
@@ -597,11 +594,10 @@ h1 {
   }
   
   /* LARGURAS MOBILE - DISTRIBUÍDAS */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 22%; }
-  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 8%; }
-  .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 20%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 15%; }
-  .transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { width: 12%; }
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 32%; }
+  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
+  .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 10%; }
   .transactions-table th:last-child, .transactions-table td:last-child { width: 23%; }
   
   .actions-cell {
@@ -642,12 +638,11 @@ h1 {
   }
   
   /* LARGURAS CELULAR PEQUENO */
-  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 19%; }
-  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 6%; }
-  .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 20%; }
-  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 13%; }
-  .transactions-table th:nth-child(5), .transactions-table td:nth-child(5) { width: 13%; }
-  .transactions-table th:last-child, .transactions-table td:last-child { width: 29%; }
+  .transactions-table th:nth-child(1), .transactions-table td:nth-child(1) { width: 30%; }
+  .transactions-table th:nth-child(2), .transactions-table td:nth-child(2) { width: 20%; }
+  .transactions-table th:nth-child(3), .transactions-table td:nth-child(3) { width: 15%; }
+  .transactions-table th:nth-child(4), .transactions-table td:nth-child(4) { width: 12%; }
+  .transactions-table th:last-child, .transactions-table td:last-child { width: 23%; }
 }
 
 /* MENSAGEM DE CÓPIA PERSONALIZADA */
@@ -991,13 +986,16 @@ input:focus, select:focus {
     opacity: 0.6;
     color: #999 !important;
 }
+
 .transacao-vencida .positive,
 .transacao-vencida .negative {
     color: #999 !important;
 }
+
 .transacao-vencida .category-dot {
     opacity: 0.4;
 }
+
 .transacao-vencida .edit-btn,
 .transacao-vencida .delete-btn {
     opacity: 0.7;
