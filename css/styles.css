@@ -979,3 +979,24 @@ input:focus, select:focus {
   background: #e6f0ff !important;
   color: #111 !important;
 }
+
+/* TRANSAÇÕES VENCIDAS */
+.transacao-vencida {
+    opacity: 0.6;
+    text-decoration: line-through;
+    color: #999 !important;
+}
+
+.transacao-vencida .positive,
+.transacao-vencida .negative {
+    color: #999 !important;
+}
+
+.transacao-vencida .category-dot {
+    opacity: 0.4;
+}
+
+.transacao-vencida .edit-btn,
+.transacao-vencida .delete-btn {
+    opacity: 0.7;
+}
