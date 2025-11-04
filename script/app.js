@@ -428,7 +428,7 @@ const FORM_MANAGER = {
         }
         
         DATA_MANAGER.salvar();
-        rizarTudo();
+        RENDER_MANAGER.renderizarTudo();
         this.fechar(formType);
         
         if (STATE.editIndex === null) {
@@ -577,11 +577,9 @@ const RENDER_MANAGER = {
     DOM.list.innerHTML = '';
     const { receita, despesa } = DATA_MANAGER.calcularTotais();
     const mesAtual = UTILS.mesAtualStr;
-    
     const hoje = new Date();
-    hoje.setHours(0,0,0,0);
-
-    // Mapeia as cores das categorias
+    
+    // Mapeamento de cores por categoria
     const categoriaCores = {
         // Receitas
         'Adiantamento': CONFIG.chartColors.revenue,
@@ -601,8 +599,8 @@ const RENDER_MANAGER = {
         'Educação': CONFIG.chartColors.expenses[5],
         'Outros': CONFIG.chartColors.expenses[6]
     };
-
-    // --- Modificação AQUI: calcula todas as transações do MES até hoje (sem futuras)
+    
+    // Filtrar transações do mês atual e ordenar por data (mais recente primeiro)
     const transacoesDoMes = STATE.transactions
         .map((transacao, index) => {
             const infoParcela = UTILS.parseParcelaInfo(transacao.description);
@@ -612,25 +610,21 @@ const RENDER_MANAGER = {
             let dataParaOrdenacao = new Date(transacao.dataLancamento);
             let dataTransacao = new Date(transacao.dataLancamento);
             let estaVencida = false;
-            let ehHoje = false;
-
-            // Verifica mês e DATA (até hoje)
+            
+            // Verificar se a transação pertence ao mês atual
             if (infoParcela) {
                 const mesParcela = UTILS.getMesAnoParcela(transacao.dataLancamento, infoParcela.parcelaAtual);
                 mostra = mesParcela === mesAtual;
                 if (mostra) {
                     const data = new Date(transacao.dataLancamento);
                     data.setMonth(data.getMonth() + infoParcela.parcelaAtual - 1);
-                    data.setHours(0,0,0,0);
                     mesDisplay = CONFIG.meses[data.getMonth()];
                     descricaoDisplay = `${infoParcela.baseDesc} (${infoParcela.parcelaAtual}/${infoParcela.totalParcelas})`;
                     dataParaOrdenacao = data;
                     dataTransacao = data;
-
-                    // NOVA REGRA: só mostra se a data chegou!
-                    mostra = dataTransacao <= hoje;
-                    ehHoje = dataTransacao.getTime() === hoje.getTime();
-                    estaVencida = dataTransacao < hoje;
+                    
+                    // Verificar se está vencida (data passou)
+                    estaVencida = data < hoje;
                 }
             } else {
                 const mesTransacao = UTILS.getMesAnoStr(transacao.dataLancamento);
@@ -638,14 +632,12 @@ const RENDER_MANAGER = {
                 if (mostra) {
                     mesDisplay = CONFIG.meses[new Date(transacao.dataLancamento).getMonth()];
                     dataTransacao = new Date(transacao.dataLancamento);
-                    dataTransacao.setHours(0,0,0,0);
-
-                    mostra = dataTransacao <= hoje; // só exibe se chegou o dia
-                    ehHoje = dataTransacao.getTime() === hoje.getTime();
+                    
+                    // Verificar se está vencida (data passou)
                     estaVencida = dataTransacao < hoje;
                 }
             }
-
+            
             return {
                 transacao,
                 index,
@@ -655,38 +647,27 @@ const RENDER_MANAGER = {
                 dataParaOrdenacao,
                 dataTransacao,
                 infoParcela,
-                estaVencida,
-                ehHoje
+                estaVencida
             };
         })
         .filter(item => item.mostra)
+        // ORDENAR POR DATA DECRESCENTE (mais recente primeiro)
         .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
-
-    // --- Renderização das linhas
+    
+    // Renderizar transações ordenadas
     transacoesDoMes.forEach(item => {
-        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida, ehHoje, dataTransacao } = item;
-        const dia = dataTransacao.getDate().toString().padStart(2, '0');
+        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida } = item;
+        
+        const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
         const ehParcelada = infoParcela !== null;
         const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
-
-        // Prepara ícones
-        let icones = '';
-        if (transacao.fixa) icones += '<div title="Fixo">📌</div>';
-        if (estaVencida) icones += '<div title="Vencida">⏰</div>';
-
-        // Aplica a(s) classe(s)
-        let classList = '';
-        if (ehHoje) classList += 'transacao-hoje ';
-        if (estaVencida) classList += 'transacao-vencida';
-
-        const tr = document.createElement('tr');
-        tr.className = classList.trim();
-
-        tr.innerHTML = `
+        
+        const linha = document.createElement('tr');
+        linha.className = estaVencida ? 'transacao-vencida' : '';
+        linha.innerHTML = `
             <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}${estaVencida ? ' ⏰ VENCIDA' : ''}">
-                ${descricaoDisplay}
+                ${descricaoDisplay} ${estaVencida ? '⏰' : ''}
             </td>
-            <td class="icon-col">${icones}</td>
             <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
                 ${UTILS.formataReal(transacao.amount)}
             </td>
@@ -696,23 +677,17 @@ const RENDER_MANAGER = {
             </td>
             <td>
                 <div class="actions-cell">
-                    ${!ehParcelada 
-                        ? `<button class="edit-btn" data-i="${index}" title="Editar" ${estaVencida ? 'disabled' : ''}></button>` 
-                        : '<span class="edit-placeholder"></span>'}
-                    <button class="delete-btn" data-i="${index}" title="Excluir" ${estaVencida ? 'disabled' : ''}></button>
+                    ${!ehParcelada ? 
+                        `<button class="edit-btn" data-i="${index}" title="Editar" ${estaVencida ? 'disabled' : ''}></button>` : 
+                        '<span class="edit-placeholder"></span>'
+                    }
+                    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
                 </div>
             </td>
         `;
-        DOM.list.appendChild(tr);
+        DOM.list.appendChild(linha);
     });
-
-    // Se nada encontrado
-    if (transacoesDoMes.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="6" style="text-align:center;color:#888;padding:20px;">Nenhuma transação lançada até o dia de hoje.</td>`;
-        DOM.list.appendChild(tr);
-    }
-
+    
     this.atualizarResumo(receita, despesa);
     DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
 },
