@@ -983,7 +983,6 @@ input:focus, select:focus {
 /* TRANSAÇÕES VENCIDAS */
 .transacao-vencida {
     opacity: 0.6;
-    text-decoration: line-through;
     color: #999 !important;
 }
 
