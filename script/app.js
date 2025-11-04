@@ -1,3 +1,4 @@
+
 /* =========================================================
    CONT1 - CONTROLE FINANCEIRO PESSOAL (PWA)
    ========================================================= */
@@ -654,43 +655,39 @@ const RENDER_MANAGER = {
         .sort((a, b) => b.dataParaOrdenacao - a.dataParaOrdenacao);
     
     // Renderizar transações ordenadas
-   transacoesDoMes.forEach(item => {
-    const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida } = item;
-    const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
-    const ehParcelada = infoParcela !== null;
-    const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
-
-    // Ícones de indicador:
-    let icones = '';
-    if (transacao.fixa) icones += '<div title="Fixo">📌</div>';
-    if (estaVencida)   icones += '<div title="Vencida">⏰</div>';
-
-    const linha = document.createElement('tr');
-    linha.className = estaVencida ? 'transacao-vencida' : '';
-    linha.innerHTML = `
-        <td class="desc-col" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}">
-            ${descricaoDisplay}
-        </td>
-        <td class="icon-col">${icones}</td>
-        <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
-            ${UTILS.formataReal(transacao.amount)}
-        </td>
-        <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
-        <td style="text-align: center;">
-            <div class="category-dot" style="background-color: ${corCategoria}"></div>
-        </td>
-        <td>
-            <div class="actions-cell">
-                ${!ehParcelada ? 
-                    `<button class="edit-btn" data-i="${index}" title="Editar" ${estaVencida ? 'disabled' : ''}></button>` : 
-                    '<span class="edit-placeholder"></span>'
-                }
-                <button class="delete-btn" data-i="${index}" title="Excluir"></button>
-            </div>
-        </td>
-    `;
-    DOM.list.appendChild(linha);
-});
+    transacoesDoMes.forEach(item => {
+        const { transacao, index, descricaoDisplay, mesDisplay, infoParcela, estaVencida } = item;
+        
+        const dia = new Date(transacao.dataLancamento).getDate().toString().padStart(2, '0');
+        const ehParcelada = infoParcela !== null;
+        const corCategoria = categoriaCores[transacao.category] || '#95a5a6';
+        
+        const linha = document.createElement('tr');
+        linha.className = estaVencida ? 'transacao-vencida' : '';
+        linha.innerHTML = `
+            <td style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descricaoDisplay}${estaVencida ? ' ⏰ VENCIDA' : ''}">
+                ${descricaoDisplay} ${estaVencida ? '⏰' : ''}
+            </td>
+            <td class="${transacao.type === 'revenue' ? 'positive' : 'negative'}" style="white-space:nowrap; overflow: hidden; text-overflow: ellipsis;" title="${UTILS.formataReal(transacao.amount)}">
+                ${UTILS.formataReal(transacao.amount)}
+            </td>
+            <td class="data-cell" style="white-space:nowrap">${dia}/${mesDisplay}</td>
+            <td style="text-align: center;">
+                <div class="category-dot" style="background-color: ${corCategoria}"></div>
+            </td>
+            <td>
+                <div class="actions-cell">
+                    ${!ehParcelada ? 
+                        `<button class="edit-btn" data-i="${index}" title="Editar" ${estaVencida ? 'disabled' : ''}></button>` : 
+                        '<span class="edit-placeholder"></span>'
+                    }
+                    <button class="delete-btn" data-i="${index}" title="Excluir"></button>
+                </div>
+            </td>
+        `;
+        DOM.list.appendChild(linha);
+    });
+    
     this.atualizarResumo(receita, despesa);
     DOM.titulo.textContent = `Transações (${CONFIG.meses[UTILS.hoje.getMonth()]})`;
 },
